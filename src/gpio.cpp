@@ -112,12 +112,12 @@ void gpioWatch (uint seconds)
     seconds = 60;
   }
 
-  uint32 cur_time = time (NULL);
+  int cur_time = time (NULL);
   // Skip this second since it's incomplete
   while (cur_time == time (NULL))
     ;
   cur_time = time (NULL);
-  uint32 fin_time = cur_time + seconds;
+  int fin_time = cur_time + seconds;
   int i, j;
 
   uint32 *gplr = (uint32 *)memPhysMap (GPLR);

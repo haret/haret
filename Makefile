@@ -33,11 +33,11 @@ clean:
 	rm -rf $(OUT)
 
 dep: $(wildcard src/*.cpp src/*/*.cpp)
-	makedep -r $(CXXFLAGS.DEF) $(CXXFLAGS.INC) -p'$$(OUT)' -o$$$$O $^
+	makedep -r $(CXXFLAGS.DEF) $(CXXFLAGS.INC) -p'$$(OUT)' -o'$$O' $^
 
 $(OUT)haret$E: $(addprefix $(OUT),haret$O haret-res$O output$O \
   util$O s-util$O memory$O gpio$O uart$O video$O asmstuff$O script$O \
-  network$O cpu$O s-cpu$O terminal$O linboot$O)
+  network$O cpu$O s-cpu$O terminal$O linboot$O bw_mem$O lib_timing$O)
 	$(LINK)
 
 # WinCE resources (not used under Linux)
@@ -48,25 +48,27 @@ $(OUT):
 
 # DO NOT DELETE this line -- makedep finds dependencies by it
 
-$(OUT)cpu$O: include/xtypes.h include/cpu.h include/output.h \
-  include/haret.h
-$(OUT)gpio$O: include/xtypes.h include/gpio.h include/memory.h \
-  include/output.h
-$(OUT)haret$O: include/xtypes.h include/resource.h include/output.h \
-  include/memory.h include/script.h include/util.h
+$(OUT)bw_mem$O: include/xtypes.h include/bench.h include/output.h
+$(OUT)cpu$O: include/xtypes.h include/cpu.h include/output.h include/haret.h
+$(OUT)gpio$O: include/xtypes.h gpio.h include/memory.h include/output.h
+$(OUT)lib_timing$O: include/xtypes.h include/bench.h include/output.h
 $(OUT)linboot$O: include/haret.h include/xtypes.h include/setup.h \
-  include/memory.h include/util.h include/output.h include/gpio.h \
-  include/video.h include/cpu.h include/resource.h
+  include/memory.h include/util.h include/output.h gpio.h include/video.h \
+  include/cpu.h include/resource.h
 $(OUT)memory$O: include/xtypes.h include/cpu.h include/memory.h \
   include/output.h include/util.h include/haret.h
 $(OUT)network$O: include/xtypes.h include/cpu.h include/util.h \
   include/output.h include/terminal.h include/script.h
 $(OUT)output$O: include/output.h include/util.h include/resource.h
 $(OUT)script$O: include/xtypes.h include/script.h include/memory.h \
-  include/video.h include/output.h include/util.h include/cpu.h \
-  include/gpio.h include/linboot.h
+  include/video.h include/output.h include/util.h include/cpu.h gpio.h \
+  include/linboot.h include/bench.h
 $(OUT)terminal$O: include/xtypes.h include/terminal.h
 $(OUT)uart$O: include/haret.h
 $(OUT)util$O: include/util.h
 $(OUT)video$O: include/xtypes.h include/video.h include/haret.h \
   include/memory.h include/output.h
+$(OUT)haret$O: include/xtypes.h include/resource.h include/output.h \
+  include/memory.h include/script.h include/util.h
+$(OUT)s-cpu$O: include/xtypes.h include/cpu.h include/output.h \
+  include/haret.h

@@ -19,6 +19,7 @@
 #include "cpu.h"
 #include "gpio.h"
 #include "linboot.h"
+#include "bench.h"
 
 static const char *quotes = "\"'";
 // Currently processed line (for error display)
@@ -733,6 +734,20 @@ bool scrInterpret (const char *str, uint lineno)
   {
     bootLinux ();
   }
+  else if (IsToken (tok, "BWMEM"))
+  {
+    uint32 count;
+    char *mode;
+
+    if (!get_expression (&x, &count)
+     || !(mode = get_token (&x)))
+    {
+      Output (L"line %d: Expected <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>", line);
+      return true;
+    }
+
+    bw_mem (count, mode);
+  }
   else if (IsToken (tok, "H|ELP"))
   {
     char *vn = get_token (&x);
@@ -805,6 +820,9 @@ bool scrInterpret (const char *str, uint lineno)
       Output (L"  Display a message (if run from a script, displays a message box).");
       Output (L"  <strformat> is a standard C format string (like in printf).");
       Output (L"  Note that to type a string you will have to use '%%hs'.");
+      Output (L"BWMEM <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>");
+      Output (L"  Perform a memory benchmark similar to lmbench, but the numbers should");
+      Output (L"  not be directly compared to those of lmbench.");
       Output (L"PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
       Output (L"  Same as MESSAGE except that it outputs the text without decorations");
       Output (L"  directly to the network pipe.");
