@@ -1,7 +1,10 @@
-31-Jan-2003 v0.3.3
+27-Feb-2004 v0.3.4
+    -*- Stop all DMA controllers before booting Linux.
+
+31-Jan-2004 v0.3.3
     -*- Added an dumper for the AC97 controller.
 
-10-Jan-2003 v0.3.2
+10-Jan-2004 v0.3.2
     -*- Made all dumpers generalized. The list of dumpers is available by
         typing 'HELP DUMP'.
     -*- Added a dumper for dumping GPIO state in a format suitable for

@@ -96,25 +96,15 @@ void ResetDevices ()
 {
   // Reset AC97
   memPhysWrite (0x4050000C,0);
-  // Reset PCMCIA
+#if 0
+  // Reset PCMCIA - for some reason this locks up on Dell Axim X5
   memPhysWrite (0x48000014,0);
-  // Set DMAs to Stop state
-  for(int i = 0; i < 0x3C; i += 4)
-    memPhysWrite (0x40000000,8);
+#endif
   // Disable DMA interrupts
   memPhysWrite (0x400000F0,0);
-
-  gpioSetDir (28, false);
-  gpioSetDir (29, false);
-  gpioSetDir (30, false);
-  gpioSetDir (31, false);
-  gpioSetDir (32, false);
-
-  gpioSetAlt (28, 0);
-  gpioSetAlt (29, 0);
-  gpioSetAlt (30, 0);
-  gpioSetAlt (31, 0);
-  gpioSetAlt (32, 0);
+  // Set DMAs to Stop state
+  for(int i = 0; i < 0x3C; i += 4)
+    memPhysWrite (0x40000000, 8);
 }
 
 // Whew... a real Microsoft API function (by number of parameters :)
@@ -404,7 +394,7 @@ errexit:
 
   __try
   {
-    //ResetDevices ();
+    ResetDevices ();
 
     //cpuSetDACR (0xffffffff);
 

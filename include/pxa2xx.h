@@ -74,8 +74,10 @@
 #define GEDR		0x40E00048
 // General pin Alternate Function Register
 #define GAFR		0x40E00054
- 
-#define AC97_BASE		0x40500000
+// Power Manager GPIO Sleep State Register
+#define PGSR		0x40F00020
+// AC97 Controller base address
+#define AC97_BASE	0x40500000
 
 /* AC97 controller registers */
 struct pxaAC97
@@ -98,11 +100,11 @@ struct pxaAC97
 #define GCR_COLD_RST	0x00000002
 #define GCR_GIE		0x00000001
   uint32 POSR;			// PCM Out Status Register
-#define POSR_FIFOE	0x00000008
+#define POSR_FIFOE	0x00000010
   uint32 PISR;			// PCM In Status Register
-#define PISR_FIFOE	0x00000008
+#define PISR_FIFOE	0x00000010
   uint32 MCSR;			// Mic In Status Register
-#define MCSR_FIFOE	0x00000008
+#define MCSR_FIFOE	0x00000010
   uint32 GSR;			// Global Status Register
 #define GSR_CDONE	0x00080000
 #define GSR_SDONE	0x00040000
@@ -127,6 +129,7 @@ struct pxaAC97
   uint32 Reserved2 [7];
   uint32 MCDR;			// Mic-in FIFO Data Register
   uint32 Reserved3 [39];
+  // +0x100
   uint32 MOCR;			// Modem Out Control Register
 #define MOCR_FEIE	0x00000008
   uint32 Reserved4;
@@ -134,13 +137,14 @@ struct pxaAC97
 #define MICR_FEIE	0x00000008
   uint32 Reserved5;
   uint32 MOSR;			// Modem Out Status Register
-#define MOSR_FIFOE	0x00000008
+#define MOSR_FIFOE	0x00000010
   uint32 Reserved6;
   uint32 MISR;			// Modem In Status Register
-#define MISR_FIFOE	0x00000008
+#define MISR_FIFOE	0x00000010
   uint32 Reserved7 [9];
   uint32 MODR;			// Modem FIFO Data Register
   uint32 Reserved8 [47];
+  // +0x200
   uint32 codec [4][64];		// Audio Codec registers
 };
 
