@@ -96,15 +96,15 @@ void ResetDevices ()
 {
   // Reset AC97
   memPhysWrite (0x4050000C,0);
-#if 0
-  // Reset PCMCIA - for some reason this locks up on Dell Axim X5
-  memPhysWrite (0x48000014,0);
-#endif
+
   // Disable DMA interrupts
   memPhysWrite (0x400000F0,0);
   // Set DMAs to Stop state
   for(int i = 0; i < 0x3C; i += 4)
-    memPhysWrite (0x40000000, 8);
+    memPhysWrite (0x40000000 + i, 8);
+  // Clear DMA mappings
+  for(i = 0; i < 0x9c; i += 4)
+     memPhysWrite (0x40000100 + i, 0);
 }
 
 // Whew... a real Microsoft API function (by number of parameters :)
