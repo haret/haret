@@ -1,0 +1,324 @@
+<html>
+<head>
+<title>Handheld Reverse-Engineering Tool</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso8859-1">
+<link rel="stylesheet" type="text/css" href="haret.css">
+</head>
+<body>
+
+<h1>What is it</h1>
+
+<p>HaRET stands for "Handheld Reverse-Engineering Tool". In other words it is
+a tool that may help you better understand the inner construction of your
+handheld even without disassembling it and looking under the cover.
+
+<p>Of course, HaRET is software, and has limits imposed by this, but I hope,
+due to source code availability, that you can add functions that suit your
+needs if there isn't already one that fits your requirements.
+
+<p>HaRET runs under Windows CE (AKA PocketPC aka Windows XP mobile) since many
+PDAs that comes without Linux preinstalled (alas, there are still such :) have
+this Operating System installed instead. Thus you can use HaRET to find out how
+to adapt Linux kernel in order to work properly on your PDA.
+
+<p>And last but not least, HaRET is a very dangerous tool. The authors don't
+take any responsability for any damage caused by this program. Basically it
+means: <B>BACKUP ALL YOUR DATA</B> which is not a bad idea in any case, though.
+
+<h2>What it is good for</h2>
+
+<p>HaRET is good for anybody who wants to know better the inner workings of his
+PDA, but was primarily designed to help people to port Linux to new PDAs.
+
+<p>But this doesn't mean you can't use it for anything else - for example,
+for porting Windows XP to new PDAs :-) - the Linux-specific part is quite
+small and can be ignored.
+
+<p>Before using this tool, though, it is a neat idea to refresh your
+ARM architecture knowledge, and some reading of Intel docs (if you're hacking
+an Xscale) would help a lot too. Basically the literature you'll need is
+(in decreasing importance order):
+
+<ul>
+<li>ARM Architecture Reference Manual
+<li>Intel PXA Processor Developer's Manual
+<li>Intel PXA Processor Design Guide
+<li>Intel Xscale Microarchitecture for the PXA Processor
+</ul>
+
+<p>All registered trademarks are registered trademarks of their owners,
+blah-blah et al, you know.
+
+<h2>How it works</h2>
+
+<p>HaRET has a built-in scripting language, and everything else revolves around
+it. Upon startup HaRET launches a file called "startup.txt" (if it exists),
+located in the same directory where the executable was copied to. Then it
+displays a simple dialog box where you command for further actions.
+
+<p>The dialog contains a script launcher field, a status bar and a log
+window. It also has a <code>"Listen for network connection"</code> button.
+That's all you see after the launch, but imagine all the power staying
+behind that! :-)
+
+<p>Currently HaRET supports only TCP/IP connections, but it's relatively easy
+to adapt it in order to use any other connection method such as RS-232
+or IrDA (either raw or IrCOMM). So when you tap the big
+<code>"Listen for network connection"</code> button
+(it is big so that you can press it even with a finger :) it opens the
+port 9999 on the PDA and listens for incoming connections. To use this you
+must have a TCP/IP connection to your PDA. If you don't have one yet,
+<a href="http://synce.sourceforge.net">look here</a>.
+
+<p>After you connect (for example, with <code>telnet 192.168.131.201 9999</code>)
+you get an, um, let's call it a command line :) Now you can type 'help' to get
+a listing of all available commands (along with a short descriprion) and
+read them all, but I'd say better read the docs first and then use the help
+just for reference.
+
+<p>Now you can either enable logging in your telnet client, so that you'll
+get a full log of what you were doing and what you got (in the case your
+PDA locks up :)
+
+<h2>The Script Language</h2>
+
+<p>The command language of HaRET is simple. It doesn't match Perl or Python but
+it does the job, and that's what it was written for. It could have a complex
+grammar written in Bison but it doesn't. It could benefit even from a parser
+written in Flex but it doesn't either. Take it or leave it, or - better -
+rewrite it if you don't like it :)
+
+<p>In the following we'll use some notations, so let's describe them here
+first (it's not sophisticated computer theory, but who knows, maybe you want
+to know).
+
+<ul>
+<li>[A|B] denotes either A or B
+<li>&lt;ABC&gt; denotes a mandatory argument
+</ul>
+
+<p>So, [P|V]DUMP denotes either PDUMP or VDUMP, [P|V]F[B|H|W] denotes
+either of PFB, PFH, PFW, VFB, VFH, VFW. That's all.
+
+<p>Script interpreter reads input line by line (doesn't matter, from a file,
+or from network, or - in some future version - from IrDA or from RS-232
+interface). Every line is expected to be either a comment, or a empty line
+(which are, naturally, ignored) or a command.
+
+<p>The first word in a command line is, naturally again, the command itself.
+Any command name can be shortened to minimal unambiguous length,
+e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump' since it
+conflicts with the 'vd' command.
+
+<p>After command you put a number of arguments. The arguments can be either
+of string or numeric type. It is better to enclose string arguments in quote
+-- either single or double -- because otherwise the parser will stop parsing
+the string at first non-alphanumeric character.
+
+<p>Numeric arguments can be complex expressions. You can use any of the
+following arithmetic operators (in ascending priority order):
+
+<ul>
+<li>'(' ')' (parenthesis)
+<li>'+' (addition) '-' (subtraction) '|' (bitwise OR) '^' (bitwise XOR)
+<li>'*' (multiplication) '/' (division) '%' (remainder) '&' (bitwise AND)
+<li>'+' (unary plus) '-' (unary minus) '~' (bitwise NOT)
+</ul>
+
+<p>Numbers can be given in standard C notation (e.g. 123 for decimal, 0x12
+for hexadecimal, 0777 for octal). Expression evaluator stops as soon at first
+character that it doesn't understand, so usually writing garbage at the end
+of line is fine :-)
+
+<p>There are also a number of predefined variables and functions that can be
+freely used in expressions; you can get a full list of builtin variables by
+invoking the <code>HELP VARS</code> command.
+
+<dl>
+<dt>MMU<dd>The 1st level descriptor table physical address
+(register 2 of coproc. 15).
+<dt>PID<dd>Current value of PID register.
+<dr>PSR<dd>The Program Status Register (cpsr).
+<dt>VRAM<dd>The physical address of video RAM.
+<dt>RAMADDR<dd>Physical RAM start address (default = 0xa0000000).
+<dt>RAMSIZE<dd>Physical RAM size (default = autodetected).
+<dt>V2P(a)<dd>Return physical address for given virtual address
+<dt>P2V(a)<dd>Map temporarily a physical address to virtual and return the address
+<dt>CP(p,c)<dd>The value of register c of coprocessor p.
+<dt>KERNEL<dd>Linux kernel file name.
+<dt>INITRD<dd>Initial Ram Disk file name.
+<dt>CMDLINE<dd>Kernel command line.
+<dt>BOOTSPD<dd>Boot animation speed, usec/scanline (0-no delay).
+<dt>MTYPE<dd>ARM machine type (see linux/arch/arm/tools/mach-types).
+<dt>VMB,VMH,VMW<dd>Virtual Memory Byte/Halfword/Word access.
+<dt>PMB,PMH,PMW<dd>Physical Memory Byte/Halfword/Word access.
+<dt>IGPIO<dd>The list of GPIOs to ignore during WATCHGPIO.
+<dt>GPSR<dd>General Purpose I/O State Register.
+<dt>GPDR<dd>General Purpose I/O Direction Register.
+<dt>GAFR<dd>General Purpose I/O Alternate Function Select Register.
+</dl>
+
+<p>You also can define your own variables; they are created the first time
+you assign something to them (with the <code>SET</code> command). Then you
+can use them as normal variables in expressions. Currently only integer
+variables are supported.
+
+<p>To use the value of a built-in variables and functions, use them in
+expressions like in high-level languages like Pascal:
+<code>print "%x" VRAM+0x10</code> or <code>set x cp(15,2)+0xa00</code>.
+
+<p>To set a value of a function that supports it (e.g. is a R/W function),
+use the SET command like here: <code>SET CP(15,2) 0xa0010000</code> or
+<code>set PMW 0x14042000 0xffffffff</code>.
+
+<p>And here's a list of all available commands:
+
+<dl>
+<dt>QUIT
+<dd>The [Q]ueen of all commands. Quit the remote session.
+
+<dt>HELP [VARS]
+<dd>Display a description of either commands or variables.
+
+<dt>MESSAGE &lt;strformat&gt; [&lt;numarg1&gt; [&lt;numarg2&gt; ... [&lt;numarg4&gt;]]]
+<dd>Display a message (if run from a script, displays a message box).
+
+<dt>PRINT &lt;strformat&gt; [&lt;numarg1&gt; [&lt;numarg2&gt; ... [&lt;numarg4&gt;]]]
+<dd>Same as MESSAGE except that it outputs the text without decorations
+directly to the log window and to the network pipe, if there's a network connection.
+
+<dt>DUMPCP &lt;coprocessor number&gt;
+<dd>Dump the 16 registers of given coprocessor. Some coprocessor have more
+than 16 registers (register bank is denoted by last numeric argument of a
+MRC/MCR command) - for now HaRET doesn't support this, If someone figures out
+how to use self-modifying code in WindowsCE, this could be implemented.
+
+<dt>DUMPGPIO
+<dd>Dump the GPIO machinery state in a human-readable format. For every GPIO
+(0-84 on XScale) it displays info in four columns as shown:
+
+<pre>
+GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER
+------------------+-------------------+-------------------+------------------
+  0   I 1 0    FE |  21   I 1 0       |  42   I 1 1       |  63   O 0 3
+  1   I 1 2       |  22   O 0 0       |  43   O 1 2       |  64   I 1 0
+...
+</pre>
+
+The meaning of columns:
+<dl>
+<dt>GPIO#
+<dd>GPIO number
+<dt>D
+<dd>Direction ([I]nput ot [O]utput).
+<dt>S
+<dd>State (0 - low, 1 - high). For input pins this is the value read from
+external device, for output pin this is the value maintained for the external
+device.
+<dt>A
+<dd>GPIO Alternate Function Number (0-3).
+<dt>INTER
+<dd>Interrupt detection. RE stands for Rising Edge, FE stands for Falling Edge.
+</dl>
+
+<dt>DUMPMMU &lt;filename&gt;
+<dd>Dump the memory map (4Gb address space) to given file. The 1st and
+2nd level MMU tables are parsed and results are written. Note that for
+some reason this commands works unstable, it often locks the PDA or
+(in the best case) pops with a exception.
+
+<dt>[V|P]DUMP &lt;filename&gt; &lt;addr&gt; &lt;size&gt;
+<dd>Dump an area of memory at given [V]irtual or [P]hysical address to file.
+
+<dt>[V|P]D &lt;addr&gt; &lt;size&gt;
+<dd>Same as [V|P]DUMP but outputs to connection rather than to file.
+
+<dt>[V|P]F[B|H|W] &lt;addr&gt; &lt;count&gt; &lt;value&gt;
+<dd>Fill memory at given [V]irtual or [P]hysical address with a value.
+The B(byte)/H(half-word)/W(word) suffixes selects the size of
+&lt;value&gt; and in which units the &lt;count&gt; is measured.
+Note that the overall size of the filled block will be rounded up to
+nearest word (4-byte) edge.<br>
+Take easy with this command! You won't trash the flash ROM with this command,
+but you can easily have to hard-reset the PDA after inacurately using this
+command (losing all your data).<br>
+For example, with the following command you can fill your screen with a nice
+blue color:
+<pre>
+pfh vram 240*320 0x0099
+</pre>
+
+<dt>[V|P]F[B|H|W] &lt;addr&gt; &lt;count&gt; &lt;value&gt;
+<dd>Fill memory at given [V]irtual or [P]hysical address with a value.
+The [B]yte/[H]alfword/[W]ord suffixes selects the size of
+&lt;value&gt; and in which units the &lt;count&gt; is measured.
+
+<dt>[V|P]WF &lt;filename&gt; &lt;addr&gt; &lt;size&gt;
+<dd>Write a portion of [V]irtual or [P]hysical memory to given file. This is
+useful, for example, to dump the boot ROM into a file (usually the first 256K
+of ROM at physical address 0) and then disassemble it.
+
+<dt>WATCHGPIO &lt;seconds&gt;
+<dd>Watch GPIO pins for given period of time and report changes. This is a
+very useful command if you wish to know which GPIO pins are connected to
+some hardware. To find out this, you must run this command, and then perform
+the actions involving the hardware you're looking after (press buttons,
+play sound, insert/remove memory cards and so on). You also may find the
+IGNGPIO command a useful addition to WATCHGPIO.
+</dl>
+
+<h2>Example</h2>
+
+<p>Here is a example HaRET script so that you can get a feeling of
+what is it and how it works.
+
+<pre>
+# Display some greeting message
+print "Welcome to Hardware (Handheld?) Reverse Engineering Tool!"
+print "Some basic info about your PDA:"
+print "MMU L1 descriptor table address is %08x" MMU
+print "Video RAM address is %08x" VRAM
+print "Current Process ID is %d" PID
+print "CPU identification register (p15 r0) is %08x" CP (15, 0)
+# Fill top ten scan lines (the run bar) with some color
+vfh VRAM 240*10 0x0099</pre>
+
+<h2>The terminal mode</h2>
+
+<p>When connected to HaRET through network it expects to find on the other end
+a standard TELNET client, such that it understand a couple of basic commands
+from TELNET protocol: disable local echo and disable line-at-once mode.
+Thus you can't effectively use programs such as <code>nc</code> to connect
+to HaRET since it doesn't support these commands.
+
+<p>In exchange, HaRET allows to nicely interactively edit entered lines. The
+following keys are defined and work for now:
+
+<dl>
+<dt>ENTER
+<dd>Naturally, starts processing the command you just entered :)
+<dt>BACKSPACE
+<dd>Delete the previously entered character.
+<dt>LEFT
+<dd>Hide the previous character. This differs from BACKSPACE since the
+contents of the line are actually preserved after the cursor and you can
+get it back by pressing the RIGHT key.
+<dt>UP
+<dd>Clear the input line (like pressing LEFT many times)
+<dt>RIGHT
+<dd>Unhide just one character next to cursor.
+<dt>DOWN
+<dd>Unhide the rest of line. Initially all the characters from previously
+entered line are marked as hidden, thus if you enter a command and press DOWN
+you'll get the same command again.
+</dl>
+
+<p>Unfortunately, the TELNET daemon emulator on PDA side doesn't support yet
+XON/XOFF characters (for this it would be required the input to be handled
+by a separate thread), thus you can't press <code>C+S</code>/<code>C+Q</code>
+while, say, doing a large memory dump. However, you can enable telnet logging
+and then look in the log file if you think you missed something (without even
+interrupting the sessin - in a different terminal).
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+16-Nov-2003 v0.3.2
+    -*- Made all dumpers generalized. The list of dumpers is available by
+        typing 'HELP DUMP'.
+    -*- Added a dumper for dumping GPIO state in a format suitable for
+        generating include/asm-arm/arch-pxa/xxx-init.h files.
+
+15-Nov-2003 v0.3.1
+    -*-	I've realised that HRET is quite hardly to pronounce for
+	English-speaking people, so I've renamed the program to HaRET.
+    -*-	Added a generalised mechanism for adding new functions. They are
+	displayed along with variables now (SET LIST has been replved
+	with HELP VARS). To get the value of a function, you do it like
+	in normal high-level languages, e.g. 'PRINT "%x" VMW(0xa0000000)'
+	or 'set CP(15,2) 0xa0010000'.
+    -*- Added three functions: GPSR, GPDR, GAFR which allow reading/writing
+	to GPIO control registers.
+    -*-	Added DUMPGPIO command which displays in a readable format the state
+	of the entire GPIO machinery.
+
+14-Nov-2003 v0.3.0
+    -*-	Added variables (SET command). Added the Linux kernel boot
+	funcionality. Added a nice penguin shown during kernel loading :)
+    -*-	Added a lot of new commands (PP[B|H|W/VP[B|H|W], WATCHGPIO,
+	[V|P]WF and a lot more). Added functions (GPIO(), CP() etc).
+
+16-Oct-2003 v0.2.1
+    -*-	The first release meant to be public. Added the telnetd emulation code
+	so that commands can be now nicely interactively edited. Added some
+	docs about HRET (the most useful part is the description of HRET
+	scripting language).
+
+15-Oct-2003 v0.2.0
+    -*-	This is the first release of what was once linexec. I hardly believe
+	there is at least one original line left somewhere, however credits
+	goes to original linexec authors Martin Demin, James Hicks, Joshua
+        Wise (in no specific order) for things I've learned from linexec
+	and also I'm grateful to Martin Demin for bringing the first
+	Linux/Dell Axim port. I've learned lot from their code - hey,
+	it's my first WinCE (and PDA) project.

@@ -1,0 +1,33 @@
+Welcome.
+
+This is HaRET, the Handheld Reverse Engineering Tool. For a detailed description
+see the files in the docs/ directory. This file documents how to build and
+install it.
+
+First, HaRET is a WinCE application. As far as I've seen gcc supports the
+arm-pe target but I don't know where the libraries and headers for it can be
+found. Thus for now it requires MSVC/ARM for building (just the plain minimum -
+the command-line compiler and a few DLLs).
+
+To make things worse, I don't like to boot Windows every time I have to
+recompile the tool, thus I've found a solution - to use WINE, the Windows
+Emulator. MSVC runs almost flawlessly under WINE, although with some versions
+of WINE you'll get the "not enough environment space" error - if you encounter
+it, upgrade WINE to latest version, which kinda works.
+
+Of course, if you're feeling better in Windows you can just compile it from
+the Windows GUI, but this is outside the scope of this document.
+
+To build HaRET you must first edit Makefile and set the path to your MSVC/ARM
+at the top of makefile. Then if you use Windows CE (vs PocketPC) you'll have
+to change the line "-subsystem:WindowsCE,4" line into "-subsystem:WindowsCE"
+otherwise the application won't load (I think).
+
+Now type 'make'. You can get a couple of rough edges here and there during
+compilation but once you have the corresponding tools set up correctly you
+should have little problems compiling it. You may have to hit Ctrl+C/Ctrl+D
+a couple of times if the compiler seems to hang, but otherwise it works :)
+
+To run the executable you will need GX.DLL. It provides a simple API that is
+used to get direct access to video memory; HaRET uses it to find the physical
+address of video RAM.

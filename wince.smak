@@ -1,0 +1,53 @@
+# Submakefile for building for WindowsCE
+
+O = .obj
+E = .exe
+
+.SUFFIXES: $E $O .res
+
+vpath %.asm src src/$(TARGET)
+vpath %.rc src/$(TARGET)
+
+# The directory where your MSVC for StrongARM and the SDK is installed.
+# You should set up WINE (see /etc/wine.reg) so that it "sees" this drive
+BASE ?= d:\\msvc-arm
+
+# Set some env vars for msvc to use
+export WINEPATH = $(BASE)\\bin
+export INCLUDE = $(BASE)\\include
+export LIB = $(BASE)\\lib
+
+CXX = wine -- $(BASE)\\bin\\clarm.exe -c
+CXXFLAGS.DEF = -DARM -DUNICODE -DUNDER_CE=0x0400 -D_WIN32_WCE=0x0400 -DNDEBUG
+CXXFLAGS.INC = -Iinclude
+# Do not enable optimization! msvc generates invalid code with -Oxs !!!
+CXXFLAGS = -nologo -W3 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
+
+ASM = wine -- $(BASE)\\bin\\armasm.exe
+ASMFLAGS = -arch 4 -cpu StrongARM1 -32
+
+RC = wine -- $(BASE)\\bin\\rc.exe
+RCFLAGS = -r -l 0x409 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
+
+CVTRES = wine -- $(BASE)\\bin\\cvtres.exe
+CVTRESFLAGS = -machine:arm -windowsce
+
+LD = wine -- $(BASE)\\bin\\link.exe
+LDFLAGS = -nologo -base:0x10000 -stack:0x10000,0x1000 -entry:WinMainCRTStartup \
+  -align:4096 -machine:ARM -subsystem:WindowsCE,4
+LIBS = aygshell.lib gx.lib ws2.lib
+
+LINK = $(LD) $(LDFLAGS) -out:$@ $^ $(LIBS)
+
+#================================================================= Rules ======#
+$(OUT)%.obj: %.cpp
+	$(CXX) $(CXXFLAGS) -Fo$@ $<
+
+$(OUT)%.obj: %.asm
+	$(ASM) $(ASMFLAGS) -o $@ $<
+
+$(OUT)%.res: src/wince/%.rc
+	$(RC) $(RCFLAGS) -fo $@ $<
+
+$(OUT)%-res.obj: $(OUT)%.res
+	$(CVTRES) $(CVTRESFLAGS) -out:$@ $<

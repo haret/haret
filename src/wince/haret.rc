@@ -1,0 +1,36 @@
+#include <windows.h>
+#include "resource.h"
+
+IDI_APPICON ICON DISCARDABLE "img/haret.ico"
+IDB_LOGO	BITMAP DISCARDABLE "img/penguin.bmp"
+IDB_THERMORED	BITMAP DISCARDABLE "img/thermored.bmp"
+IDB_THERMOBLUE	BITMAP DISCARDABLE "img/thermoblue.bmp"
+IDB_EYES	BITMAP DISCARDABLE "img/eyes.bmp"
+
+DLG_HaRET DIALOG 10, 20, 160, 170
+STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "HaRET"
+FONT 8, "Helv"
+BEGIN
+    PUSHBUTTON      "Run", BT_SCRIPT, 125, 25, 30, 14
+    LTEXT           "Launch a script file. Default path is the same where the executable lives.", 
+                    106, 5, 5, 150, 20
+    LTEXT           "Start waiting for connection on port 9999. When you connect, you'll get a remote hardware examination tool.", 
+                    103, 5, 45, 150, 30
+    PUSHBUTTON      "Listen for network connection", BT_LISTEN, 55, 75, 100, 
+                    14
+    EDITTEXT        ID_SCRIPTNAME, 5, 25, 115, 14, ES_AUTOHSCROLL
+    EDITTEXT        ID_STATUSTEXT, 5, 150, 150, 12, WS_DISABLED
+    EDITTEXT        ID_LOG, 5, 95, 150, 50, ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | NOT WS_TABSTOP
+END
+
+DLG_PROGRESS DIALOG 6, 18, 129, 60
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_DLGFRAME
+FONT 8, "Helv"
+BEGIN
+    CONTROL         "", ID_PROGRESSBAR, "msctls_trackbar32", 0xb0 | 
+                    WS_CLIPSIBLINGS, 5, 30, 120, 25
+    LTEXT           "Please wait patiently until operation finishes ...", 
+                    202, 5, 5, 120, 20
+END

@@ -1,0 +1,28 @@
+body
+{
+    background-color: #c0e0ff;
+    margin-left: 10;
+    margin-right: 10;
+}
+
+a:link    { color: #304060 }
+a:visited { color: #406080 }
+a:hover   { color: #f0f8ff }
+a:active  { color: #ffffff }
+
+h1 { font-size: 140%; font-weight: bold; text-align: center; color: #304050 }
+h2 { font-size: 130%; font-weight: bold; text-align: center; color: #203040 }
+h3 { font-size: 120%; font-weight: bold; color: #102030 }
+h1,h2,h3 { font: small-caps }
+
+p { text-align: justify; vertical-align: top }
+dt { font-weight: bold; color: #305070 }
+
+pre {
+        margin-left: 1em;
+        margin-right: 1em;
+	padding: 0.5em;
+        border: solid thin;
+        color: #204060;
+	background: #c0d0e0;
+}

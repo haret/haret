@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# This simple script can be used to connect to HaRET on your PDA.
+#
+
+# IP address of your PDA
+IP=192.168.131.201
+# Uncomment the following line to get session logs
+LOG="| tee haret.log"
+
+eval exec telnet -E $IP 9999 $LOG

@@ -1,0 +1,8 @@
+# See docs/haret.html for a short description of HaRET Scripting Language
+
+print "Welcome to Hardware (Handheld?) Reverse Engineering Tool!"
+print "Some basic info about your PDA:"
+print "MMU L1 descriptor table address is %08x" MMU
+print "Video RAM address is %08x" VRAM
+print "Current Process ID is %d" PID
+print "CPU identification register (p15 r0) is %08x" CP (15, 0)
