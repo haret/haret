@@ -17,11 +17,11 @@ due to source code availability, that you can add functions that suit your
 needs if there isn't already one that fits your requirements.
 
 <p>HaRET runs under Windows CE (AKA PocketPC aka Windows XP mobile) since many
-PDAs that comes without Linux preinstalled (alas, there are still such :) have
-this Operating System installed instead. Thus you can use HaRET to find out how
-to adapt Linux kernel in order to work properly on your PDA.
+PDAs sold without Linux preinstalled (alas, there are still several :) have
+this Operating (?) System (?) installed instead. Thus you can use HaRET to
+find out how to adapt Linux kernel so that it works properly on your PDA.
 
-<p>And last but not least, HaRET is a very dangerous tool. The authors don't
+<p>Last but not least, HaRET is a very dangerous tool. The author doesn't
 take any responsability for any damage caused by this program. Basically it
 means: <B>BACKUP ALL YOUR DATA</B> which is not a bad idea in any case, though.
 
@@ -31,8 +31,8 @@ means: <B>BACKUP ALL YOUR DATA</B> which is not a bad idea in any case, though.
 PDA, but was primarily designed to help people to port Linux to new PDAs.
 
 <p>But this doesn't mean you can't use it for anything else - for example,
-for porting Windows XP to new PDAs :-) - the Linux-specific part is quite
-small and can be ignored.
+for porting Windows XP Server 2003 to WinCE-based PDAs :-) - the
+Linux-specific part is quite small and can be ignored.
 
 <p>Before using this tool, though, it is a neat idea to refresh your
 ARM architecture knowledge, and some reading of Intel docs (if you're hacking
@@ -51,14 +51,15 @@ blah-blah et al, you know.
 
 <h2>How it works</h2>
 
-<p>HaRET has a built-in scripting language, and everything else revolves around
-it. Upon startup HaRET launches a file called "startup.txt" (if it exists),
-located in the same directory where the executable was copied to. Then it
-displays a simple dialog box where you command for further actions.
+<p>HaRET has a built-in scripting language, and everything else revolves
+around this. Upon startup HaRET launches a file called "startup.txt"
+(if it exists), located in the same directory where the executable was
+copied to. Then it displays a simple dialog box where you command for
+further actions.
 
 <p>The dialog contains a script launcher field, a status bar and a log
 window. It also has a <code>"Listen for network connection"</code> button.
-That's all you see after the launch, but imagine all the power staying
+That's all you see after the launch, but imagine all the power sleeping
 behind that! :-)
 
 <p>Currently HaRET supports only TCP/IP connections, but it's relatively easy
@@ -72,18 +73,20 @@ must have a TCP/IP connection to your PDA. If you don't have one yet,
 
 <p>After you connect (for example, with <code>telnet 192.168.131.201 9999</code>)
 you get an, um, let's call it a command line :) Now you can type 'help' to get
-a listing of all available commands (along with a short descriprion) and
-read them all, but I'd say better read the docs first and then use the help
-just for reference.
+a list of all available commands (with a short descriprion) and read them all,
+but I'd say better read the docs first and then use the help just for
+reference.
 
-<p>Now you can either enable logging in your telnet client, so that you'll
+<p>Now you better enable logging in your telnet client, so that you'll
 get a full log of what you were doing and what you got (in the case your
-PDA locks up :)
+PDA locks up :) You can use the "haret" script included in the docs/
+directory for use with the regular telnet command (for which I haven't
+found how to enable logging).
 
 <h2>The Script Language</h2>
 
-<p>The command language of HaRET is simple. It doesn't match Perl or Python but
-it does the job, and that's what it was written for. It could have a complex
+<p>The command language of HaRET is simple. It is not a match to Perl or Python
+but it does the job, and that's what it was written for. It could have a complex
 grammar written in Bison but it doesn't. It could benefit even from a parser
 written in Flex but it doesn't either. Take it or leave it, or - better -
 rewrite it if you don't like it :)
@@ -107,8 +110,8 @@ interface). Every line is expected to be either a comment, or a empty line
 
 <p>The first word in a command line is, naturally again, the command itself.
 Any command name can be shortened to minimal unambiguous length,
-e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump' since it
-conflicts with the 'vd' command.
+e.g. you can use 'p' for 'priint' but not 'v' for 'vdump' since it
+conflicts with the 'vd' command ('vdu' is fine, though).
 
 <p>After command you put a number of arguments. The arguments can be either
 of string or numeric type. It is better to enclose string arguments in quote
