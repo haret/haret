@@ -93,21 +93,18 @@ static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_siz
 
 void ResetDMA (uint32 *dma)
 {
+  int i;
   // Disable DMA interrupts
   dma [0xF0/4] = 0;
+  // Clear DDADRx
+  for (i = 0; i < 16; i++)
+    dma [0x200/4 + i * 4] |= 1;
   // Set DMAs to Stop state
-  for (int i = 0; i < 16; i++)
-    dma [i] = 0;
-  // Clear DMA requests to channel map registers
+  for (i = 0; i < 16; i++)
+    dma [i] = 0x40000007;
+  // Clear DMA requests to channel map registers (just in case)
   for(i = 0; i < 40; i ++)
     dma [0x100/4 + i] = 0;
-  for (i = 0; i < 16; i++)
-  {
-    // Clear DDADRx
-    dma [0x200/4 + i * 4] |= 1;
-    // Clear DCMDx
-    dma [0x20C/4 + i * 4] = 0;
-  }
 }
 
 // Whew... a real Microsoft API function (by number of parameters :)
