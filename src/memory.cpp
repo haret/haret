@@ -57,6 +57,8 @@ static struct __mem_dummy
 static uint8 *phys_mem [PHYS_CACHE_COUNT];
 // The physical address (multiple of 32K, if 1 then slot is free)
 static uint32 phys_base [PHYS_CACHE_COUNT] = { 1, 1, 1, 1 };
+// The MMU L1 page table
+static uint32 *mmu = NULL;
 
 /* We allocate windows in virtual address space for physical memory
  * in 64K chunks, however we always ensure there are at least 32K ahead
@@ -250,8 +252,8 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
     uint32 delta = l2pt & 0xfff;
     l2pt &= 0xfffff000;
 
-    pmL2PT = (uint32 *)VirtualAlloc (NULL, 4096, MEM_RESERVE, PAGE_READWRITE);
-    if (!VirtualCopy (pmL2PT, (void *)(l2pt >> 8), 4096,
+    pmL2PT = (uint32 *)VirtualAlloc (NULL, 8192, MEM_RESERVE, PAGE_READWRITE);
+    if (!VirtualCopy (pmL2PT, (void *)(l2pt >> 8), 8192,
                       PAGE_READWRITE | PAGE_PHYSICAL))
     {
       Complain (C_ERROR ("VirtualCopy() failed (%d) when accessing MMU L2 table"),

@@ -8,6 +8,8 @@
 #ifndef _CPU_H
 #define _CPU_H
 
+#include "pxa2xx.h"
+
 // Read one register of coprocessor
 extern uint32 cpuGetCP (uint cp, uint regno);
 // Set a coprocessor register
@@ -15,6 +17,9 @@ extern bool cpuSetCP (uint cp, uint regno, uint32 val);
 // Dump the 16 registers of coprocessor #cp
 extern bool cpuDumpCP (void (*out) (void *data, const char *, ...),
                        void *data, uint32 *args);
+// Dump the state of on-chip AC97 controller
+extern bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
+                         void *data, uint32 *args);
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
 // Get current Process Identifier register (0-127)

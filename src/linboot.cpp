@@ -19,9 +19,6 @@
 
 #pragma warning(4:4509)
 
-// Interrupt Controller Mask Register
-#define ICMR	0x40D00004
-
 // Kernel file name
 char *bootKernel = "zimage";
 // Initrd file name
@@ -324,7 +321,7 @@ errexit:
   // need to allocate it a couple of times till we get it as we need it...
   // Also, naturally, preloader cannot be located in the memory where
   // kernel will be copied.
-  alloc_tries = 100;
+  alloc_tries = 10;
   for (;;)
   {
     uint32 mem = (uint32)malloc (preloader_size + 4095);
@@ -384,18 +381,22 @@ errexit:
   setup_linux_params (taglist, initrd_phys_addr, isize);
 
   Output (L"Goodbye cruel world ...");
+  Sleep (500);
 
   uint32 old_icmr;
   uint32 *icmr = (uint32 *)memPhysMap (ICMR);
   uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
 
-  /* Go into system mode */
-  SetThreadPriority (GetCurrentThread (),THREAD_PRIORITY_TIME_CRITICAL);
-  CeSetThreadQuantum (GetCurrentThread (), 0);
-  SetProcPermissions (0xffffffff);
-  SetKMode (TRUE);
-  /* <ibot> rooooooooot has landed! */
   eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
+
+  /* Set thread priority to maximum */
+  SetThreadPriority (GetCurrentThread (), THREAD_PRIORITY_TIME_CRITICAL);
+  /* Disable multitasking (heh) */
+  CeSetThreadQuantum (GetCurrentThread (), 0);
+  /* Allow current process to access any memory domains */
+  SetProcPermissions (0xffffffff);
+  /* Go into kernel mode (well, wince is always in system mode...) */
+  SetKMode (TRUE);
 
   cli ();
   old_icmr = *icmr;

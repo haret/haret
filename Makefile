@@ -49,22 +49,21 @@ $(OUT):
 # DO NOT DELETE this line -- makedep finds dependencies by it
 
 $(OUT)bw_mem$O: include/xtypes.h include/bench.h include/output.h
-$(OUT)cpu$O: include/xtypes.h include/cpu.h include/output.h include/haret.h
+$(OUT)cpu$O: include/xtypes.h include/cpu.h include/pxa2xx.h include/output.h \
+  include/haret.h include/memory.h
 $(OUT)gpio$O: include/xtypes.h gpio.h include/memory.h include/output.h
-$(OUT)irq$O: include/xtypes.h include/haret.h include/irq.h include/output.h \
-  include/memory.h
 $(OUT)lib_timing$O: include/xtypes.h include/bench.h include/output.h
 $(OUT)linboot$O: include/haret.h include/xtypes.h include/setup.h \
   include/memory.h include/util.h include/output.h gpio.h include/video.h \
-  include/cpu.h include/resource.h
-$(OUT)memory$O: include/xtypes.h include/cpu.h include/memory.h \
-  include/output.h include/util.h include/haret.h
-$(OUT)network$O: include/xtypes.h include/cpu.h include/util.h \
-  include/output.h include/terminal.h include/script.h
+  include/cpu.h include/pxa2xx.h include/resource.h
+$(OUT)memory$O: include/xtypes.h include/cpu.h include/pxa2xx.h \
+  include/memory.h include/output.h include/util.h include/haret.h
+$(OUT)network$O: include/xtypes.h include/cpu.h include/pxa2xx.h \
+  include/util.h include/output.h include/terminal.h include/script.h
 $(OUT)output$O: include/output.h include/util.h include/resource.h
 $(OUT)script$O: include/xtypes.h include/script.h include/memory.h \
-  include/video.h include/output.h include/util.h include/cpu.h gpio.h \
-  include/linboot.h include/bench.h include/irq.h
+  include/video.h include/output.h include/util.h include/cpu.h \
+  include/pxa2xx.h gpio.h include/linboot.h include/bench.h include/irq.h
 $(OUT)terminal$O: include/xtypes.h include/terminal.h
 $(OUT)uart$O: include/haret.h
 $(OUT)util$O: include/util.h
@@ -72,5 +71,5 @@ $(OUT)video$O: include/xtypes.h include/video.h include/haret.h \
   include/memory.h include/output.h
 $(OUT)haret$O: include/xtypes.h include/resource.h include/output.h \
   include/memory.h include/script.h include/util.h
-$(OUT)s-cpu$O: include/xtypes.h include/cpu.h include/output.h \
-  include/haret.h
+$(OUT)s-cpu$O: include/xtypes.h include/cpu.h include/pxa2xx.h \
+  include/output.h include/haret.h

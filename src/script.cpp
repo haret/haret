@@ -89,7 +89,9 @@ static struct hwDumper ScriptDumpers [] =
   { "CP", "Value of 16 coprocessor registers (arg = coproc number)",
     1, cpuDumpCP },
   { "MMU", "Virtual memory map (4Gb address space).",
-    0, memDumpMMU }
+    0, memDumpMMU },
+  { "AC97", "PXA AC97 ctrl (64x16-bit regs) (arg = ctrl number, 0..3).",
+    1, cpuDumpAC97 }
 };
 
 static varDescriptor *UserVars = NULL;
@@ -397,7 +399,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
 
   if (peek_char (s) != '(')
   {
-    Complain (C_ERROR ("line %d: %s(%d args) expected"), line, keyw, count);
+    Complain (C_ERROR ("line %d: %hs(%d args) expected"), line, keyw, count);
     return false;
   }
 
