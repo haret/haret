@@ -28,7 +28,7 @@ char *bootKernel = "zimage";
 char *bootInitrd = "initrd";
 // Kernel command line
 char *bootCmdline = "root=/dev/ram0 ro console=tty0";
-// Microseconds to sleep for nicer animation :-)
+// Milliseconds to sleep for nicer animation :-)
 uint32 bootSpeed = 5;
 // ARM machine type (see linux/arch/arm/tools/mach-types)
 uint32 bootMachineType = 339;

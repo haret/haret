@@ -649,6 +649,16 @@ bool scrInterpret (const char *str, uint lineno)
     }
     gpioWatch (sec);
   }
+  else if (IsToken (tok, "S|LEEP"))
+  {
+    uint32 msec;
+    if (!get_expression (&x, &msec))
+    {
+      Complain (C_ERROR ("line %d: Expected <milliseconds>"), line);
+      return true;
+    }
+    Sleep (msec);
+  }
   else if (IsToken (tok, "S|ET"))
   {
     char *vn = get_token (&x);
@@ -802,6 +812,8 @@ bool scrInterpret (const char *str, uint lineno)
       Output (L"  Quit the remote session.");
       Output (L"SET <variable> <value>");
       Output (L"  Assign a value to a variable. Use HELP VARS for a list of variables.");
+      Output (L"SLEEP <milliseconds>");
+      Output (L"  Sleep for given amount of milliseconds.");
       Output (L"[V|P]DUMP <filename> <addr> <size>");
       Output (L"  Dump an area of memory in hexadecimal/char format from given [V]irtual");
       Output (L"  or [P]hysical address to specified file.");
