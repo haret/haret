@@ -58,6 +58,27 @@
 		mov	pc, lr
 		endp
 
+; this next section is to help remove the amount of
+; self modifying code done by HaRET itself
+
+		export	|cpuGetPid|
+|cpuGetPid| proc
+		mrc	p15, 0, r0, c13, c0, 0
+		mov	pc, r14
+		endp
+		
+		export	|cpuGetIDCode|
+|cpuGetIDCode|
+		mrc	p15, 0, r0, c0, c0, 0
+		mov	pc, r14
+		endp
+
+		export  |cpuGetTTBase|
+|cpuGetTTBase|
+		mrc	p15, 0, r0, c2, c0, 0
+		mov	pc, r14
+		endp
+
 ; Flush CPU caches
 		export	|cpuFlushCache|
 |cpuFlushCache|	proc

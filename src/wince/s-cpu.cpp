@@ -19,14 +19,33 @@ static uint32 selfmod [2] =
   0xe1a0f00e    // mov pc,lr
 };
 
+static void (*flush)(void) = NULL;
+
+extern "C" void arm920_flush_cache(void);
+
 static bool FlushSelfMod (const char *op)
 {
   bool rc = true;
+
+  if (flush == NULL) {
+	uint32 id = cpuGetCP(15, 0);
+
+
+	switch (id & ~0xf) {
+	case 0x41129200:
+		flush = arm920_flush_cache;
+		break;
+
+	default:
+		flush = cpuFlushCache;
+	}
+  }
+  
   __try
   {
     SetKMode (TRUE);
     cli ();
-    cpuFlushCache ();
+    (flush)();
     sti ();
     SetKMode (FALSE);
   }
@@ -38,10 +57,35 @@ static bool FlushSelfMod (const char *op)
   return rc;
 }
 
+// some of the most popular ones we do by direct
+// asm. Also we may not have identified the CPU by
+// the time we need to call some of these
+
+extern "C" uint32 cpuGetPid(void);
+extern "C" uint32 cpuGetIDCode(void);
+extern "C" uint32 cpuGetTTBase(void);
+
 uint32 cpuGetCP (uint cp, uint regno)
 {
   if (cp > 15)
     return 0xffffffff;
+
+  switch (cp) {
+  case 15:
+	  switch (regno) {
+	  case 0:
+		return cpuGetIDCode();
+
+	  case 1:
+		return cpuGetTTBase();
+
+	  case 3:
+		  return cpuGetDACR();
+
+	  case 13:
+		  return cpuGetPid();
+	  }
+  }
 
   uint32 value;
   selfmod [0] = 0xee100010 | (cp << 8) | (regno << 16);
