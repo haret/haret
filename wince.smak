@@ -35,7 +35,7 @@ CVTRESFLAGS = -machine:arm -windowsce
 LD = wine -- $(BASE)\\bin\\link.exe
 LDFLAGS = -nologo -base:0x10000 -stack:0x10000,0x1000 -entry:WinMainCRTStartup \
   -align:4096 -machine:ARM -subsystem:WindowsCE,4
-LIBS = aygshell.lib gx.lib ws2.lib
+LIBS = aygshell.lib gx.lib winsock.lib
 
 LINK = $(LD) $(LDFLAGS) -out:$@ $^ $(LIBS)
 
