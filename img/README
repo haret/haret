@@ -1,0 +1,6 @@
+If you wish to modify the PocketPC icon you have to edit the haret,xcf.bz2
+file using GIMP, then save it as PNG, then make a twice smaller image from it
+(16x16) save it again, and, finally, convert it with icotool from icoutils
+package:
+
+    icotool -c -o haret.ico haret16.png haret32.png
