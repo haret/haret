@@ -1,3 +1,7 @@
+06-Apr-2005 <unreleased>
+    -*- Detect ARM920 and use correct cache-flush
+    -*- avoid some of the cache flushing in the cpu get CR functions
+
 27-Feb-2004 v0.3.4
     -*- Stop all DMA controllers before booting Linux.
 
