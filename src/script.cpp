@@ -98,7 +98,7 @@ static int UserVarsCount = 0;
 static char *get_token (const char **s)
 {
   const char *x = *s;
-  static char storage [100];
+  static char storage [1000];
 
   // Skip spaces at the beginning
   while (*x && isspace (*x))
