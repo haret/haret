@@ -585,7 +585,7 @@ bool scrInterpret (const char *str, uint lineno)
      || !get_expression (&x, &size))
     {
       delete [] fn;
-      Complain (C_ERROR ("line %d: Expected <address> <size>"), line);
+      Complain (C_ERROR ("line %d: Expected <filename> <address> <size>"), line);
       return true;
     }
 
