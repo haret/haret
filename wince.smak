@@ -18,7 +18,7 @@ export INCLUDE = $(BASE)\\include
 export LIB = $(BASE)\\lib
 
 CXX = wine -- $(BASE)\\bin\\clarm.exe -c
-CXXFLAGS.DEF = -DARM -DUNICODE -DUNDER_CE=0x0400 -D_WIN32_WCE=0x0400 -DNDEBUG
+CXXFLAGS.DEF = -DARM -DUNICODE -DUNDER_CE=0x0300 -D_WIN32_WCE=0x0300 -DNDEBUG
 CXXFLAGS.INC = -Iinclude
 # Do not enable optimization! msvc generates invalid code with -Oxs !!!
 CXXFLAGS = -nologo -W3 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
@@ -34,7 +34,7 @@ CVTRESFLAGS = -machine:arm -windowsce
 
 LD = wine -- $(BASE)\\bin\\link.exe
 LDFLAGS = -nologo -base:0x10000 -stack:0x10000,0x1000 -entry:WinMainCRTStartup \
-  -align:4096 -machine:ARM -subsystem:WindowsCE,4
+  -align:4096 -machine:ARM -subsystem:WindowsCE,3
 LIBS = aygshell.lib gx.lib winsock.lib
 
 LINK = $(LD) $(LDFLAGS) -out:$@ $^ $(LIBS)
