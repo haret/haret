@@ -91,20 +91,51 @@ static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_siz
  * via ATAG.
  */
 
-void ResetDMA (uint32 *dma)
+void ResetDMA (pxaDMA *dma)
 {
   int i;
   // Disable DMA interrupts
-  dma [0xF0/4] = 0;
+  dma->DINT = 0;
   // Clear DDADRx
   for (i = 0; i < 16; i++)
-    dma [0x200/4 + i * 4] |= 1;
+  {
+    dma->Desc [i].DDADR = DDADR_STOP;
+    dma->Desc [i].DCMD = 0;
+  }
   // Set DMAs to Stop state
   for (i = 0; i < 16; i++)
-    dma [i] = 0x40000007;
+    dma->DCSR [i] = DCSR_NODESC | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERR;
   // Clear DMA requests to channel map registers (just in case)
   for(i = 0; i < 40; i ++)
-    dma [0x100/4 + i] = 0;
+    dma->DRCMR [i] = 0;
+}
+
+void ResetUDC (pxaUDC *udc)
+{
+  udc->UDCCS [ 2] = UDCCS_BO_RPC | UDCCS_BO_SST;
+  udc->UDCCS [ 7] = UDCCS_BO_RPC | UDCCS_BO_SST;
+  udc->UDCCS [12] = UDCCS_BO_RPC | UDCCS_BO_SST;
+  udc->UDCCS [ 1] = UDCCS_BI_TPC | UDCCS_BI_FTF |
+    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
+  udc->UDCCS [ 6] = UDCCS_BI_TPC | UDCCS_BI_FTF |
+    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
+  udc->UDCCS [11] = UDCCS_BI_TPC | UDCCS_BI_FTF |
+    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
+  udc->UDCCS [ 3] = UDCCS_II_TPC | UDCCS_II_FTF |
+    UDCCS_II_TUR | UDCCS_II_TSP;
+  udc->UDCCS [ 8] = UDCCS_II_TPC | UDCCS_II_FTF |
+    UDCCS_II_TUR | UDCCS_II_TSP;
+  udc->UDCCS [13] = UDCCS_II_TPC | UDCCS_II_FTF |
+    UDCCS_II_TUR | UDCCS_II_TSP;
+  udc->UDCCS [ 4] = UDCCS_IO_RPC | UDCCS_IO_ROF;
+  udc->UDCCS [ 9] = UDCCS_IO_RPC | UDCCS_IO_ROF;
+  udc->UDCCS [11] = UDCCS_IO_RPC | UDCCS_IO_ROF;
+  udc->UDCCS [ 5] = UDCCS_INT_TPC | UDCCS_INT_FTF |
+    UDCCS_INT_TUR | UDCCS_INT_SST;
+  udc->UDCCS [10] = UDCCS_INT_TPC | UDCCS_INT_FTF |
+    UDCCS_INT_TUR | UDCCS_INT_SST;
+  udc->UDCCS [15] = UDCCS_INT_TPC | UDCCS_INT_FTF |
+    UDCCS_INT_TUR | UDCCS_INT_SST;
 }
 
 // Whew... a real Microsoft API function (by number of parameters :)
@@ -380,7 +411,8 @@ errexit:
   uint32 old_icmr;
   uint32 *icmr = (uint32 *)memPhysMap (ICMR);
   uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
-  uint32 *dma = (uint32 *)memPhysMap (0x40000000);
+  pxaDMA *dma = (pxaDMA *)memPhysMap (0x40000000);
+  pxaUDC *udc = (pxaUDC *)memPhysMap (UDC_BASE_ADDR);
 
   eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
 
@@ -398,6 +430,7 @@ errexit:
   *icmr = 0;
 
   ResetDMA (dma);
+  ResetUDC (udc);
 
   __try
   {
