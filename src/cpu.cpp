@@ -47,11 +47,6 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   }
 
   uint16 regs [64];
-  int i, to;
-
-  uint32 *icmr = (uint32 *)memPhysMap (ICMR);
-  uint32 old_icmr = *icmr;
-  *icmr = old_icmr & ~IRQ_AC97;
 
   // Disable AC97 interrupt generation
   uint32 old_gcr = ac97->GCR;
@@ -68,25 +63,23 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   uint32 old_micr = ac97->MICR;
   ac97->MICR = old_micr & ~MICR_FEIE;
 
-  // Clear all status bits
-  ac97->GSR = ac97->GSR;
-  ac97->POSR = POSR_FIFOE;
-  ac97->PISR = PISR_FIFOE;
-  ac97->MCSR = MCSR_FIFOE;
-  ac97->MOSR = MOSR_FIFOE;
-  ac97->MISR = MISR_FIFOE;
-
+  int i;
   for (i = 0; i < 64; i++)
   {
+    uint32 volatile *reg = &ac97->codec [unit][i];
+
     // In the case of error ...
     regs [i] = 0xffff;
 
     cli ();
 
     ac97->CAR &= ~CAR_CAIP;
+    int to = 10000;
 
     // First read the Codec Access Register
-    if (ac97->CAR & CAR_CAIP)
+    while ((ac97->CAR & CAR_CAIP) && --to)
+      ;
+    if (!to)
     {
       sti ();
       out (data, "Register %x: codec is busy\n", i * 2);
@@ -94,27 +87,29 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
     }
 
     // A dummy read from register (results in invalid data)
-    (void)ac97->codec [unit][i];
+    (void)*reg;
+
+    // Drop the SDONE and RDCS bits
+    ac97->GSR |= GSR_SDONE | GSR_RDCS;
 
     // Wait for the SDONE bit
-    to = 10000;
     while (!(ac97->GSR & (GSR_SDONE | GSR_RDCS)) && --to)
       ;
     if (!to || (ac97->GSR & GSR_RDCS))
     {
-      uint32 x = ac97->GSR;
-      ac97->GSR &= (GSR_SDONE | GSR_CDONE | GSR_RDCS);
       sti ();
-      out (data, "Register %x: access timed out (%08x)\n", i * 2, x);
+      out (data, "Register %x: access timed out\n", i * 2);
       continue;
     }
 
-    regs [i] = ac97->codec [unit][i];
+    regs [i] = *reg;
 
-    // Clear all status bits ...
-    ac97->GSR &= (GSR_SDONE | GSR_CDONE | GSR_RDCS);
     sti ();
+
+    // Shit, if we remove this it won't work correctly :-(
+    out (data, ".\b");
   }
+  out (data, "\n");
 
   ac97->POCR = old_pocr;
   ac97->PICR = old_picr;
@@ -122,7 +117,6 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   ac97->MOCR = old_mocr;
   ac97->MICR = old_micr;
   ac97->GCR = old_gcr;
-  *icmr = old_icmr;
 
   out (data, "GCR:  %08x  MCCR: %08x\n", old_gcr,  old_mccr);
   out (data, "POCR: %08x  PICR: %08x\n", old_pocr, old_picr);
