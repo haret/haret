@@ -1,8 +1,20 @@
-16-Nov-2003 v0.3.2
+10-Jan-2003 v0.3.2
     -*- Made all dumpers generalized. The list of dumpers is available by
         typing 'HELP DUMP'.
     -*- Added a dumper for dumping GPIO state in a format suitable for
         generating include/asm-arm/arch-pxa/xxx-init.h files.
+    -*- Enhanced memory size detection. Alas, Windows CE does not have
+        a function that would directly return the amount of RAM in the PDA,
+	so you have to use different tricks for this.
+    -*- Renamed GPSR function to GPLR since it reads/sets the GPIO Level
+        Register.
+    -*- Renamed WATCHGPIO to WGPIO for shorter typing.
+    -*- Added the SLEEP command for waiting given number of milliseconds.
+    -*- Added the BWMEM command which will measure PDA's memory performance
+        using Larry McVoy's lmbench routines. However, since the code is
+	modified (although mostly cosmetically) from the original, the
+	numbers should NOT be published as the results of lmbench, but
+	rather as results of HaRET.
 
 15-Nov-2003 v0.3.1
     -*-	I've realised that HRET is quite hardly to pronounce for

@@ -113,10 +113,6 @@ void gpioWatch (uint seconds)
   }
 
   int cur_time = time (NULL);
-  // Skip this second since it's incomplete
-  while (cur_time == time (NULL))
-    ;
-  cur_time = time (NULL);
   int fin_time = cur_time + seconds;
   int i, j;
 
@@ -147,7 +143,10 @@ void gpioWatch (uint seconds)
         for (j = 0; j < 32; j++)
           if ((changes & (1 << j))
 	   && ((i * 32 + j) <= 84))
+	  {
             Output (L"GPLR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+            Log (L"GPLR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+          }
         old_gplr [i] = val;
       }
     }
@@ -162,7 +161,10 @@ void gpioWatch (uint seconds)
         for (j = 0; j < 32; j++)
           if ((changes & (1 << j))
 	   && ((i * 32 + j) <= 84))
+	  {
             Output (L"GPDR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+            Log (L"GPDR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+	  }
         old_gpdr [i] = val;
       }
     }
@@ -177,7 +179,10 @@ void gpioWatch (uint seconds)
         for (j = 0; j < 16; j++)
           if (changes & (3 << j * 2)
 	   && ((i * 32 + j) <= 83))
+	  {
             Output (L"GAFR[%d] changed to %d", i * 16 + j, (changes >> j * 2) & 3);
+            Log (L"GAFR[%d] changed to %d", i * 16 + j, (changes >> j * 2) & 3);
+	  }
         old_gafr [i] = val;
       }
     }
@@ -186,7 +191,7 @@ void gpioWatch (uint seconds)
   }
 }
 
-uint32 gpioScrGPSR (bool setval, uint32 *args, uint32 val)
+uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {

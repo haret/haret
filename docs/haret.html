@@ -138,7 +138,7 @@ invoking the <code>HELP VARS</code> command.
 <dt>MMU<dd>The 1st level descriptor table physical address
 (register 2 of coproc. 15).
 <dt>PID<dd>Current value of PID register.
-<dr>PSR<dd>The Program Status Register (cpsr).
+<dt>PSR<dd>The Program Status Register (cpsr).
 <dt>VRAM<dd>The physical address of video RAM.
 <dt>RAMADDR<dd>Physical RAM start address (default = 0xa0000000).
 <dt>RAMSIZE<dd>Physical RAM size (default = autodetected).
@@ -148,12 +148,13 @@ invoking the <code>HELP VARS</code> command.
 <dt>KERNEL<dd>Linux kernel file name.
 <dt>INITRD<dd>Initial Ram Disk file name.
 <dt>CMDLINE<dd>Kernel command line.
-<dt>BOOTSPD<dd>Boot animation speed, usec/scanline (0-no delay).
+<dt>BOOTSPD<dd>Boot animation speed, milliseconds/scanline (0-no delay).
 <dt>MTYPE<dd>ARM machine type (see linux/arch/arm/tools/mach-types).
 <dt>VMB,VMH,VMW<dd>Virtual Memory Byte/Halfword/Word access.
 <dt>PMB,PMH,PMW<dd>Physical Memory Byte/Halfword/Word access.
-<dt>IGPIO<dd>The list of GPIOs to ignore during WATCHGPIO.
-<dt>GPSR<dd>General Purpose I/O State Register.
+<dt>IGPIO<dd>The list of GPIOs to ignore during WATCHGPIO. For example,
+to ignore GPIO31 changes, issue the command "set IGPIO(31) 1".
+<dt>GPLR<dd>General Purpose I/O Level Register.
 <dt>GPDR<dd>General Purpose I/O Direction Register.
 <dt>GAFR<dd>General Purpose I/O Alternate Function Select Register.
 </dl>
@@ -187,13 +188,32 @@ use the SET command like here: <code>SET CP(15,2) 0xa0010000</code> or
 <dd>Same as MESSAGE except that it outputs the text without decorations
 directly to the log window and to the network pipe, if there's a network connection.
 
-<dt>DUMPCP &lt;coprocessor number&gt;
+<dt>BWMEM &lt;size&gt; &lt;rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy&gt;
+<dd>Measure PDA's memory performance using Larry McVoy's lmbench routines.
+However, since the code is modified (although mostly cosmetically) from the
+original, the numbers should NOT be published as the results of lmbench,
+but rather as results of HaRET. "size" is memory size for the test; second
+operand defines which kind of test to perform.
+
+<dt>SLEEP &lt;milliseconds&gt;
+<dd>Sleep for given period of time. Could be used in scripts that change
+GPIOs etc.
+
+<dt>DUMP &lt;dumper&gt; [&lt;filename&gt;]
+<dd>Dump something to screen (if no filename is given) or to given file.
+There are a number of built-in dumpers, and it is quite easy to add new
+dumpers. To see the list of built-in dumpers, use the <code>HELP DUMP</code>
+command, here is the description of currently available dumpers:
+
+<dl>
+
+<dt>DUMP CP(coprocessor number)
 <dd>Dump the 16 registers of given coprocessor. Some coprocessor have more
 than 16 registers (register bank is denoted by last numeric argument of a
 MRC/MCR command) - for now HaRET doesn't support this, If someone figures out
 how to use self-modifying code in WindowsCE, this could be implemented.
 
-<dt>DUMPGPIO
+<dt>DUMP GPIO
 <dd>Dump the GPIO machinery state in a human-readable format. For every GPIO
 (0-84 on XScale) it displays info in four columns as shown:
 
@@ -221,11 +241,18 @@ device.
 <dd>Interrupt detection. RE stands for Rising Edge, FE stands for Falling Edge.
 </dl>
 
-<dt>DUMPMMU &lt;filename&gt;
+<dt>DUMP GPIOST
+<dd>Dumps current GPIO register state suitable for include/asm/arch/xxx-init.h
+files. The format is very specific to current Linux kernel and could be
+modified later.
+
+<dt>DUMP MMU
 <dd>Dump the memory map (4Gb address space) to given file. The 1st and
 2nd level MMU tables are parsed and results are written. Note that for
 some reason this commands works unstable, it often locks the PDA or
 (in the best case) pops with a exception.
+
+</dl>
 
 <dt>[V|P]DUMP &lt;filename&gt; &lt;addr&gt; &lt;size&gt;
 <dd>Dump an area of memory at given [V]irtual or [P]hysical address to file.
@@ -264,7 +291,8 @@ very useful command if you wish to know which GPIO pins are connected to
 some hardware. To find out this, you must run this command, and then perform
 the actions involving the hardware you're looking after (press buttons,
 play sound, insert/remove memory cards and so on). You also may find the
-IGNGPIO command a useful addition to WATCHGPIO.
+IGPIO function a useful addition to WATCHGPIO.
+
 </dl>
 
 <h2>Example</h2>
@@ -274,7 +302,7 @@ what is it and how it works.
 
 <pre>
 # Display some greeting message
-print "Welcome to Hardware (Handheld?) Reverse Engineering Tool!"
+print "Welcome to Handheld Reverse Engineering Tool!"
 print "Some basic info about your PDA:"
 print "MMU L1 descriptor table address is %08x" MMU
 print "Video RAM address is %08x" VRAM

@@ -20,6 +20,7 @@
 #include "gpio.h"
 #include "linboot.h"
 #include "bench.h"
+#include "irq.h"
 
 static const char *quotes = "\"'";
 // Currently processed line (for error display)
@@ -32,17 +33,17 @@ static varDescriptor ScriptVars [] =
     varROFunc, (uint32 *)&cpuGetMMU, 0 },
   { "PID", "Current Process Identifier register value",
     varROFunc, (uint32 *)&cpuGetPID, 0 },
-  { "VRAM", "Video Memory physical address",
-    varROFunc, (uint32 *)&vidGetVRAM, 0 },
   { "PSR", "Program Status Register",
     varROFunc, (uint32 *)&cpuGetPSR, 0 },
+  { "VRAM", "Video Memory physical address",
+    varROFunc, (uint32 *)&vidGetVRAM, 0 },
   { "KERNEL", "Linux kernel file name",
     varString, (uint32 *)&bootKernel },
   { "INITRD", "Initial Ram Disk file name",
     varString, (uint32 *)&bootInitrd },
   { "CMDLINE", "Kernel command line",
     varString, (uint32 *)&bootCmdline },
-  { "IGPIO", "The list of GPIOs to ignore during WATCHGPIO",
+  { "IGPIO", "The list of GPIOs to ignore during WGPIO",
     varBitSet, (uint32 *)&gpioIgnore, 84 },
   { "BOOTSPD", "Boot animation speed, usec/scanline (0-no delay)",
     varInteger, &bootSpeed },
@@ -70,8 +71,8 @@ static varDescriptor ScriptVars [] =
     varRWFunc, (uint32 *)&memScrPMH, 1 },
   { "PMW", "Physical Memory Word access",
     varRWFunc, (uint32 *)&memScrPMW, 1 },
-  { "GPSR", "General Purpose I/O State Register",
-    varRWFunc, (uint32 *)&gpioScrGPSR, 1 },
+  { "GPLR", "General Purpose I/O Level Register",
+    varRWFunc, (uint32 *)&gpioScrGPLR, 1 },
   { "GPDR", "General Purpose I/O Direction Register",
     varRWFunc, (uint32 *)&gpioScrGPDR, 1 },
   { "GAFR", "General Purpose I/O Alternate Function Select Register",
@@ -640,7 +641,7 @@ bool scrInterpret (const char *str, uint lineno)
                f, args);
     fclose (f);
   }
-  else if (IsToken (tok, "W|ATCHGPIO"))
+  else if (IsToken (tok, "WG|PIO"))
   {
     uint32 sec;
     if (!get_expression (&x, &sec))
@@ -650,6 +651,18 @@ bool scrInterpret (const char *str, uint lineno)
     }
     gpioWatch (sec);
   }
+#if 0
+  else if (IsToken (tok, "WI|RQ"))
+  {
+    uint32 sec;
+    if (!get_expression (&x, &sec))
+    {
+      Complain (C_ERROR ("line %d: Expected <seconds>"), line);
+      return true;
+    }
+    irqWatch (sec);
+  }
+#endif
   else if (IsToken (tok, "S|LEEP"))
   {
     uint32 msec;
@@ -843,8 +856,12 @@ bool scrInterpret (const char *str, uint lineno)
       Output (L"  <value> and in which units the <count> is measured.");
       Output (L"[V|P]WF <filename> <addr> <size>");
       Output (L"  Write a portion of [V]irtual or [P]hysical memory to given file.");
-      Output (L"WATCHGPIO <seconds>");
+      Output (L"WGPIO <seconds>");
       Output (L"  Watch GPIO pins for given period of time and report changes.");
+#if 0
+      Output (L"WIRQ <seconds>");
+      Output (L"  Watch which IRQ occurs for some period of time and report them.");
+#endif
     }
     else
       Output (L"No help on this topic available");

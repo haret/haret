@@ -27,13 +27,13 @@ static struct __mem_dummy
   __mem_dummy ()
   {
     MEMORYSTATUS mst;
+    STORE_INFORMATION sti;
     mst.dwLength = sizeof (mst);
     GlobalMemoryStatus (&mst);
-    /* Well, WinCE is returning not the total amount of physical RAM but
-       the amount of RAM reserved for programs (vs storage). Usually the
-       size is somehow close to half of available physical RAM, so we'll
-       just double the returned number and round it to nearest 8Mb boundary */
-    memPhysSize = ((mst.dwTotalPhys * 2) + 0x00400000) & 0xff800000;
+    GetStoreInformation(&sti);
+    /* WinCE is returning ~1Mb less memory, let's suppose minus kernel size,
+       so we'll round the result up to nearest 8Mb boundary. */
+    memPhysSize = (mst.dwTotalPhys + sti.dwStoreSize + 0x7fffff) & ~0x7fffff;
   }
 } __mem_dummy_obj;
 

@@ -15,7 +15,7 @@
 TARGET = wince
 
 # Program version
-VERSION=0.3.1
+VERSION=0.3.2
 
 # Output directory
 OUT=out/
@@ -35,9 +35,9 @@ clean:
 dep: $(wildcard src/*.cpp src/*/*.cpp)
 	makedep -r $(CXXFLAGS.DEF) $(CXXFLAGS.INC) -p'$$(OUT)' -o'$$O' $^
 
-$(OUT)haret$E: $(addprefix $(OUT),haret$O haret-res$O output$O \
-  util$O s-util$O memory$O gpio$O uart$O video$O asmstuff$O script$O \
-  network$O cpu$O s-cpu$O terminal$O linboot$O bw_mem$O lib_timing$O)
+$(OUT)haret$E: $(addprefix $(OUT),haret$O haret-res$O output$O irq$O \
+  util$O s-util$O memory$O gpio$O uart$O video$O asmstuff$O irqchain$O \
+  script$O network$O cpu$O s-cpu$O terminal$O linboot$O bw_mem$O lib_timing$O)
 	$(LINK)
 
 # WinCE resources (not used under Linux)
@@ -51,6 +51,8 @@ $(OUT):
 $(OUT)bw_mem$O: include/xtypes.h include/bench.h include/output.h
 $(OUT)cpu$O: include/xtypes.h include/cpu.h include/output.h include/haret.h
 $(OUT)gpio$O: include/xtypes.h gpio.h include/memory.h include/output.h
+$(OUT)irq$O: include/xtypes.h include/haret.h include/irq.h include/output.h \
+  include/memory.h
 $(OUT)lib_timing$O: include/xtypes.h include/bench.h include/output.h
 $(OUT)linboot$O: include/haret.h include/xtypes.h include/setup.h \
   include/memory.h include/util.h include/output.h gpio.h include/video.h \
@@ -62,7 +64,7 @@ $(OUT)network$O: include/xtypes.h include/cpu.h include/util.h \
 $(OUT)output$O: include/output.h include/util.h include/resource.h
 $(OUT)script$O: include/xtypes.h include/script.h include/memory.h \
   include/video.h include/output.h include/util.h include/cpu.h gpio.h \
-  include/linboot.h include/bench.h
+  include/linboot.h include/bench.h include/irq.h
 $(OUT)terminal$O: include/xtypes.h include/terminal.h
 $(OUT)uart$O: include/haret.h
 $(OUT)util$O: include/util.h

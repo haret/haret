@@ -94,8 +94,8 @@ extern bool gpioDump (void (*out) (void *data, const char *, ...),
 extern bool gpioDumpState (void (*out) (void *data, const char *, ...),
                            void *data, uint32 *args);
 
-// GPSR access for scripting
-uint32 gpioScrGPSR (bool setval, uint32 *args, uint32 val);
+// GPLR access for scripting
+uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val);
 // GPDR access for scripting
 uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val);
 // GAFR access for scripting
