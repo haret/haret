@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<h1>What is it</h1>
+<h1>What it is</h1>
 
 <p>HaRET stands for "Handheld Reverse-Engineering Tool". In other words it is
 a tool that may help you better understand the inner construction of your
@@ -153,8 +153,10 @@ invoking the <code>HELP VARS</code> command.
 <dt>CMDLINE<dd>Kernel command line.
 <dt>BOOTSPD<dd>Boot animation speed, milliseconds/scanline (0-no delay).
 <dt>MTYPE<dd>ARM machine type (see linux/arch/arm/tools/mach-types).
-<dt>VMB,VMH,VMW<dd>Virtual Memory Byte/Halfword/Word access.
-<dt>PMB,PMH,PMW<dd>Physical Memory Byte/Halfword/Word access.
+<dt>BOOTLINUX<dd>Boots the Linux kernel as specified by the
+KERNEL, INITRD, CMDLINE, BOOTSPD and MTYPE variables.
+<dt>VMB,VMH,VMW(a)<dd>Virtual Memory Byte/Halfword/Word access.
+<dt>PMB,PMH,PMW(a)<dd>Physical Memory Byte/Halfword/Word access.
 <dt>IGPIO<dd>The list of GPIOs to ignore during WATCHGPIO. For example,
 to ignore GPIO31 changes, issue the command "set IGPIO(31) 1".
 <dt>GPLR<dd>General Purpose I/O Level Register.
@@ -173,7 +175,7 @@ expressions like in high-level languages like Pascal:
 
 <p>To set a value of a function that supports it (e.g. is a R/W function),
 use the SET command like here: <code>SET CP(15,2) 0xa0010000</code> or
-<code>set PMW 0x14042000 0xffffffff</code>.
+<code>set PMW(0x14042000) 0xffffffff</code>.
 
 <p>And here's a list of all available commands:
 
