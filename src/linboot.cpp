@@ -91,20 +91,23 @@ static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_siz
  * via ATAG.
  */
 
-// This resets some devices
-void ResetDevices ()
+void ResetDMA (uint32 *dma)
 {
-  // Reset AC97
-  memPhysWrite (0x4050000C,0);
-
   // Disable DMA interrupts
-  memPhysWrite (0x400000F0,0);
+  dma [0xF0/4] = 0;
   // Set DMAs to Stop state
-  for(int i = 0; i < 0x3C; i += 4)
-    memPhysWrite (0x40000000 + i, 8);
-  // Clear DMA mappings
-  for(i = 0; i < 0x9c; i += 4)
-     memPhysWrite (0x40000100 + i, 0);
+  for (int i = 0; i < 16; i++)
+    dma [i] = 0;
+  // Clear DMA requests to channel map registers
+  for(i = 0; i < 40; i ++)
+    dma [0x100/4 + i] = 0;
+  for (i = 0; i < 16; i++)
+  {
+    // Clear DDADRx
+    dma [0x200/4 + i * 4] |= 1;
+    // Clear DCMDx
+    dma [0x20C/4 + i * 4] = 0;
+  }
 }
 
 // Whew... a real Microsoft API function (by number of parameters :)
@@ -373,9 +376,14 @@ errexit:
   Output (L"Goodbye cruel world ...");
   Sleep (500);
 
+  // Reset AC97
+  memPhysWrite (0x4050000C,0);
+
+  /* Map now everything we'll need later */
   uint32 old_icmr;
   uint32 *icmr = (uint32 *)memPhysMap (ICMR);
   uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
+  uint32 *dma = (uint32 *)memPhysMap (0x40000000);
 
   eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
 
@@ -392,10 +400,10 @@ errexit:
   old_icmr = *icmr;
   *icmr = 0;
 
+  ResetDMA (dma);
+
   __try
   {
-    ResetDevices ();
-
     //cpuSetDACR (0xffffffff);
 
     // Create the virtual->physical 1:1 mapping entry in

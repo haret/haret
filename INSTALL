@@ -23,6 +23,11 @@ at the top of makefile. Then if you use Windows CE (vs PocketPC) you'll have
 to change the line "-subsystem:WindowsCE,4" line into "-subsystem:WindowsCE"
 otherwise the application won't load (I think).
 
+Also you will need GAPI headers and libraries. This is a very thin layer
+between software and the framebuffer. If you don't have it, try googling for
+gapi12.zip. Last time I've tried I found it in a lot of places. If all else
+fails, mail me and I'll send it to you.
+
 Now type 'make'. You can get a couple of rough edges here and there during
 compilation but once you have the corresponding tools set up correctly you
 should have little problems compiling it. You may have to hit Ctrl+C/Ctrl+D

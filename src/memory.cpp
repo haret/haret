@@ -52,11 +52,11 @@ static struct __mem_dummy
 #define PHYS_CACHE_SIZE 0x10000
 #define PHYS_CACHE_MASK (PHYS_CACHE_SIZE - 1)
 // The amount of physical memory locations to cache
-#define PHYS_CACHE_COUNT 4
+#define PHYS_CACHE_COUNT 8
 // Cache several last mapped physical memory for better effectivity
 static uint8 *phys_mem [PHYS_CACHE_COUNT];
 // The physical address (multiple of 32K, if 1 then slot is free)
-static uint32 phys_base [PHYS_CACHE_COUNT] = { 1, 1, 1, 1 };
+static uint32 phys_base [PHYS_CACHE_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 // The MMU L1 page table
 static uint32 *mmu = NULL;
 
@@ -143,7 +143,7 @@ void memPhysReset ()
 extern "C" BOOL SetKMode (BOOL fMode);
 
 // The amount of physical memory locations to cache
-#define PHYS_CACHE_COUNT 4
+#define PHYS_CACHE_COUNT 8
 // The size of physical memory to map at once
 #define PHYS_CACHE_SIZE 0x10000
 #define PHYS_CACHE_MASK (PHYS_CACHE_SIZE - 1)
