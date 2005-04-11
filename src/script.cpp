@@ -77,7 +77,7 @@ static varDescriptor ScriptVars [] =
     varRWFunc, (uint32 *)&gpioScrGPDR, 1 },
   { "GAFR", "General Purpose I/O Alternate Function Select Register",
     varRWFunc, (uint32 *)&gpioScrGAFR, 1 },
-  { "CPUType", "CPU Type", varRWFunc, (uint32 *)&cpuType }
+  { "CPUType", "CPU Type", varRWFunc, (uint32 *)&cpuType, 1 }
 };
 
 #define ScriptDumpersCount (sizeof (ScriptDumpers) / sizeof (hwDumper))
