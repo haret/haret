@@ -1,3 +1,8 @@
+11-Apr-2005
+    -*- updates for seperate UART drivers
+    _*_ s3c24xx uart driver additions
+    _*_ settable cpu-type
+
 06-Apr-2005 <unreleased>
     -*- Detect ARM920 and use correct cache-flush
     -*- avoid some of the cache flushing in the cpu get CR functions
