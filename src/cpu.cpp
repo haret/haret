@@ -5,11 +5,45 @@
     For conditions of use see file COPYING
 */
 
+#include <string.h>
+#include <stdlib.h>
+
 #include "xtypes.h"
 #include "cpu.h"
 #include "output.h"
 #include "haret.h"
 #include "memory.h"
+
+struct cpu_fns *cpu = &cpu_pxa;		// default to PXA
+
+static struct cpu_fns *cpus[] = {
+	&cpu_pxa,
+	&cpu_s3c24xx,
+	NULL
+};
+
+struct cpu_fns *cpuFind(const char *name)
+{
+	struct cpu_fns **cpu = cpus;
+
+	for (; *cpu != NULL; cpu++) {
+		if (_stricmp(name, (*cpu)->name) == 0)
+			break;
+	}
+
+	return *cpu;
+}
+
+uint32 cpuType(bool setval, uint32 *args, uint32 val)
+{
+	if (setval) {
+		// need to set cpu types
+
+		return 0;
+	} else {
+		return (uint32)cpu->name;
+	}
+}
 
 bool cpuDumpCP (void (*out) (void *data, const char *, ...),
                 void *data, uint32 *args)

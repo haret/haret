@@ -1,9 +1,10 @@
 #include <windows.h>
 #include "haret.h"
+#include "uart.h"
 
 #define FUART 0x40100000
 
-void UART_puts(char *s)
+void UART_pxa_puts(char *s)
 {
   UINT32 *base=(UINT32*)VirtualAlloc((void*)0x0,sizeof(void*)*0xffff, MEM_RESERVE,PAGE_READWRITE);
   int ret=VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
@@ -16,7 +17,7 @@ void UART_puts(char *s)
   }
 }
 
-void UART_setup()
+void UART_pxa_setup()
 {
   UINT32 *base=(UINT32*)VirtualAlloc((void*)0x0,sizeof(void*)*0xffff, MEM_RESERVE,PAGE_READWRITE);
   int ret=VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
@@ -40,4 +41,28 @@ void UART_setup()
     base[0]=(char)(test[a]);
     a++;
   }
+}
+
+static struct uart_drv def_drv = {
+	UART_pxa_setup,
+	UART_pxa_puts
+};
+
+static struct uart_drv *uart_drv = &def_drv;
+
+void UART_puts(char *ch)
+{
+	(uart_drv->puts)(ch);
+}
+
+void UART_setup(void)
+{
+	(uart_drv->setup)();
+}
+
+void UART_setDriver(struct uart_drv *drv)
+{
+	uart_drv = drv;
+
+	(drv->setup)();
 }

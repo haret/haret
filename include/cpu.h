@@ -9,6 +9,7 @@
 #define _CPU_H
 
 #include "pxa2xx.h"
+#include "s3c24xx.h"
 
 // Read one register of coprocessor
 extern uint32 cpuGetCP (uint cp, uint regno);
@@ -38,5 +39,23 @@ extern "C" void cli ();
 extern "C" void sti ();
 // Coprocessor register access for scripting
 extern uint32 cpuScrCP (bool setval, uint32 *args, uint32 val);
+
+// control type of CPU
+extern uint32 cpuType(bool setval, uint32 *args, uint32 val);
+
+struct cpu_fns {
+	char *name;
+
+	// claim any resources that will be needed by the cpu
+	int (*setup_load)(void);
+
+	// shutdown peripheral blocks ready for load
+	int (*shutdown_peripherals)(void);
+
+	// try and recover the situation if things fail
+	int (*attempt_recovery)(void);
+};
+
+extern struct cpu_fns *cpu;
 
 #endif /* _CPU_H */

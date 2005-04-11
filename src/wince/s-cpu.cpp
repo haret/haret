@@ -30,13 +30,17 @@ static bool FlushSelfMod (const char *op)
   if (flush == NULL) {
 	uint32 id = cpuGetCP(15, 0);
 
+	// switch on cpu id, minus the bottom bits which are generally
+	// the core version number
 
 	switch (id & ~0xf) {
 	case 0x41129200:
+		Output(L"ARM920T Detected");
 		flush = arm920_flush_cache;
 		break;
 
 	default:
+		Output(L"Default CPU routines installed");
 		flush = cpuFlushCache;
 	}
   }

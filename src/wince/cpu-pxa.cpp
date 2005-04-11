@@ -6,7 +6,7 @@
 
 	Split from linboot.cpp by Ben Dooks
 
-	$Id: cpu-pxa.cpp,v 1.1 2005/04/06 10:46:25 fluffy Exp $
+	$Id: cpu-pxa.cpp,v 1.2 2005/04/11 23:44:14 fluffy Exp $
 */
 
 
@@ -70,9 +70,9 @@ void pxaResetUDC (pxaUDC *udc)
 }
 
 static uint32 old_icmr;
-static uint32 *icmr = (uint32 *)memPhysMap (ICMR);
-static pxaDMA *dma = (pxaDMA *)memPhysMap (0x40000000);
-static pxaUDC *udc = (pxaUDC *)memPhysMap (UDC_BASE_ADDR);
+static uint32 *icmr;
+static pxaDMA *dma;
+static pxaUDC *udc;
 
 static int pxaSetupLoad(void)
 {
