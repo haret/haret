@@ -707,6 +707,8 @@ bool scrInterpret (const char *str, uint lineno)
           delete [] var->sval;
         *var->sval = strnew (get_token (&x));
         var->val_size = 1;
+		if (var->notify_set != NULL)
+			(var->notify_set)();
         break;
       case varBitSet:
       {

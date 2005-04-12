@@ -4,7 +4,7 @@
 
     For conditions of use see file COPYING
 
-	$Id: cpu-s3c24xx.cpp,v 1.2 2005/04/11 23:43:28 fluffy Exp $
+	$Id: cpu-s3c24xx.cpp,v 1.3 2005/04/12 00:43:43 fluffy Exp $
 */
 
 
@@ -53,7 +53,7 @@ static void UART_s3c24xx_map(void)
 
 	if (uart_base == NULL) {
 		uart_base = (volatile uint32 *)VirtualAlloc((void*)0x0,sizeof(void*)*0xffff, MEM_RESERVE,PAGE_READWRITE);
-		ret=VirtualCopy((void *)uart_base, (void *) ((S3C_UART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
+		ret=VirtualCopy((void *)uart_base, (void *) ((S3C_UART)/256),sizeof(void*)*0xffff, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
 	}
 }
 
@@ -205,10 +205,22 @@ static int s3c24xxSetupLoad(void)
 	return 0;
 }
 
+// TODO - sort out shutting down IIS, DMA, etc
+
+static int s3c24xxShutdownPerihperals(void)
+{
+	return 0;
+}
+
+static int s3c24xxAttemptRecovery(void)
+{
+	return 0;
+}
+
 
 struct cpu_fns cpu_s3c24xx = {
 	"S3C24XX",
 	s3c24xxSetupLoad,
-	NULL,
-	NULL
+	s3c24xxShutdownPerihperals,
+	s3c24xxAttemptRecovery
 };
