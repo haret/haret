@@ -41,7 +41,9 @@ extern "C" void sti ();
 extern uint32 cpuScrCP (bool setval, uint32 *args, uint32 val);
 
 // control type of CPU
-extern uint32 cpuType(bool setval, uint32 *args, uint32 val);
+extern char *cpuTypeString;
+
+extern void cpuType(void);
 
 struct cpu_fns {
 	char *name;

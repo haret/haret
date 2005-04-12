@@ -34,14 +34,16 @@ struct cpu_fns *cpuFind(const char *name)
 	return *cpu;
 }
 
-uint32 cpuType(bool setval, uint32 *args, uint32 val)
-{
-	if (setval) {
-		// need to set cpu types
+char *cpuTypeString = NULL;
 
-		return 0;
+void cpuType(void)
+{
+	struct cpu_fns *nc = cpuFind(cpuTypeString);
+
+	if (nc != NULL) {
+		cpu = nc;
 	} else {
-		return (uint32)cpu->name;
+
 	}
 }
 

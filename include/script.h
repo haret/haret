@@ -38,6 +38,8 @@ struct varDescriptor
   // A optional value size (for bitset in bits, for funcs number of args,
   // for others no meaning)
   uint val_size;
+
+  void (*notify_set)(void);
 };
 
 // The structure to describe a hardware dumper
