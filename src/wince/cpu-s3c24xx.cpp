@@ -4,7 +4,7 @@
 
     For conditions of use see file COPYING
 
-	$Id: cpu-s3c24xx.cpp,v 1.3 2005/04/12 00:43:43 fluffy Exp $
+	$Id: cpu-s3c24xx.cpp,v 1.4 2005/04/14 12:56:58 fluffy Exp $
 */
 
 
@@ -23,6 +23,7 @@
 
 #include "s3c24xx/regs-gpio.h"
 #include "s3c24xx/regs-serial.h"
+#include "s3c24xx/regs-dma.h"
 #include "s3c24xx/map.h"
 
 static uint32 *s3c_gpio;
@@ -207,8 +208,52 @@ static int s3c24xxSetupLoad(void)
 
 // TODO - sort out shutting down IIS, DMA, etc
 
+static void s3c24xxShutdownIIS(void)
+{
+
+}
+
+static void s3c24xxShutdownDMA(void)
+{
+	int dma_ch;
+	volatile uint32 *channels;
+	volatile uint32 *ch;
+	uint32 dmasktrig;
+	int timeo;
+
+	channels = (volatile uint32 *)memPhysMap(S3C2410_PA_DMA);
+	if (channels == NULL)
+		return;
+
+	for (dma_ch = 0; dma_ch < 4; dma_ch++) {
+		ch = channels + ((0x40 / 4) * dma_ch);
+	
+		dmasktrig = s3c_readl(ch, S3C2410_DMA_DMASKTRIG);
+		if (dmasktrig & S3C2410_DMASKTRIG_ON) {
+			Output(L"DMA[%d] - shutting down active DMA\n", dma_ch);
+
+			s3c_writel(ch, S3C2410_DMA_DMASKTRIG, S3C2410_DMASKTRIG_STOP);
+
+			timeo = 0x10000;
+			while (true) {
+				dmasktrig = s3c_readl(ch, S3C2410_DMA_DMASKTRIG);
+
+				if ((dmasktrig & S3C2410_DMASKTRIG_ON) == 0)
+					break;
+
+				if (timeo -- <= 0) {
+					Output(L"DMA[%d] - timeout waiting to stop\n", dma_ch);
+				}
+			}
+		}
+	}
+}
+
 static int s3c24xxShutdownPerihperals(void)
 {
+	s3c24xxShutdownIIS();
+	s3c24xxShutdownDMA();
+
 	return 0;
 }
 
