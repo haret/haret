@@ -4,7 +4,7 @@
 
     For conditions of use see file COPYING
 
-	$Id: cpu-s3c24xx.cpp,v 1.4 2005/04/14 12:56:58 fluffy Exp $
+	$Id: cpu-s3c24xx.cpp,v 1.5 2005/04/14 13:17:13 fluffy Exp $
 */
 
 
@@ -30,12 +30,12 @@ static uint32 *s3c_gpio;
 
 static inline uint32 s3c_readl(volatile uint32 *base, uint32 reg)
 {
-	return *((volatile uint32 *)base + (reg/4));
+	return base[reg/4];
 }
 
 static inline void s3c_writel(volatile uint32 *base, uint32 reg, uint32 val)
 {
-	*((volatile uint32 *)base + (reg/4)) = val;
+	base[(reg/4)] = val;
 }
 
 // uart drivers
@@ -234,14 +234,14 @@ static void s3c24xxShutdownDMA(void)
 
 			s3c_writel(ch, S3C2410_DMA_DMASKTRIG, S3C2410_DMASKTRIG_STOP);
 
-			timeo = 0x10000;
-			while (true) {
+			timeo = 0x100000;
+			while (timeo > 0) {
 				dmasktrig = s3c_readl(ch, S3C2410_DMA_DMASKTRIG);
 
 				if ((dmasktrig & S3C2410_DMASKTRIG_ON) == 0)
 					break;
 
-				if (timeo -- <= 0) {
+				if (timeo-- <= 0) {
 					Output(L"DMA[%d] - timeout waiting to stop\n", dma_ch);
 				}
 			}
