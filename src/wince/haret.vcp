@@ -1,0 +1,5405 @@
+# Microsoft eMbedded Visual Tools Project File - Name="haret" - Package Owner=<4>
+# Microsoft eMbedded Visual Tools Generated Build File, Format Version 6.02
+# ** DO NOT EDIT **
+
+# TARGTYPE "Win32 (WCE MIPSIV_FP) Application" 0x9201
+# TARGTYPE "Win32 (WCE ARMV4) Application" 0xa301
+# TARGTYPE "Win32 (WCE x86) Application" 0x8301
+# TARGTYPE "Win32 (WCE MIPS16) Application" 0x8901
+# TARGTYPE "Win32 (WCE SH3) Application" 0x8101
+# TARGTYPE "Win32 (WCE ARMV4I) Application" 0xa501
+# TARGTYPE "Win32 (WCE MIPSII_FP) Application" 0xa201
+# TARGTYPE "Win32 (WCE SH4) Application" 0x8601
+# TARGTYPE "Win32 (WCE MIPSIV) Application" 0x9601
+# TARGTYPE "Win32 (WCE emulator) Application" 0xa601
+# TARGTYPE "Win32 (WCE ARMV4T) Application" 0xa401
+# TARGTYPE "Win32 (WCE MIPSII) Application" 0xa101
+
+CFG=haret - Win32 (WCE x86) Debug
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
+!MESSAGE 
+!MESSAGE NMAKE /f "haret.vcn".
+!MESSAGE 
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "haret.vcn" CFG="haret - Win32 (WCE x86) Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "haret - Win32 (WCE x86) Release" (based on "Win32 (WCE x86) Application")
+!MESSAGE "haret - Win32 (WCE x86) Debug" (based on "Win32 (WCE x86) Application")
+!MESSAGE "haret - Win32 (WCE SH4) Release" (based on "Win32 (WCE SH4) Application")
+!MESSAGE "haret - Win32 (WCE SH4) Debug" (based on "Win32 (WCE SH4) Application")
+!MESSAGE "haret - Win32 (WCE SH3) Release" (based on "Win32 (WCE SH3) Application")
+!MESSAGE "haret - Win32 (WCE SH3) Debug" (based on "Win32 (WCE SH3) Application")
+!MESSAGE "haret - Win32 (WCE emulator) Release" (based on "Win32 (WCE emulator) Application")
+!MESSAGE "haret - Win32 (WCE emulator) Debug" (based on "Win32 (WCE emulator) Application")
+!MESSAGE "haret - Win32 (WCE MIPSIV_FP) Release" (based on "Win32 (WCE MIPSIV_FP) Application")
+!MESSAGE "haret - Win32 (WCE MIPSIV_FP) Debug" (based on "Win32 (WCE MIPSIV_FP) Application")
+!MESSAGE "haret - Win32 (WCE MIPSIV) Release" (based on "Win32 (WCE MIPSIV) Application")
+!MESSAGE "haret - Win32 (WCE MIPSIV) Debug" (based on "Win32 (WCE MIPSIV) Application")
+!MESSAGE "haret - Win32 (WCE MIPS16) Release" (based on "Win32 (WCE MIPS16) Application")
+!MESSAGE "haret - Win32 (WCE MIPS16) Debug" (based on "Win32 (WCE MIPS16) Application")
+!MESSAGE "haret - Win32 (WCE MIPSII_FP) Release" (based on "Win32 (WCE MIPSII_FP) Application")
+!MESSAGE "haret - Win32 (WCE MIPSII_FP) Debug" (based on "Win32 (WCE MIPSII_FP) Application")
+!MESSAGE "haret - Win32 (WCE MIPSII) Release" (based on "Win32 (WCE MIPSII) Application")
+!MESSAGE "haret - Win32 (WCE MIPSII) Debug" (based on "Win32 (WCE MIPSII) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4T) Release" (based on "Win32 (WCE ARMV4T) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4T) Debug" (based on "Win32 (WCE ARMV4T) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4I) Release" (based on "Win32 (WCE ARMV4I) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4I) Debug" (based on "Win32 (WCE ARMV4I) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4) Release" (based on "Win32 (WCE ARMV4) Application")
+!MESSAGE "haret - Win32 (WCE ARMV4) Debug" (based on "Win32 (WCE ARMV4) Application")
+!MESSAGE 
+
+# Begin Project
+# PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
+# PROP ATL_Project 2
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "X86Rel"
+# PROP BASE Intermediate_Dir "X86Rel"
+# PROP BASE CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "X86Rel"
+# PROP Intermediate_Dir "X86Rel"
+# PROP CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /O2 /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /O2 /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "X86Dbg"
+# PROP BASE Intermediate_Dir "X86Dbg"
+# PROP BASE CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "X86Dbg"
+# PROP Intermediate_Dir "X86Dbg"
+# PROP CPU_ID "{D6518FF3-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "SH4Rel"
+# PROP BASE Intermediate_Dir "SH4Rel"
+# PROP BASE CPU_ID "{D6519021-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "SH4Rel"
+# PROP Intermediate_Dir "SH4Rel"
+# PROP CPU_ID "{D6519021-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
+CPP=shcl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Qsh4 /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /Qsh4 /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "SH4Dbg"
+# PROP BASE Intermediate_Dir "SH4Dbg"
+# PROP BASE CPU_ID "{D6519021-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "SH4Dbg"
+# PROP Intermediate_Dir "SH4Dbg"
+# PROP CPU_ID "{D6519021-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "SHx" /d "SH4" /d "_SH4_" /r
+CPP=shcl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /Qsh4 /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH4" /D "_SH4_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /Qsh4 /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "SH3Rel"
+# PROP BASE Intermediate_Dir "SH3Rel"
+# PROP BASE CPU_ID "{D6519020-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "SH3Rel"
+# PROP Intermediate_Dir "SH3Rel"
+# PROP CPU_ID "{D6519020-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+CPP=shcl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "SH3Dbg"
+# PROP BASE Intermediate_Dir "SH3Dbg"
+# PROP BASE CPU_ID "{D6519020-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "SH3Dbg"
+# PROP Intermediate_Dir "SH3Dbg"
+# PROP CPU_ID "{D6519020-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "SHx" /d "SH3" /d "_SH3_" /r
+CPP=shcl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "SHx" /D "SH3" /D "_SH3_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "emulatorRel"
+# PROP BASE Intermediate_Dir "emulatorRel"
+# PROP BASE CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "emulatorRel"
+# PROP Intermediate_Dir "emulatorRel"
+# PROP CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /O2 /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "_i386_" /D UNDER_CE=$(CEVersion) /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "NDEBUG" /YX /Gs8192 /GF /O2 /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "emulatorDbg"
+# PROP BASE Intermediate_Dir "emulatorDbg"
+# PROP BASE CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "emulatorDbg"
+# PROP Intermediate_Dir "emulatorDbg"
+# PROP CPU_ID "{32E52003-403E-442D-BE48-DE10F8C6131D}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
+# ADD RSC /l 0x409 /d "$(CePlatform)" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "_X86_" /d "x86" /d "_i386_" /r
+CPP=cl.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "_i386_" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "i_386_" /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /YX /Gs8192 /GF /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPSIV_FPRel"
+# PROP BASE Intermediate_Dir "MIPSIV_FPRel"
+# PROP BASE CPU_ID "{046A430D-7770-48AB-89B5-24C2D300B03F}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPSIV_FPRel"
+# PROP Intermediate_Dir "MIPSIV_FPRel"
+# PROP CPU_ID "{046A430D-7770-48AB-89B5-24C2D300B03F}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D "MIPSIV_FP" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips4 /QMn32 /QMFPE- /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D "MIPSIV_FP" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips4 /QMn32 /QMFPE- /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "MIPSIV_FPDbg"
+# PROP BASE Intermediate_Dir "MIPSIV_FPDbg"
+# PROP BASE CPU_ID "{046A430D-7770-48AB-89B5-24C2D300B03F}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "MIPSIV_FPDbg"
+# PROP Intermediate_Dir "MIPSIV_FPDbg"
+# PROP CPU_ID "{046A430D-7770-48AB-89B5-24C2D300B03F}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D "MIPSIV_FP" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips4 /QMn32 /QMFPE- /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D "MIPSIV_FP" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips4 /QMn32 /QMFPE- /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPSIVRel"
+# PROP BASE Intermediate_Dir "MIPSIVRel"
+# PROP BASE CPU_ID "{0B2FE524-26C5-4194-8CEF-B1582DEB5A98}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPSIVRel"
+# PROP Intermediate_Dir "MIPSIVRel"
+# PROP CPU_ID "{0B2FE524-26C5-4194-8CEF-B1582DEB5A98}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips4 /QMn32 /QMFPE /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips4 /QMn32 /QMFPE /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "MIPSIVDbg"
+# PROP BASE Intermediate_Dir "MIPSIVDbg"
+# PROP BASE CPU_ID "{0B2FE524-26C5-4194-8CEF-B1582DEB5A98}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "MIPSIVDbg"
+# PROP Intermediate_Dir "MIPSIVDbg"
+# PROP CPU_ID "{0B2FE524-26C5-4194-8CEF-B1582DEB5A98}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips4 /QMn32 /QMFPE /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "_MIPS64" /D "R4000" /D "MIPSIV" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips4 /QMn32 /QMFPE /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPS16Rel"
+# PROP BASE Intermediate_Dir "MIPS16Rel"
+# PROP BASE CPU_ID "{D6519013-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPS16Rel"
+# PROP Intermediate_Dir "MIPS16Rel"
+# PROP CPU_ID "{D6519013-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "MIPS16SUPPORT" /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPS16" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "MIPS16SUPPORT" /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPS16" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPS16" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_MIPS16_" /D "MIPS16SUPPORT" /YX /QMmips16 /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPS16" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D "_MIPS16_" /D "MIPS16SUPPORT" /YX /QMmips16 /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "MIPS16Dbg"
+# PROP BASE Intermediate_Dir "MIPS16Dbg"
+# PROP BASE CPU_ID "{D6519013-710F-11D3-99F2-00105A0DF099}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "MIPS16Dbg"
+# PROP Intermediate_Dir "MIPS16Dbg"
+# PROP CPU_ID "{D6519013-710F-11D3-99F2-00105A0DF099}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "MIPS16SUPPORT" /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPS16" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "MIPS16SUPPORT" /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPS16" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPS16" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_MIPS16_" /D "MIPS16SUPPORT" /YX /QMmips16 /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPS16" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D "_MIPS16_" /D "MIPS16SUPPORT" /YX /QMmips16 /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS16 /ALIGN:4096
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPSII_FPRel"
+# PROP BASE Intermediate_Dir "MIPSII_FPRel"
+# PROP BASE CPU_ID "{D8AC856C-B213-4895-9E83-9EC51A55201E}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPSII_FPRel"
+# PROP Intermediate_Dir "MIPSII_FPRel"
+# PROP CPU_ID "{D8AC856C-B213-4895-9E83-9EC51A55201E}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPSII_FP" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPSII_FP" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPSII_FP" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips2 /QMFPE- /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPSII_FP" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips2 /QMFPE- /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "MIPSII_FPDbg"
+# PROP BASE Intermediate_Dir "MIPSII_FPDbg"
+# PROP BASE CPU_ID "{D8AC856C-B213-4895-9E83-9EC51A55201E}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "MIPSII_FPDbg"
+# PROP Intermediate_Dir "MIPSII_FPDbg"
+# PROP CPU_ID "{D8AC856C-B213-4895-9E83-9EC51A55201E}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPSII_FP" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /d "MIPSII_FP" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPSII_FP" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips2 /QMFPE- /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D "MIPSII_FP" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips2 /QMFPE- /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "MIPSIIRel"
+# PROP BASE Intermediate_Dir "MIPSIIRel"
+# PROP BASE CPU_ID "{689DDC64-9D9D-11D5-96F8-00207802C01C}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "MIPSIIRel"
+# PROP Intermediate_Dir "MIPSIIRel"
+# PROP CPU_ID "{689DDC64-9D9D-11D5-96F8-00207802C01C}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips2 /QMFPE /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QMmips2 /QMFPE /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "MIPSIIDbg"
+# PROP BASE Intermediate_Dir "MIPSIIDbg"
+# PROP BASE CPU_ID "{689DDC64-9D9D-11D5-96F8-00207802C01C}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "MIPSIIDbg"
+# PROP Intermediate_Dir "MIPSIIDbg"
+# PROP CPU_ID "{689DDC64-9D9D-11D5-96F8-00207802C01C}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "MIPS" /d "_MIPS_" /d "R4000" /d "MIPSII" /r
+CPP=clmips.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips2 /QMFPE /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "MIPS" /D "_MIPS_" /D "R4000" /D "MIPSII" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QMmips2 /QMFPE /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMV4TRel"
+# PROP BASE Intermediate_Dir "ARMV4TRel"
+# PROP BASE CPU_ID "{F52316A9-3B7C-4FE7-A67F-68350B41240D}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMV4TRel"
+# PROP Intermediate_Dir "ARMV4TRel"
+# PROP CPU_ID "{F52316A9-3B7C-4FE7-A67F-68350B41240D}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4T" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4T" /r
+CPP=clthumb.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "THUMB" /D "_THUMB_" /D "ARMV4T" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QRarch4T /QRinterwork-return /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "THUMB" /D "_THUMB_" /D "ARMV4T" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QRarch4T /QRinterwork-return /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMV4TDbg"
+# PROP BASE Intermediate_Dir "ARMV4TDbg"
+# PROP BASE CPU_ID "{F52316A9-3B7C-4FE7-A67F-68350B41240D}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMV4TDbg"
+# PROP Intermediate_Dir "ARMV4TDbg"
+# PROP CPU_ID "{F52316A9-3B7C-4FE7-A67F-68350B41240D}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4T" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4T" /r
+CPP=clthumb.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "THUMB" /D "_THUMB_" /D "ARMV4T" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QRarch4T /QRinterwork-return /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "THUMB" /D "_THUMB_" /D "ARMV4T" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QRarch4T /QRinterwork-return /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMV4IRel"
+# PROP BASE Intermediate_Dir "ARMV4IRel"
+# PROP BASE CPU_ID "{DC70F430-E78B-494F-A9D5-62ADC56443B8}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 2
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMV4IRel"
+# PROP Intermediate_Dir "ARMV4IRel"
+# PROP CPU_ID "{DC70F430-E78B-494F-A9D5-62ADC56443B8}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4I" /r
+# ADD RSC /l 0x809 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "NDEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4I" /d "_AFXDLL" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "ARMV4I" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /QRarch4T /QRinterwork-return /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /I "E:/haret/haret/include" /I "C:\Windows CE Tools\GAPI\inc" /D _WIN32_WCE=$(CEVersion) /D "ARM" /D "_ARM_" /D "$(CePlatform)" /D "ARMV4I" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D VERSION=L\"0.3.2_s3c24xx\" /D "_AFXDLL" /FR /YX /QRarch4T /QRinterwork-return /O2 /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib "C:\Windows CE Tools\GAPI\ARM\gx.lib" /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMV4IDbg"
+# PROP BASE Intermediate_Dir "ARMV4IDbg"
+# PROP BASE CPU_ID "{DC70F430-E78B-494F-A9D5-62ADC56443B8}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMV4IDbg"
+# PROP Intermediate_Dir "ARMV4IDbg"
+# PROP CPU_ID "{DC70F430-E78B-494F-A9D5-62ADC56443B8}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4I" /r
+# ADD RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "$(CePlatform)" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4I" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4I" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QRarch4T /QRinterwork-return /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4I" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /QRarch4T /QRinterwork-return /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "ARMV4Rel"
+# PROP BASE Intermediate_Dir "ARMV4Rel"
+# PROP BASE CPU_ID "{ECBEA43D-CD7B-4852-AD55-D4227B5D624B}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "ARMV4Rel"
+# PROP Intermediate_Dir "ARMV4Rel"
+# PROP CPU_ID "{ECBEA43D-CD7B-4852-AD55-D4227B5D624B}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "ARMV4" /r
+# ADD RSC /l 0x409 /i "..\..\include" /i "..\..\\" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "NDEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "ARMV4" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /YX /O2 /M$(CECrtMT) /c
+# ADD CPP /nologo /W3 /Zd /Od /I "..\include" /I "..\..\include" /I "C:\Windows CE Tools\GAPI\inc" /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=$(CEVersion) /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /D VERSION="\"0.3.5 (bjd4)\"" /FR /YX /D /M$(CECrtMT) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib winsock.lib "C:\Windows CE Tools\GAPI\ARM\gx.lib" /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /map /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "ARMV4Dbg"
+# PROP BASE Intermediate_Dir "ARMV4Dbg"
+# PROP BASE CPU_ID "{ECBEA43D-CD7B-4852-AD55-D4227B5D624B}"
+# PROP BASE Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "ARMV4Dbg"
+# PROP Intermediate_Dir "ARMV4Dbg"
+# PROP CPU_ID "{ECBEA43D-CD7B-4852-AD55-D4227B5D624B}"
+# PROP Platform_ID "{8A9A2F80-6887-11D3-842E-005004848CBA}"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+RSC=rc.exe
+# ADD BASE RSC /l 0x409 /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "ARMV4" /r
+# ADD RSC /l 0x409 /i "$(ProjDir)/../../include" /i "$(ProjDir)/include" /i "$(ProjDir)/../include" /d UNDER_CE=$(CEVersion) /d _WIN32_WCE=$(CEVersion) /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "$(CePlatform)" /d "ARM" /d "_ARM_" /d "ARMV4" /r
+CPP=clarm.exe
+# ADD BASE CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /YX /M$(CECrtMTDebug) /c
+# ADD CPP /nologo /W3 /Zi /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=$(CEVersion) /D _WIN32_WCE=$(CEVersion) /D "$(CePlatform)" /D "UNICODE" /D "_UNICODE" /D VERSION=\"bjd_s3c\" /YX /M$(CECrtMTDebug) /c
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+
+!ENDIF 
+
+# Begin Target
+
+# Name "haret - Win32 (WCE x86) Release"
+# Name "haret - Win32 (WCE x86) Debug"
+# Name "haret - Win32 (WCE SH4) Release"
+# Name "haret - Win32 (WCE SH4) Debug"
+# Name "haret - Win32 (WCE SH3) Release"
+# Name "haret - Win32 (WCE SH3) Debug"
+# Name "haret - Win32 (WCE emulator) Release"
+# Name "haret - Win32 (WCE emulator) Debug"
+# Name "haret - Win32 (WCE MIPSIV_FP) Release"
+# Name "haret - Win32 (WCE MIPSIV_FP) Debug"
+# Name "haret - Win32 (WCE MIPSIV) Release"
+# Name "haret - Win32 (WCE MIPSIV) Debug"
+# Name "haret - Win32 (WCE MIPS16) Release"
+# Name "haret - Win32 (WCE MIPS16) Debug"
+# Name "haret - Win32 (WCE MIPSII_FP) Release"
+# Name "haret - Win32 (WCE MIPSII_FP) Debug"
+# Name "haret - Win32 (WCE MIPSII) Release"
+# Name "haret - Win32 (WCE MIPSII) Debug"
+# Name "haret - Win32 (WCE ARMV4T) Release"
+# Name "haret - Win32 (WCE ARMV4T) Debug"
+# Name "haret - Win32 (WCE ARMV4I) Release"
+# Name "haret - Win32 (WCE ARMV4I) Debug"
+# Name "haret - Win32 (WCE ARMV4) Release"
+# Name "haret - Win32 (WCE ARMV4) Debug"
+# Begin Source File
+
+SOURCE=.\asmstuff.asm
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+# Begin Custom Build - Performing Custom Build Step on $(InputPath) to $(OutDir)\armstuff.obj
+OutDir=.\ARMV4IRel
+InputPath=.\asmstuff.asm
+
+"$(OutDir)\asmstuff.obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	armasm -o $(OutDir)\asmstuff.obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+# Begin Custom Build
+OutDir=.\ARMV4Rel
+InputPath=.\asmstuff.asm
+
+"$(OutDir)\asmstuff.obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	armasm -o $(OutDir)\asmstuff.obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\bw_mem.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_BW_ME=\
+	"..\..\include\bench.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_BW_ME=\
+	"..\..\include\bench.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_BW_ME=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=".\cpu-arm920.asm"
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+# Begin Custom Build
+OutDir=.\ARMV4Rel
+InputPath=".\cpu-arm920.asm"
+
+"$(OutDir)/cpu-arm920.obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	armasm -o $(OutDir)\cpu-arm920.obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=".\cpu-pxa.cpp"
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_CPU_P=\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\setup.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_CPU_P=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\setup.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=".\cpu-s3c24xx.cpp"
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_CPU_S=\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\s3c24xx\map.h"\
+	"..\..\include\s3c24xx\regs-dma.h"\
+	"..\..\include\s3c24xx\regs-gpio.h"\
+	"..\..\include\s3c24xx\regs-serial.h"\
+	"..\..\include\setup.h"\
+	"..\..\include\uart.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_CPU_S=\
+	".\cpu.h"\
+	".\gpio.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\resource.h"\
+	".\s3c24xx\map.h"\
+	".\s3c24xx\regs-dma.h"\
+	".\s3c24xx\regs-gpio.h"\
+	".\s3c24xx\regs-serial.h"\
+	".\setup.h"\
+	".\uart.h"\
+	".\video.h"\
+	".\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\cpu.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_CPU_C=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_CPU_C=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_CPU_C=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\img\eyes.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\gpio.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_GPIO_=\
+	"..\..\include\gpio.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_GPIO_=\
+	"..\..\include\gpio.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_GPIO_=\
+	"..\gpio.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\haret.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_HARET=\
+	"..\..\include\output.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\script.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_HARET=\
+	"..\..\include\output.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\script.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_HARET=\
+	".\output.h"\
+	".\resource.h"\
+	".\script.h"\
+	".\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\img\haret.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\haret.rc
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\irq.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_IRQ_C=\
+	"..\..\include\haret.h"\
+	"..\..\include\irq.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_IRQ_C=\
+	"..\..\include\haret.h"\
+	"..\..\include\irq.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+# ADD CPP bjd2\"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_IRQ_C=\
+	"..\haret.h"\
+	"..\irq.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\irqchain.asm
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+# Begin Custom Build
+OutDir=.\ARMV4IRel
+InputPath=.\irqchain.asm
+
+"$(OutDir)\irqchain.obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	armasm -o $(OutDir)\irqchain.obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\lib_timing.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_LIB_T=\
+	"..\..\include\bench.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_LIB_T=\
+	"..\..\include\bench.h"\
+	"..\..\include\output.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_LIB_T=\
+	"..\bench.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\linboot.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_LINBO=\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\setup.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_LINBO=\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\resource.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\setup.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_LINBO=\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\resource.h"\
+	"..\setup.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\memory.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_MEMOR=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_MEMOR=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_MEMOR=\
+	"..\cpu.h"\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\network.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_NETWO=\
+	"..\..\include\cpu.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\script.h"\
+	"..\..\include\terminal.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_NETWO=\
+	"..\..\include\cpu.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\script.h"\
+	"..\..\include\terminal.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_NETWO=\
+	"..\cpu.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\output.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_OUTPU=\
+	"..\..\include\output.h"\
+	"..\..\include\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_OUTPU=\
+	"..\..\include\output.h"\
+	"..\..\include\resource.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_OUTPU=\
+	"..\output.h"\
+	"..\resource.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\img\penguin.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=".\s-cpu.cpp"
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_S_CPU=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_S_CPU=\
+	"..\..\include\cpu.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_S_CPU=\
+	".\cpu.h"\
+	".\haret.h"\
+	".\output.h"\
+	".\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=".\s-util.cpp"
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\include\s3c24xx.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\script.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_SCRIP=\
+	"..\..\include\bench.h"\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\irq.h"\
+	"..\..\include\linboot.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\script.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_SCRIP=\
+	"..\..\include\bench.h"\
+	"..\..\include\cpu.h"\
+	"..\..\include\gpio.h"\
+	"..\..\include\irq.h"\
+	"..\..\include\linboot.h"\
+	"..\..\include\output.h"\
+	"..\..\include\pxa2xx.h"\
+	"..\..\include\s3c24xx.h"\
+	"..\..\include\script.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_SCRIP=\
+	"..\bench.h"\
+	"..\cpu.h"\
+	"..\gpio.h"\
+	"..\irq.h"\
+	"..\linboot.h"\
+	"..\output.h"\
+	"..\script.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\terminal.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_TERMI=\
+	"..\..\include\terminal.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_TERMI=\
+	"..\..\include\terminal.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_TERMI=\
+	"..\terminal.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\img\thermoblue.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\img\thermored.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=..\uart.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_UART_=\
+	"..\..\include\haret.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_UART_=\
+	"..\..\include\haret.h"\
+	"..\..\include\uart.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_UART_=\
+	"..\haret.h"\
+	"..\uart.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\util.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\video.cpp
+
+!IF  "$(CFG)" == "haret - Win32 (WCE x86) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE x86) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH4) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE SH3) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE emulator) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV_FP) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSIV) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPS16) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII_FP) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE MIPSII) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Release"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4T) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Release"
+
+DEP_CPP_VIDEO=\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4I) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Release"
+
+DEP_CPP_VIDEO=\
+	"..\..\..\..\Windows CE Tools\GAPI\inc\gx.h"\
+	"..\..\include\haret.h"\
+	"..\..\include\output.h"\
+	"..\..\include\video.h"\
+	"..\..\include\xtypes.h"\
+	
+
+!ELSEIF  "$(CFG)" == "haret - Win32 (WCE ARMV4) Debug"
+
+NODEP_CPP_VIDEO=\
+	"..\haret.h"\
+	"..\output.h"\
+	"..\video.h"\
+	"..\xtypes.h"\
+	
+
+!ENDIF 
+
+# End Source File
+# End Target
+# End Project
