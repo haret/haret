@@ -4,7 +4,7 @@
 ;
 ;   For conditions of use see file COPYING
 ;
-;   $Id: cpu-arm920.asm,v 1.1 2005/04/05 23:36:48 fluffy Exp $
+;   $Id: cpu-arm920.asm,v 1.2 2005/04/21 21:06:14 zap Exp $
 
 ;; taken from linux/arch/arm/mm/proc-arm920.S: MMU functions for ARM920
 ;; 
@@ -17,25 +17,22 @@
 ; Flush CPU caches
 
 		export	|arm920_flush_cache|
+
 |arm920_flush_cache|	proc
-
-
 ; DSEGMENTS 8
 ; DENTRIES 64
-
-		mov		r0, #0
-		mov		r1, #(8-1) << 5			; 8 segments
-|fls1|	orr		r3, r1,#(64-1)<<26		; 64 entries
-|fls2|	mcr		p15, 0, r3, c7, c14, 2	; clean+invalidate D index
+		mov	r0, #0
+		mov	r1, #(8-1) << 5			; 8 segments
+|fls1|		orr	r3, r1,#(64-1)<<26		; 64 entries
+|fls2|		mcr	p15, 0, r3, c7, c14, 2	; clean+invalidate D index
 		subs	r3, r3, #1<<26			;
-		bcs		fls2					;
+		bcs	fls2				;
 		subs	r1, r1, #1<<5			;
-		bcs		fls1					;
+		bcs	fls1				;
 
-		mcr		p15, 0, r0, c7, c5, 0		; invalidate I cache
-		mcr		p15, 0, r0, c7, c10, 4		; drain WB
-		mcr		p15, 0, r0, c8, c7, 0		; drain I+D TLBs
-		mov		pc, r14
-
+		mcr	p15, 0, r0, c7, c5, 0		; invalidate I cache
+		mcr	p15, 0, r0, c7, c10, 4		; drain WB
+		mcr	p15, 0, r0, c8, c7, 0		; drain I+D TLBs
+		mov	pc, r14
 
 		end

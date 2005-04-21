@@ -14,14 +14,14 @@
 #include "util.h"
 #include "resource.h"
 
-extern HINSTANCE hInst;
-extern HWND MainWindow;
+//#define USE_WAIT_CURSOR
 
 // This function can be assigned a value in order to redirect
 // message boxes elsewhere (such as to a socket)
 void (*output_fn) (wchar_t *msg, wchar_t *title) = NULL;
 
-//#define USE_WAIT_CURSOR
+extern HINSTANCE hInst;
+extern HWND MainWindow;
 
 void Log (const wchar_t *format, ...)
 {

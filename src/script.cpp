@@ -29,6 +29,8 @@ static uint line;
 #define ScriptVarsCount (sizeof (ScriptVars) / sizeof (varDescriptor))
 static varDescriptor ScriptVars [] =
 {
+  { "CPU", "Autodetected CPU family",
+    varROFunc, (uint32 *)&cpuGetFamily, 0 },
   { "MMU", "Memory Management Unit level 1 descriptor table physical addr",
     varROFunc, (uint32 *)&cpuGetMMU, 0 },
   { "PID", "Current Process Identifier register value",
@@ -58,7 +60,7 @@ static varDescriptor ScriptVars [] =
   { "P2V", "Physical To Virtual address translation",
     varROFunc, (uint32 *)&memPhysMap, 1 },
   { "CP", "Coprocessor Registers access",
-    varROFunc, (uint32 *)&cpuScrCP, 2 },
+    varRWFunc, (uint32 *)&cpuScrCP, 2 },
   { "VMB", "Virtual Memory Byte access",
     varRWFunc, (uint32 *)&memScrVMB, 1 },
   { "VMH", "Virtual Memory Halfword access",
@@ -77,8 +79,6 @@ static varDescriptor ScriptVars [] =
     varRWFunc, (uint32 *)&gpioScrGPDR, 1 },
   { "GAFR", "General Purpose I/O Alternate Function Select Register",
     varRWFunc, (uint32 *)&gpioScrGAFR, 1 },
-
-  { "CPUType", "CPU Type", varString, (uint32 *)&cpuTypeString, 0, cpuType }
 };
 
 #define ScriptDumpersCount (sizeof (ScriptDumpers) / sizeof (hwDumper))
@@ -175,7 +175,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args,
 static varDescriptor *FindVar (const char *vn, varDescriptor *Vars, int VarCount)
 {
   for (int i = 0; i < VarCount; i++)
-    if (!_stricmp (vn, Vars [i].name))
+    if (!strcasecmp (vn, Vars [i].name))
       return Vars + i;
   return NULL;
 }
@@ -608,7 +608,7 @@ bool scrInterpret (const char *str, uint lineno)
 
     hwDumper *hwd = NULL;
     for (int i = 0; i < ScriptDumpersCount; i++)
-      if (!_stricmp (vn, ScriptDumpers [i].name))
+      if (!strcasecmp (vn, ScriptDumpers [i].name))
       {
         hwd = ScriptDumpers + i;
         break;
@@ -771,7 +771,7 @@ bool scrInterpret (const char *str, uint lineno)
   {
     char *vn = get_token (&x);
 
-    if (!_stricmp (vn, "VARS"))
+    if (!strcasecmp (vn, "VARS"))
     {
       char type [9];
       char args [10];
@@ -807,7 +807,7 @@ bool scrInterpret (const char *str, uint lineno)
                 ScriptVars [i].desc);
       }
     }
-    else if (!_stricmp (vn, "DUMP"))
+    else if (!strcasecmp (vn, "DUMP"))
     {
       char args [10];
       for (size_t i = 0; i < ScriptDumpersCount; i++)

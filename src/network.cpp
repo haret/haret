@@ -267,13 +267,13 @@ conn_error:
   vi.dwOSVersionInfoSize = sizeof (vi);
   GetVersionEx (&vi);
   Output (L"Welcome, this is HaRET running on WindowsCE v%d.%d\n"
-          L"CPU is %hs\n"
-          L"Running in %hs mode; minimal virtual address: %08x, maximal: %08x\n"
-          L"Enter 'HELP' for a short command summary.\n",
+          L"Minimal virtual address: %08x, maximal virtual address: %08x",
           vi.dwMajorVersion, vi.dwMinorVersion,
-	  cpu_id (cpuGetCP (15, 0)), cpu_mode (cpuGetPSR () & 0x1f),
           si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
 #endif
+  Output (L"CPU is %hs running in %hs mode\n"
+          L"Enter 'HELP' for a short command summary.\n",
+	  cpu_id (cpuGetCP (15, 0)), cpu_mode (cpuGetPSR () & 0x1f));
 
   {
     haretNetworkTerminal t (sock);

@@ -21,6 +21,7 @@
 #include "memory.h"
 #include "script.h"
 #include "util.h"
+#include "cpu.h"
 
 #define WINDOW_CLASS TEXT("pmret")
 #define WINDOW_TITLE TEXT("HaRET")
@@ -46,6 +47,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
 
       ShowWindow (hWnd, SW_SHOWMAXIMIZED);
 
+      cpuDetect ();
       scrExecute ("startup.txt", false);
       return TRUE;
     }

@@ -6,7 +6,7 @@
 
 	Split from linboot.cpp by Ben Dooks
 
-	$Id: cpu-pxa.cpp,v 1.2 2005/04/11 23:44:14 fluffy Exp $
+	$Id: cpu-pxa.cpp,v 1.3 2005/04/21 21:06:14 zap Exp $
 */
 
 
@@ -22,7 +22,18 @@
 #include "cpu.h"
 #include "resource.h"
 
-void pxaResetDMA (pxaDMA *dma)
+static bool pxaDetect ()
+{
+  uint32 p15r0 = cpuGetCP (15, 0);
+
+  if ((p15r0 >> 24) == 'i'
+   && ((p15r0 >> 13) & 7) == 1)
+    return true;
+
+  return false;
+}
+
+static void pxaResetDMA (pxaDMA *dma)
 {
   int i;
   // Disable DMA interrupts
@@ -41,7 +52,7 @@ void pxaResetDMA (pxaDMA *dma)
     dma->DRCMR [i] = 0;
 }
 
-void pxaResetUDC (pxaUDC *udc)
+static void pxaResetUDC (pxaUDC *udc)
 {
   udc->UDCCS [ 2] = UDCCS_BO_RPC | UDCCS_BO_SST;
   udc->UDCCS [ 7] = UDCCS_BO_RPC | UDCCS_BO_SST;
@@ -95,15 +106,17 @@ static int pxaShutdownPeripherals(void)
   return 0;
 }
 
-static int pxaAttemptRecovery(void)
+static int pxaAttemptRecovery (void)
 {
-    *icmr = old_icmr;
-	return 0;
+  *icmr = old_icmr;
+  return 0;
 }
 
-cpu_fns cpu_pxa = {
-	"PXA",
-	pxaSetupLoad,
-	pxaShutdownPeripherals,
-	pxaAttemptRecovery
+cpu_fns cpu_pxa =
+{
+  L"PXA2xx",
+  pxaDetect,
+  pxaSetupLoad,
+  pxaShutdownPeripherals,
+  pxaAttemptRecovery
 };

@@ -11,6 +11,8 @@
 #include "pxa2xx.h"
 #include "s3c24xx.h"
 
+// Detect the CPU and set up the `cpu' pointer (see below)
+extern void cpuDetect ();
 // Read one register of coprocessor
 extern uint32 cpuGetCP (uint cp, uint regno);
 // Set a coprocessor register
@@ -40,22 +42,18 @@ extern "C" void sti ();
 // Coprocessor register access for scripting
 extern uint32 cpuScrCP (bool setval, uint32 *args, uint32 val);
 
-// control type of CPU
-extern char *cpuTypeString;
+struct cpu_fns
+{
+  wchar_t *name;
 
-extern void cpuType(void);
-
-struct cpu_fns {
-	char *name;
-
-	// claim any resources that will be needed by the cpu
-	int (*setup_load)(void);
-
-	// shutdown peripheral blocks ready for load
-	int (*shutdown_peripherals)(void);
-
-	// try and recover the situation if things fail
-	int (*attempt_recovery)(void);
+  /// Detect if current CPU is this CPU
+  bool (*detect) (void);
+  // claim any resources that will be needed by the cpu
+  int (*setup_load)(void);
+  // shutdown peripheral blocks ready for load
+  int (*shutdown_peripherals)(void);
+  // try and recover the situation if things fail
+  int (*attempt_recovery)(void);
 };
 
 extern struct cpu_fns *cpu;

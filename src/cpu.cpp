@@ -13,38 +13,56 @@
 #include "output.h"
 #include "haret.h"
 #include "memory.h"
+#include "util.h"
 
-struct cpu_fns *cpu = &cpu_pxa;		// default to PXA
+static bool unknownDetect ()
+{ return true; }
 
-static struct cpu_fns *cpus[] = {
-	&cpu_pxa,
-	&cpu_s3c24xx,
-	NULL
+static int unknownSetupLoad ()
+{ return 0; }
+
+static int unknownShutdownPeripherals ()
+{ return 0; }
+
+static int unknownAttemptRecovery ()
+{ return 0; }
+
+struct cpu_fns *cpu = NULL;
+static cpu_fns cpu_unknown =
+{
+  L"Unknown",
+  unknownDetect,
+  unknownSetupLoad,
+  unknownShutdownPeripherals,
+  unknownAttemptRecovery
 };
 
-struct cpu_fns *cpuFind(const char *name)
+extern struct cpu_fns cpu_pxa;
+extern struct cpu_fns cpu_s3c24xx;
+
+static struct cpu_fns *cpus [] =
 {
-	struct cpu_fns **cpu = cpus;
+  &cpu_pxa,
+  &cpu_s3c24xx,
+  &cpu_unknown
+};
 
-	for (; *cpu != NULL; cpu++) {
-		if (_stricmp(name, (*cpu)->name) == 0)
-			break;
-	}
-
-	return *cpu;
+void cpuDetect ()
+{
+  for (int i = 0; i < sizeof (cpus) / sizeof (cpus [0]); i++)
+    if (cpus [i]->detect ())
+    {
+      cpu = cpus [i];
+      Log (L"Detected CPU family: %s", cpu->name);
+      return;
+    }
+  Complain (C_ERROR ("Cannot detect the family of your CPU:\n"
+                    L"some functions will not be available"));
 }
 
-char *cpuTypeString = NULL;
-
-void cpuType(void)
+uint32 cpuGetFamily (bool setval, uint32 *args, uint32 val)
 {
-	struct cpu_fns *nc = cpuFind(cpuTypeString);
-
-	if (nc != NULL) {
-		cpu = nc;
-	} else {
-
-	}
+  return (uint32)cpu->name;
 }
 
 bool cpuDumpCP (void (*out) (void *data, const char *, ...),

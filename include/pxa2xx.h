@@ -303,7 +303,4 @@ struct pxaDMA
   } Desc [16];
 };
 
-extern struct cpu_fns cpu_pxa;
-
-
 #endif // _PXA_H

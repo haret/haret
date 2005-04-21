@@ -41,6 +41,8 @@ uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val);
 uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val);
 // GAFR access for scripting
 uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val);
+// Get CPU family
+uint32 cpuGetFamily (bool setval, uint32 *args, uint32 val);
 
 extern uint32 gpioIgnore [];
 

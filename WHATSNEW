@@ -1,11 +1,24 @@
+22-Apr-2005 v0.3.6
+    -*- Reimplemented the patch from 01-Dec-2004 since it was lost (!?).
+    -*- Added CPU autodetect routines, S3C24xx detection is currently not
+        implemented although quite easy to implement.
+    -*- Added the "CPU" readonly variable which contains the autodetected
+        CPU family. Removed the CPUType variable since CPU detection should
+        work quite reliably, so there's no need to override this manually.
+
 11-Apr-2005
     -*- updates for seperate UART drivers
-    _*_ s3c24xx uart driver additions
-    _*_ settable cpu-type
+    -*- s3c24xx uart driver additions
+    -*- settable cpu-type
 
 06-Apr-2005 <unreleased>
     -*- Detect ARM920 and use correct cache-flush
     -*- avoid some of the cache flushing in the cpu get CR functions
+
+01-Dec-2004 v0.3.5
+    -*- Rewrote the cpuGetCP() and cpuGetCP() routines so that they don't use
+        self-modifying code. This fixes a number of hangs experienced on different
+        platforms in different circumstances.
 
 27-Feb-2004 v0.3.4
     -*- Stop all DMA controllers before booting Linux.
@@ -20,50 +33,50 @@
         generating include/asm-arm/arch-pxa/xxx-init.h files.
     -*- Enhanced memory size detection. Alas, Windows CE does not have
         a function that would directly return the amount of RAM in the PDA,
-	so you have to use different tricks for this.
+        so you have to use different tricks for this.
     -*- Renamed GPSR function to GPLR since it reads/sets the GPIO Level
         Register.
     -*- Renamed WATCHGPIO to WGPIO for shorter typing.
     -*- Added the SLEEP command for waiting given number of milliseconds.
     -*- Added the BWMEM command which will measure PDA's memory performance
         using Larry McVoy's lmbench routines. However, since the code is
-	modified (although mostly cosmetically) from the original, the
-	numbers should NOT be published as the results of lmbench, but
-	rather as results of HaRET.
+        modified (although mostly cosmetically) from the original, the
+        numbers should NOT be published as the results of lmbench, but
+        rather as results of HaRET.
     -*- Fixed a bug that prevented you from assigning string variables longer
         than 100 characters (they were truncated to this length). I've found
-	this while using a very long 'cmdline' variable.
+        this while using a very long 'cmdline' variable.
 
 15-Nov-2003 v0.3.1
-    -*-	I've realised that HRET is quite hardly to pronounce for
-	English-speaking people, so I've renamed the program to HaRET.
-    -*-	Added a generalised mechanism for adding new functions. They are
-	displayed along with variables now (SET LIST has been replved
-	with HELP VARS). To get the value of a function, you do it like
-	in normal high-level languages, e.g. 'PRINT "%x" VMW(0xa0000000)'
-	or 'set CP(15,2) 0xa0010000'.
+    -*- I've realised that HRET is quite hardly to pronounce for
+        English-speaking people, so I've renamed the program to HaRET.
+    -*- Added a generalised mechanism for adding new functions. They are
+        displayed along with variables now (SET LIST has been replved
+        with HELP VARS). To get the value of a function, you do it like
+        in normal high-level languages, e.g. 'PRINT "%x" VMW(0xa0000000)'
+        or 'set CP(15,2) 0xa0010000'.
     -*- Added three functions: GPSR, GPDR, GAFR which allow reading/writing
-	to GPIO control registers.
-    -*-	Added DUMPGPIO command which displays in a readable format the state
-	of the entire GPIO machinery.
+        to GPIO control registers.
+    -*- Added DUMPGPIO command which displays in a readable format the state
+        of the entire GPIO machinery.
 
 14-Nov-2003 v0.3.0
-    -*-	Added variables (SET command). Added the Linux kernel boot
-	funcionality. Added a nice penguin shown during kernel loading :)
-    -*-	Added a lot of new commands (PP[B|H|W/VP[B|H|W], WATCHGPIO,
-	[V|P]WF and a lot more). Added functions (GPIO(), CP() etc).
+    -*- Added variables (SET command). Added the Linux kernel boot
+        funcionality. Added a nice penguin shown during kernel loading :)
+    -*- Added a lot of new commands (PP[B|H|W/VP[B|H|W], WATCHGPIO,
+        [V|P]WF and a lot more). Added functions (GPIO(), CP() etc).
 
 16-Oct-2003 v0.2.1
-    -*-	The first release meant to be public. Added the telnetd emulation code
-	so that commands can be now nicely interactively edited. Added some
-	docs about HRET (the most useful part is the description of HRET
-	scripting language).
+    -*- The first release meant to be public. Added the telnetd emulation code
+        so that commands can be now nicely interactively edited. Added some
+        docs about HRET (the most useful part is the description of HRET
+        scripting language).
 
 15-Oct-2003 v0.2.0
-    -*-	This is the first release of what was once linexec. I hardly believe
-	there is at least one original line left somewhere, however credits
-	goes to original linexec authors Martin Demin, James Hicks, Joshua
+    -*- This is the first release of what was once linexec. I hardly believe
+        there is at least one original line left somewhere, however credits
+        goes to original linexec authors Martin Demin, James Hicks, Joshua
         Wise (in no specific order) for things I've learned from linexec
-	and also I'm grateful to Martin Demin for bringing the first
-	Linux/Dell Axim port. I've learned lot from their code - hey,
-	it's my first WinCE (and PDA) project.
+        and also I'm grateful to Martin Demin for bringing the first
+        Linux/Dell Axim port. I've learned lot from their code - hey,
+        it's my first WinCE (and PDA) project.

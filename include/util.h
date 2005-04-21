@@ -8,6 +8,11 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#ifdef _MSC_VER
+#define strcasecmp	_stricmp
+#define strncasecmp	_strnicmp
+#endif
+
 // strchr() for wide chars
 extern wchar_t *wstrchr (wchar_t *s, wchar_t c);
 // strlen() for wide chars
