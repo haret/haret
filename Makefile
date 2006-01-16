@@ -20,6 +20,7 @@ VERSION=0.3.6
 # Output directory
 OUT=out/
 
+-include config.smak
 include $(TARGET).smak
 
 CXXFLAGS.DEF+=-DVERSION=\"$(VERSION)\"

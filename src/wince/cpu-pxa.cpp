@@ -6,7 +6,7 @@
 
 	Split from linboot.cpp by Ben Dooks
 
-	$Id: cpu-pxa.cpp,v 1.3 2005/04/21 21:06:14 zap Exp $
+	$Id: cpu-pxa.cpp,v 1.4 2006/01/16 19:13:15 zap Exp $
 */
 
 
@@ -22,12 +22,16 @@
 #include "cpu.h"
 #include "resource.h"
 
+// see Intel XScale Core developers manual, CP15 register 0
 static bool pxaDetect ()
 {
   uint32 p15r0 = cpuGetCP (15, 0);
 
   if ((p15r0 >> 24) == 'i'
-   && ((p15r0 >> 13) & 7) == 1)
+   && (
+        (((p15r0 >> 13) & 7) == 1) ||   // XScale core version 1
+        (((p15r0 >> 13) & 7) == 2)      // XScale core version 2
+      ))
     return true;
 
   return false;
