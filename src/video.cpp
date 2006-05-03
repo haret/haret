@@ -6,7 +6,6 @@
 */
 
 #include <windows.h>
-#include <gx.h>
 
 #include "xtypes.h"
 #include "video.h"
@@ -20,35 +19,46 @@ uint videoW, videoH;
 // Is there another way to find this not involving GAPI?
 uint32 vidGetVRAM ()
 {
-  if (!videoBeginDraw ())
-    return 0;
+    RawFrameBufferInfo frameBufferInfo;
+    
+    HDC hdc = GetDC (NULL);
+    int result = ExtEscape (hdc, GETRAWFRAMEBUFFER, 0, NULL,
+                            sizeof (RawFrameBufferInfo), (char*)&frameBufferInfo);
+    ReleaseDC (NULL, hdc);
+    
+    if (result > 0)
+      return (uint32)frameBufferInfo.pFramePointer;
 
-  uint32 vram_addr = (uint32)vram;
-  videoEndDraw ();
-  return memVirtToPhys (vram_addr);
-}
+    return 0;
+} 
 
 bool videoBeginDraw ()
 {
-  if (GXOpenDisplay (GetDesktopWindow (), 0) == 0)
-    return false;
-  vram = (uint16 *)GXBeginDraw ();
-  videoW = GetSystemMetrics (SM_CXSCREEN);
-  videoH = GetSystemMetrics (SM_CYSCREEN);
-  return true;
+    RawFrameBufferInfo frameBufferInfo;
+    
+    HDC hdc = GetDC (NULL);
+    int result = ExtEscape (hdc, GETRAWFRAMEBUFFER, 0, NULL,
+                            sizeof (RawFrameBufferInfo), (char*)&frameBufferInfo);
+    ReleaseDC (NULL, hdc);
+    
+    if (result > 0)
+    {
+      vram = (uint16 *)frameBufferInfo.pFramePointer;
+      videoW = frameBufferInfo.cxPixels;
+      videoH = frameBufferInfo.cyPixels;
+      return TRUE;
+    }
+
+    return FALSE;
 }
 
 void videoEndDraw ()
 {
   if (vram)
-  {
-    GXEndDraw ();
-    GXCloseDisplay ();
     vram = NULL;
-  }
 }
 
-videoBitmap::videoBitmap (uint ResourceID)
+void videoBitmap::load (uint ResourceID)
 {
   rh = (HRSRC)LoadResource (hInst, FindResource (hInst,
     MAKEINTRESOURCE (ResourceID), RT_BITMAP));
@@ -65,11 +75,6 @@ videoBitmap::videoBitmap (uint ResourceID)
   if (!data)
     Complain (C_ERROR ("Failed to load bitmap resource #%d"), ResourceID);
 }
-
-// There is no way to unlock/unload a resource ???
-//videoBitmap::~videoBitmap ()
-//{
-//}
 
 void videoBitmap::DrawLine (uint x, uint y, uint lineno)
 {

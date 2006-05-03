@@ -1,3 +1,18 @@
+02-May-2006 v0.3.7, <ynezz@hysteria.sk>
+    -*- Updated main dialog to WM GUI behavior
+    -*- Replaced code for getting framebuffer pointer
+    -*- Added possibility to init COM1 port settings
+    -*- Added two commandline options -r(run) and -k(kill)
+        run - don't do any gui stuff, just init and boot. This option shorten
+        development cycle a lot, so you can do "synce-prun haret -r" as soon as 
+        you have ActiveSync connection
+        kill - just kills 'welcome.exe' process (LCD calibration) before haret 
+        dialog startup, in case you won't calibrate LCD but need haret GUI
+    -*- Added support for VGA booting penguin bitmaps
+    -*- Added Visual Studio 2k5 project file
+    -*- Replaced GAPI calls with display device escapes - this removes the
+        GX.dll dependency. Hurray for this!
+
 22-Apr-2005 v0.3.6
     -*- Reimplemented the patch from 01-Dec-2004 since it was lost (!?).
     -*- Added CPU autodetect routines, S3C24xx detection is currently not

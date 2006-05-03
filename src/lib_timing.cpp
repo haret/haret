@@ -781,7 +781,7 @@ morefds(void)
 void
 touch(char *buf, int nbytes)
 {
-	static	psize;
+	static	int psize;
 
 	if (!psize) {
 		psize = getpagesize();

@@ -154,6 +154,10 @@ static bool read_file (FILE *f, uint8 *buff, uint32 size, uint32 totsize,
 void bootLinux ()
 {
   char fn [200];
+  videoBitmap logo;
+  videoBitmap thermored;
+  videoBitmap thermoblue;
+  videoBitmap eyes;
 
   fnprepare (bootKernel, fn, sizeof (fn) / sizeof (wchar_t));
   FILE *fk = fopen (fn, "rb");
@@ -183,17 +187,28 @@ void bootLinux ()
     }
   }
 
-  // Load the bitmaps used to display load progress
-  videoBitmap logo (IDB_LOGO);
-  videoBitmap thermored (IDB_THERMORED);
-  videoBitmap thermoblue (IDB_THERMOBLUE);
-  videoBitmap eyes (IDB_EYES);
-
   videoBeginDraw ();
+  
+  /* Load the bitmaps used to display load progress */
+  if (videoW == 480 && videoH == 640)
+  {
+    /* VGA */
+    logo.load (IDB_LOGO_VGA);
+    thermored.load (IDB_THERMORED_VGA);
+    thermoblue.load (IDB_THERMOBLUE_VGA);
+    eyes.load (IDB_EYES_VGA);
+  }
+  else
+  {
+    logo.load (IDB_LOGO);
+    thermored.load (IDB_THERMORED);
+    thermoblue.load (IDB_THERMOBLUE);
+    eyes.load (IDB_EYES);
+  }
 
   int dx = (videoW - logo.GetWidth ()) / 2;
   int dy = (videoH - logo.GetHeight ()) / 2;
-
+	
   logo.Draw (dx, dy);
   thermoblue.Draw (dx + THERMOMETER_X, dy + THERMOMETER_Y);
 
@@ -361,8 +376,11 @@ errexit:
   // Reset AC97
   memPhysWrite (0x4050000C,0);
 
+  if (videoH == 640 && videoW == 480)
+    eyes.Draw ((dx + PENGUIN_EYES_X) * 2, (dy + PENGUIN_EYES_Y) * 2);
+  else
+    eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
 
-  eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
 
   /* Set thread priority to maximum */
   SetThreadPriority (GetCurrentThread (), THREAD_PRIORITY_TIME_CRITICAL);

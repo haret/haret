@@ -25,6 +25,9 @@ extern HWND MainWindow;
 
 void Log (const wchar_t *format, ...)
 {
+  if (MainWindow == 0)
+    return;
+    
   wchar_t buff [512];
   va_list args;
   va_start (args, format);
