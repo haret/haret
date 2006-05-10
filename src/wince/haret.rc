@@ -55,12 +55,11 @@ FONT 8, "Helv"
 BEGIN
     PUSHBUTTON      "Run",BT_SCRIPT,125,25,30,14
     LTEXT           "Launch a script file. Default path is the same where the executable lives.",106,5,5,150,20
-    LTEXT           "Start waiting for connection on port 9999. When you connect, you'll get a remote hardware examination tool.",103,5,58,149,23
-    PUSHBUTTON      "Listen for network connection",BT_LISTEN,6,87,100,14
+    LTEXT           "Start waiting for connection on port 9999. When you connect, you'll get a remote hardware examination tool.",103,5,50,149,23
+    PUSHBUTTON      "Listen for network connection",BT_LISTEN,55,86,100,14
     EDITTEXT        ID_SCRIPTNAME,5,25,115,14,ES_AUTOHSCROLL
     EDITTEXT        ID_STATUSTEXT,5,150,150,12,WS_DISABLED
     EDITTEXT        ID_LOG,5,105,150,40,ES_MULTILINE | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    CONTROL         "Open COM1 with 115200,8N1 settings",IDC_COM1,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,5,43,138,11
 END
 
 DLG_PROGRESS DIALOG  6, 18, 129, 60
@@ -95,10 +94,21 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// CEUX
+//
+
+HI_RES_AWARE CEUX 
+BEGIN
+    0x0001
+END
+
 #endif    // Czech resources
 /////////////////////////////////////////////////////////////////////////////
 
-HI_RES_AWARE CEUX {1}
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

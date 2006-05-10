@@ -32,7 +32,6 @@
 HINSTANCE hInst;
 HWND MainWindow = 0;
 wchar_t SourcePath [200];
-char port_ok[] = "Comport init: COM1:115200,8N1";
 
 static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   LPARAM lParam)
@@ -66,13 +65,6 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
           return TRUE;
         case BT_SCRIPT:
         {
-          if (IsDlgButtonChecked(hWnd, IDC_COM1) == BST_CHECKED)
-          {
-            if(!com_port_open())
-              MessageBox (hWnd, L"Unable to open port COM1", L"Error", MB_ICONERROR);
-            else
-              com_port_write (port_ok, sizeof (port_ok) - 1);
-          }
           wchar_t wscrfn [100];
 	  GetWindowText (GetDlgItem (hWnd, ID_SCRIPTNAME), wscrfn,
 	    sizeof (wscrfn) / sizeof (wchar_t));
@@ -150,18 +142,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   WSAStartup (MAKEWORD(1, 1), &wsadata);
 
   /* commandline parsing */
-  char cmdline [100];
-  char *p;
+  wchar_t *p;
   int run = 0;
   int kill = 0;
-  BOOL b;
-  WideCharToMultiByte (CP_ACP, 0, lpCmdLine, wstrlen (lpCmdLine) + 1, cmdline, sizeof (cmdline), " ", &b);
 
-  p = cmdline;
+  p = lpCmdLine;
 
   while (*p)
   {
-    while(*p && isspace(*p))
+    while(*p && iswspace(*p))
       p++;
 
     if(!*p)
@@ -186,14 +175,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   }
   else
   {
-    /* allow imediate linux boot */
+    /* allow immediate linux boot */
     cpuDetect ();
     scrExecute ("startup.txt", false);
-    if (!com_port_open ())
-      MessageBox (NULL, L"Unable to open port COM1", L"Error", MB_ICONERROR);
-    else
-      com_port_write (port_ok, sizeof (port_ok));
-
     scrExecute ("default.txt");
   }
 

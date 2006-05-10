@@ -1,3 +1,4 @@
+set COM 2
 set kernel "zImage"
 set initrd "initrd"
 set cmdline "root=/dev/ram0 ramdisk_size=8192 keepinitrd init=/linuxrc console=ttyS2,115200n8"

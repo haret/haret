@@ -21,7 +21,7 @@ class videoBitmap
   uint8 *pixels;
 public:
   // Load the bitmap
-  videoBitmap (uint ResourceID);
+  void load (uint ResourceID);
   // No destructor
   //~videoBitmap ();
   // Get bitmap width
@@ -34,6 +34,20 @@ public:
   // Draw the entire bitmap
   void Draw (uint x, uint y);
 };
+
+#ifndef GETRAWFRAMEBUFFER
+  #define GETRAWFRAMEBUFFER 0x00020001
+  typedef struct _RawFrameBufferInfo
+  {
+    WORD wFormat;
+    WORD wBPP;
+    VOID *pFramePointer;
+    int	cxStride;
+    int	cyStride;
+        int cxPixels;
+        int cyPixels;
+  } RawFrameBufferInfo;
+#endif
 
 #endif
 

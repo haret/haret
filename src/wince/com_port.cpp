@@ -1,16 +1,44 @@
 /* code by ynezz@hysteria.sk for conditions of use see file COPYING */
 #include <windows.h>
 #include <stdio.h>
+#include "xtypes.h"
 #include "com_port.h"
+#include "output.h"
 
 static HANDLE port_handle = INVALID_HANDLE_VALUE;
+static uint32 port_number = 0;
+
+uint32 comScrNumber (bool setval, uint32 *args, uint32 val)
+{
+  if (setval)
+  {
+    if (val > 0 && val < 100)
+    {
+      port_number = val;
+      if (com_port_open())
+      {
+        char w [50];
+        sprintf (w, "Comport init COM%i:115200,8N1", port_number);
+        com_port_write (w, strlen (w) - 1);
+      }
+      return 0;
+    }
+  }
+  return port_number;
+}
 
 int com_port_open ()
 {
   DCB port_dcb;
   COMMTIMEOUTS port_timeouts;
+  wchar_t port[6];
+  
+  if (port_number > 0 && port_number < 100)
+    wsprintf (port, L"COM%i:", port_number);
+  else
+    return FALSE;
 
-  port_handle = CreateFile (L"COM1:", GENERIC_READ | GENERIC_WRITE,
+  port_handle = CreateFile (port, GENERIC_READ | GENERIC_WRITE,
     0, NULL, OPEN_EXISTING, 0, NULL);
 
   if (port_handle == INVALID_HANDLE_VALUE)
@@ -53,11 +81,14 @@ int com_port_close ()
   return TRUE;
 }
 
-int com_port_write (char *data, unsigned count)
+int com_port_write (char *data, uint32 count)
 {
-  DWORD data_written;
+  uint32 data_written;
 
-  if (!WriteFile (port_handle, data, count, &data_written, NULL))
+  if (port_handle == INVALID_HANDLE_VALUE)
+    return FALSE;
+
+  if (!WriteFile (port_handle, data, count, (LPDWORD)&data_written, NULL))
     return FALSE;
 
   if (count != data_written)

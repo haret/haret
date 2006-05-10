@@ -21,6 +21,7 @@
 #include "linboot.h"
 #include "bench.h"
 #include "irq.h"
+#include "com_port.h"
 
 static const char *quotes = "\"'";
 // Currently processed line (for error display)
@@ -79,6 +80,8 @@ static varDescriptor ScriptVars [] =
     varRWFunc, (uint32 *)&gpioScrGPDR, 1 },
   { "GAFR", "General Purpose I/O Alternate Function Select Register",
     varRWFunc, (uint32 *)&gpioScrGAFR, 1 },
+  { "COM", "COM port number initialized to 115200,8N1 before booting linux",
+    varRWFunc, (uint32 *)&comScrNumber}
 };
 
 #define ScriptDumpersCount (sizeof (ScriptDumpers) / sizeof (hwDumper))
