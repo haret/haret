@@ -48,7 +48,7 @@
 				ExecutionBucket="7"
 				AdditionalOptions="/GS-"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\include"
+				AdditionalIncludeDirectories="..\..\include"
 				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -64,7 +64,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
 				Culture="1033"
-				AdditionalIncludeDirectories="..\..\..;..\..\..\include;&quot;$(IntDir)&quot;"
+				AdditionalIncludeDirectories="..\..\;..\..\include;&quot;$(IntDir)&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE"
-				AdditionalDependencies="ws2.lib gx.lib aygshell.lib Ccrtrtti.lib toolhelp.lib"
+				AdditionalDependencies="ws2.lib aygshell.lib Ccrtrtti.lib toolhelp.lib"
 				OutputFile="$(OutDir)/haret.exe"
 				LinkIncremental="2"
 				DelayLoadDLLs="$(NOINHERIT)"
@@ -97,7 +97,7 @@
 			/>
 			<DeploymentTool
 				ForceDirty="-1"
-				RemoteDirectory="\SD-MMCard"
+				RemoteDirectory="\SD-MMCard\"
 				RegisterOutput="0"
 				AdditionalFiles=""
 			/>
@@ -289,7 +289,7 @@
 				ExecutionBucket="7"
 				AdditionalOptions="/GS-"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\..\include"
+				AdditionalIncludeDirectories="..\..\include"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;_WINDOWS;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -304,7 +304,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
 				Culture="1033"
-				AdditionalIncludeDirectories="..\..\..;..\..\..\include;&quot;$(IntDir)&quot;"
+				AdditionalIncludeDirectories="..\..\;..\..\include;&quot;$(IntDir)&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -312,7 +312,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE"
-				AdditionalDependencies="ws2.lib gx.lib aygshell.lib Ccrtrtti.lib toolhelp.lib"
+				AdditionalDependencies="ws2.lib aygshell.lib Ccrtrtti.lib toolhelp.lib"
 				OutputFile="$(OutDir)/haret.exe"
 				LinkIncremental="1"
 				DelayLoadDLLs="$(NOINHERIT)"
@@ -516,7 +516,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\asmstuff.asm"
+				RelativePath="..\..\src\wince\asmstuff.asm"
 				>
 				<FileConfiguration
 					Name="Debug|Pocket PC 2003 (ARMV4)"
@@ -524,7 +524,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -533,20 +533,20 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\bw_mem.cpp"
+				RelativePath="..\..\src\bw_mem.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\com_port.cpp"
+				RelativePath="..\..\src\wince\com_port.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\cpu-arm920.asm"
+				RelativePath="..\..\src\wince\cpu-arm920.asm"
 				>
 				<FileConfiguration
 					Name="Debug|Pocket PC 2003 (ARMV4)"
@@ -554,7 +554,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -563,24 +563,24 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\cpu-pxa.cpp"
+				RelativePath="..\..\src\wince\cpu-pxa.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\cpu-s3c24xx.cpp"
+				RelativePath="..\..\src\wince\cpu-s3c24xx.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\cpu.cpp"
+				RelativePath="..\..\src\cpu.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\getsetcp.asm"
+				RelativePath="..\..\src\wince\getsetcp.asm"
 				>
 				<FileConfiguration
 					Name="Debug|Pocket PC 2003 (ARMV4)"
@@ -588,7 +588,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -597,24 +597,28 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\gpio.cpp"
+				RelativePath="..\..\src\gpio.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\haret.cpp"
+				RelativePath="..\..\src\wince\haret.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\irq.cpp"
+				RelativePath="..\..\src\wince\haret.rc"
 				>
 			</File>
 			<File
-				RelativePath="..\irqchain.asm"
+				RelativePath="..\..\src\irq.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wince\irqchain.asm"
 				>
 				<FileConfiguration
 					Name="Debug|Pocket PC 2003 (ARMV4)"
@@ -622,7 +626,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -631,56 +635,56 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						CommandLine="armasm $(InputPath) &quot;$(IntDir)\$(InputName).obj&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Outputs="&quot;$(IntDir)\$(InputName).obj&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\lib_timing.cpp"
+				RelativePath="..\..\src\lib_timing.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\linboot.cpp"
+				RelativePath="..\..\src\linboot.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\memory.cpp"
+				RelativePath="..\..\src\memory.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\network.cpp"
+				RelativePath="..\..\src\network.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\output.cpp"
+				RelativePath="..\..\src\wince\output.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\s-cpu.cpp"
+				RelativePath="..\..\src\wince\s-cpu.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\s-util.cpp"
+				RelativePath="..\..\src\wince\s-util.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\script.cpp"
+				RelativePath="..\..\src\script.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\terminal.cpp"
+				RelativePath="..\..\src\terminal.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\uart.cpp"
+				RelativePath="..\..\src\uart.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\util.cpp"
+				RelativePath="..\..\src\util.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\video.cpp"
+				RelativePath="..\..\src\video.cpp"
 				>
 			</File>
 		</Filter>
@@ -690,15 +694,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\include\com_port.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\resource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\include\video.h"
+				RelativePath="..\..\src\wince\resource.h"
 				>
 			</File>
 		</Filter>
@@ -708,35 +704,39 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\img\eyes.bmp"
+				RelativePath="..\..\src\wince\img\eyes-vga.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\img\haret.ico"
+				RelativePath="..\..\src\wince\img\eyes.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\haret.rc"
-				>
-				<FileConfiguration
-					Name="Debug|Pocket PC 2003 (ARMV4)"
-					>
-					<Tool
-						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="..\..;..\..\include;..\..\..;..\..\..\include;&quot;$(IntDir)&quot;"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\img\penguin.bmp"
+				RelativePath="..\..\src\wince\img\haret.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\img\thermoblue.bmp"
+				RelativePath="..\..\src\wince\img\penguin-vga.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\img\thermored.bmp"
+				RelativePath="..\..\src\wince\img\penguin.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wince\img\thermoblue-vga.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wince\img\thermoblue.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wince\img\thermored-vga.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wince\img\thermored.bmp"
 				>
 			</File>
 		</Filter>
