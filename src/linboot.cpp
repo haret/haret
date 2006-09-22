@@ -364,7 +364,7 @@ errexit:
   // Recommended kernel placement = RAM start + 32K
   // Initrd will be put at the address of kernel + 4Mb
   // (let's hope uncompressed kernel never happens to be larger than that).
-  uint32 initrd_phys_addr = memPhysAddr + 0x8000 + 0x400000;
+  uint32 initrd_phys_addr = memPhysAddr + 0x8000 + 0x500000;
   if (isize)
     Output (L"Physical initrd address: %08x", initrd_phys_addr);
 
