@@ -25,7 +25,6 @@
 #include "cpu.h"
 #include "com_port.h"
 
-#define VERSION "0.3.7"
 #define WINDOW_CLASS TEXT("pmret")
 #define WINDOW_TITLE TEXT("HaRET")
 
