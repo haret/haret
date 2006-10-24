@@ -11,33 +11,36 @@ vpath %.rc src/$(TARGET)
 # The directory where your MSVC for StrongARM and the SDK is installed.
 # You should set up WINE (see /etc/wine.reg) so that it "sees" this drive
 # Overwrite this in config.smak
-DIR.MSVC.ARM ?= d:\\msvc-arm
+DIR.MSVC.COMMON = C:/Program Files/Microsoft eMbedded C++ 4.0/Common/EVC/
+DIR.MSVC.ARM ?= C:/Program Files/Microsoft eMbedded C++ 4.0/EVC/wce420
+DIR.ARMV4.INCLUDE = C:/Program Files/Windows CE Tools/wce400/STANDARDSDK/Include/Armv4
+DIR.ARMV4.LIB = C:/Windows CE Tools/wce300/Pocket PC 2002/lib/arm
 
 # Set some env vars for msvc to use
 export WINEPATH = $(DIR.MSVC.ARM)\\bin
-export INCLUDE = $(DIR.MSVC.ARM)\\include
+export INCLUDE = $(DIR.ARMV4.INCLUDE)
 export LIB = $(DIR.MSVC.ARM)\\lib
 
-WINE = wine --
-#WINE =
-CXX = $(WINE) $(DIR.MSVC.ARM)\\bin\\clarm.exe -c
+#WINE = wine --
+WINE =
+CXX = $(WINE) "$(DIR.MSVC.ARM)\\bin\\clarm.exe" -c
 CXXFLAGS.DEF = -DARM -DUNICODE -DUNDER_CE=0x0300 -D_WIN32_WCE=0x0300 -DNDEBUG
 CXXFLAGS.INC = -Iinclude
 # Do not enable optimization! msvc generates invalid code with -Oxs !!!
 CXXFLAGS = -nologo -W3 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
 
-ASM = $(WINE) $(DIR.MSVC.ARM)\\bin\\armasm.exe
+ASM = $(WINE) "$(DIR.MSVC.ARM)\\bin\\armasm.exe"
 ASMFLAGS = -arch 4 -cpu StrongARM1 -32
 
-RC = $(WINE) $(DIR.MSVC.ARM)\\bin\\rc.exe
+RC = $(WINE) "$(DIR.MSVC.COMMON)\\bin\\rc.exe"
 RCFLAGS = -r -l 0x409 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
 
-CVTRES = $(WINE) $(DIR.MSVC.ARM)\\bin\\cvtres.exe
+CVTRES = $(WINE) "$(DIR.MSVC.ARM)\\bin\\cvtres.exe"
 CVTRESFLAGS = -machine:arm -windowsce
 
-LD = $(WINE) $(DIR.MSVC.ARM)\\bin\\link.exe
+LD = $(WINE) "$(DIR.MSVC.ARM)\\bin\\link.exe"
 LDFLAGS = -nologo -base:0x10000 -stack:0x10000,0x1000 -entry:WinMainCRTStartup \
-  -align:4096 -machine:ARM -subsystem:WindowsCE,3
+  -align:4096 -machine:ARM -subsystem:WindowsCE,3 -libpath:"$(DIR.ARMV4.LIB)"
 LIBS = aygshell.lib winsock.lib toolhelp.lib gx.lib
 
 LINK = $(LD) $(LDFLAGS) -out:$@ $^ $(LIBS)
