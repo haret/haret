@@ -1,6 +1,6 @@
 /*
     Samsung S3C24xx CPU definitions
-    Based on linux/include/asm-arm/arch-s3c2410/*.h
+    Based on linux/include/asm-arm/arch-s3c2410/ *.h
 
     For conditions of use see file COPYING
 */
