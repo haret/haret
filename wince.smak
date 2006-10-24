@@ -18,22 +18,24 @@ export WINEPATH = $(DIR.MSVC.ARM)\\bin
 export INCLUDE = $(DIR.MSVC.ARM)\\include
 export LIB = $(DIR.MSVC.ARM)\\lib
 
-CXX = wine -- $(DIR.MSVC.ARM)\\bin\\clarm.exe -c
+WINE = wine --
+#WINE =
+CXX = $(WINE) $(DIR.MSVC.ARM)\\bin\\clarm.exe -c
 CXXFLAGS.DEF = -DARM -DUNICODE -DUNDER_CE=0x0300 -D_WIN32_WCE=0x0300 -DNDEBUG
 CXXFLAGS.INC = -Iinclude
 # Do not enable optimization! msvc generates invalid code with -Oxs !!!
 CXXFLAGS = -nologo -W3 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
 
-ASM = wine -- $(DIR.MSVC.ARM)\\bin\\armasm.exe
+ASM = $(WINE) $(DIR.MSVC.ARM)\\bin\\armasm.exe
 ASMFLAGS = -arch 4 -cpu StrongARM1 -32
 
-RC = wine -- $(DIR.MSVC.ARM)\\bin\\rc.exe
+RC = $(WINE) $(DIR.MSVC.ARM)\\bin\\rc.exe
 RCFLAGS = -r -l 0x409 $(CXXFLAGS.DEF) $(CXXFLAGS.INC)
 
-CVTRES = wine -- $(DIR.MSVC.ARM)\\bin\\cvtres.exe
+CVTRES = $(WINE) $(DIR.MSVC.ARM)\\bin\\cvtres.exe
 CVTRESFLAGS = -machine:arm -windowsce
 
-LD = wine -- $(DIR.MSVC.ARM)\\bin\\link.exe
+LD = $(WINE) $(DIR.MSVC.ARM)\\bin\\link.exe
 LDFLAGS = -nologo -base:0x10000 -stack:0x10000,0x1000 -entry:WinMainCRTStartup \
   -align:4096 -machine:ARM -subsystem:WindowsCE,3
 LIBS = aygshell.lib winsock.lib toolhelp.lib gx.lib
