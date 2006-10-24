@@ -162,7 +162,7 @@
 		movne	r5, r2			; save kernel physical address in r5
 
 		subs	r4, r4, #1		; skip tags and kernel pages
-		addeq	r2, r5, #0x00500000	; place initrd at kernel + 4Mb
+		addeq	r2, r5, #0x00500000	; place initrd at kernel + 5Mb
 
 		subs	r1, r1, #1
 		bne	|nextpage|
