@@ -6,6 +6,7 @@
 */
 
 #include <windows.h>
+#include <gx.h>
 
 #include "xtypes.h"
 #include "video.h"
@@ -19,6 +20,7 @@ uint videoW, videoH;
 // Is there another way to find this not involving GAPI?
 uint32 vidGetVRAM ()
 {
+    uint32 vaddr = 0; // virtual address
     RawFrameBufferInfo frameBufferInfo;
     
     HDC hdc = GetDC (NULL);
@@ -27,7 +29,17 @@ uint32 vidGetVRAM ()
     ReleaseDC (NULL, hdc);
     
     if (result > 0)
-      return (uint32)frameBufferInfo.pFramePointer;
+      vaddr = (uint32)frameBufferInfo.pFramePointer;
+    else if (videoBeginDraw ())
+    {
+      vaddr = vram;
+      videoEndDraw ();
+    }
+
+    if (vaddr != 0)
+    {
+      return memVirtToPhys (vaddr);
+    }
 
     return 0;
 } 
@@ -47,9 +59,16 @@ bool videoBeginDraw ()
       videoW = frameBufferInfo.cxPixels;
       videoH = frameBufferInfo.cyPixels;
       return TRUE;
+    } 
+    else
+    {
+      if (GXOpenDisplay (GetDesktopWindow (), 0) == 0)
+        return FALSE;
+      vram = (uint16 *)GXBeginDraw ();
+      videoW = GetSystemMetrics (SM_CXSCREEN);
+      videoH = GetSystemMetrics (SM_CYSCREEN);
+      return TRUE;
     }
-
-    return FALSE;
 }
 
 void videoEndDraw ()
