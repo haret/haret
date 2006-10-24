@@ -32,7 +32,7 @@ uint32 vidGetVRAM ()
       vaddr = (uint32)frameBufferInfo.pFramePointer;
     else if (videoBeginDraw ())
     {
-      vaddr = vram;
+      vaddr = (uint32)vram;
       videoEndDraw ();
     }
 
