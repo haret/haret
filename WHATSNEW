@@ -1,3 +1,17 @@
+20061111 0.4.0 <kevin@koconnor.net>
+
+  * Add the ability to log "Output()" messages to a disk file when a
+    file "earlyharetlog.txt" exists in the same directory as the haret
+    executable.  In addition, a bunch of startup Output() logs were
+    added.  This feature is useful for diagnosing crashes at program
+    startup.
+
+  * Update code so that haret compiles with cegcc.  This involves a
+    few minor code changes to the C++ code and some file renames.  The
+    assembler syntax was also updated to work with with gas.  Two
+    existing features were disabled - gx based framebuffer detection
+    and the BWMEM command - both were causing compile problems.
+
 02-May-2006 v0.3.7, <ynezz@hysteria.sk>
     -*- Updated main dialog to WM GUI behavior
     -*- Replaced code for getting framebuffer pointer
