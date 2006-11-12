@@ -23,10 +23,9 @@ uint32 memPhysAddr = 0xa0000000;
 uint32 memPhysSize;
 
 /* Autodetect RAM physical size at startup */
-static struct __mem_dummy
+void
+mem_autodetect(void)
 {
-  __mem_dummy ()
-  {
     MEMORYSTATUS mst;
     STORE_INFORMATION sti;
     mst.dwLength = sizeof (mst);
@@ -35,8 +34,7 @@ static struct __mem_dummy
     /* WinCE is returning ~1Mb less memory, let's suppose minus kernel size,
        so we'll round the result up to nearest 8Mb boundary. */
     memPhysSize = (mst.dwTotalPhys + sti.dwStoreSize + 0x7fffff) & ~0x7fffff;
-  }
-} __mem_dummy_obj;
+}
 
 #if 1
 
@@ -58,14 +56,12 @@ static struct __mem_dummy
 static uint8 *phys_mem [PHYS_CACHE_COUNT];
 // The physical address (multiple of 32K, if 1 then slot is free)
 static uint32 phys_base [PHYS_CACHE_COUNT] = { 1, 1, 1, 1, 1, 1, 1, 1 };
-// The MMU L1 page table
-static uint32 *mmu = NULL;
 
 /* We allocate windows in virtual address space for physical memory
  * in 64K chunks, however we always ensure there are at least 32K ahead
  * the address user requested.
  */
-uint8 *memPhysMap (uint32 paddr)
+uint8 *memPhysMap_wm(uint32 paddr)
 {
   // Address should be aligned
   paddr &= ~3;
@@ -165,7 +161,7 @@ static uint32 pmDomain;
 // The virtual address where the entire physical RAM is mapped
 static uint32 pmMemoryMapAddr = 0;
 
-uint8 *memPhysMap (uint32 paddr)
+uint8 *memPhysMap_bruteforce(uint32 paddr)
 {
   if (!pmInited)
   {
@@ -191,8 +187,7 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
     // The offset inside the MMU L1 descriptor table
     uint32 pmBase = pmAlignedWindow & 0xfff00000;
     // Apply current process ID register, if applicable
-    if ((pmBase & 0xfe000000) == 0)
-      pmBase |= cpuGetPID () << 25;
+    pmBase = MVAddr(pmBase);
 
     //--- Read the L1 descriptor ---//
 
@@ -345,6 +340,96 @@ void memPhysReset ()
 
 #endif
 
+// Search a given mmu table for an l1 section mapping that provides a
+// virtual to physical mapping for a specified physical base location.
+static int
+searchMMUforPhys(uint32 *mmu, uint32 base, int cached=0)
+{
+    for (uint32 i=0; i<4096; i++) {
+        uint32 l1d = mmu[i];
+        if (l1d & MMU_L1_TYPE_MASK != MMU_L1_SECTION)
+            // Only interested in section mappings.
+            continue;
+        if ((l1d >> 20) != base)
+            // No address match.
+            continue;
+        uint32 cacheval = l1d & (MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE);
+        if (!cached && cacheval)
+            // Only interested in mappings that don't use the cache.
+            continue;
+        if (cached && cacheval != (MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE))
+            // Only interested in mappings that are cached.
+            continue;
+        // Found a hit.
+        return i;
+    }
+    return -1;
+}
+
+// Try to obtain a virtual to physical map by reusing one of the wm
+// 1-meg section mappings.  This also maintains an index of found
+// mappings to speed up future requests.
+static uint8 *
+memPhysMap_section(uint32 paddr)
+{
+    static int16 cache[4096];
+
+    uint32 base = paddr >> 20;
+
+    if (cache[base]) {
+        if (cache[base] < 0)
+            return NULL;
+        // Cache hit.  Just return what is in the cache.
+        return (uint8*)((((uint32)cache[base]) << 20)
+                        | (paddr & ((1<<20) - 1)));
+    }
+
+    // Get virtual address of MMU table.
+    static uint32 *mmuCache;
+    uint32 *mmu = mmuCache;
+    if (!mmu) {
+        uint32 mmu_paddr = cpuGetMMU();
+        mmu = (uint32*)memPhysMap_wm(mmu_paddr);
+        if (!mmu)
+            return NULL;
+        static int triedCache;
+        if (! triedCache) {
+            // Try to find a persistent mmu mapping.
+            triedCache = 1;
+            int pos = searchMMUforPhys(mmu, mmu_paddr >> 20);
+            if (pos >= 0)
+                mmu = mmuCache = (uint32*)((pos << 20)
+                                           | (mmu_paddr & ((1<<20) - 1)));
+        }
+    }
+
+    int pos = searchMMUforPhys(mmu, base);
+    cache[base] = pos;
+    if (pos < 0)
+        // Couldn't find a suitable section mapping.
+        return NULL;
+    return (uint8*)((pos << 20) | (paddr & ((1<<20) - 1)));
+}
+
+static int PhysicalMapMethod = 1;
+
+uint8 *
+memPhysMap(uint32 paddr)
+{
+    if (PhysicalMapMethod & 1) {
+        uint8 *ret = memPhysMap_section(paddr);
+        if (ret)
+            return ret;
+    }
+
+#if 0
+    if (PhysicalMapMethod & 2)
+        return memPhysMap_bruteforce(paddr);
+#endif
+
+    return memPhysMap_wm(paddr);
+}
+
 uint32 memPhysRead (uint32 paddr)
 {
   uint8 *pm;
@@ -371,8 +456,7 @@ uint32 memVirtToPhys (uint32 vaddr)
   uint32 mmu = cpuGetMMU ();
 
   // First of all, if vaddr < 32Mb, PID replaces top 7 bits
-  if (vaddr <= 0x01ffffff)
-    vaddr |= (cpuGetPID () << 25);
+  vaddr = MVAddr(vaddr);
 
   // Bits 20..32 select the address of 1st level descriptor
   uint32 paddr = mmu + ((vaddr >> 18) & ~3);

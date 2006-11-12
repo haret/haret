@@ -18,6 +18,7 @@
 #include "output.h"
 #include "terminal.h"
 #include "script.h"
+#include "machines.h" // Mach
 
 #  include <winsock.h>
 #  define so_close	closesocket
@@ -111,10 +112,14 @@ static void sock_output (wchar_t *msg, wchar_t *title)
   send (sock, dst, len, 0);
 }
 
-static char *cpu_id (uint p15r0)
+DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
+
+static char *cpu_id()
 {
   static char buff [100];
   int top = 0;
+
+  uint p15r0 = get_p15r0();
 
 #define PUTS(s) \
   { size_t sl = strlen (s); memcpy (buff + top, s, sl); top += sl; }
@@ -246,13 +251,20 @@ conn_error:
   OSVERSIONINFOW vi;
   vi.dwOSVersionInfoSize = sizeof (vi);
   GetVersionEx (&vi);
+
+  WCHAR bufplat[128], bufoem[128];
+  SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
+  SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
+
   Output (L"Welcome, this is HaRET running on WindowsCE v%d.%d\n"
           L"Minimal virtual address: %08x, maximal virtual address: %08x",
           vi.dwMajorVersion, vi.dwMinorVersion,
           si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-  Output (L"CPU is %hs running in %hs mode\n"
+  Output (L"Detected machine '%hs' (Plat='%s' OEM='%s')\n"
+          L"CPU is %hs running in %hs mode\n"
           L"Enter 'HELP' for a short command summary.\n",
-	  cpu_id (cpuGetCP (15, 0)), cpu_mode (cpuGetPSR () & 0x1f));
+          Mach->name, bufplat, bufoem,
+	  cpu_id(), cpu_mode (cpuGetPSR () & 0x1f));
 
   {
     haretNetworkTerminal t (sock);

@@ -7,7 +7,7 @@
 void UART_pxa_puts(char *s)
 {
   UINT32 *base=(UINT32*)VirtualAlloc((void*)0x0,sizeof(void*)*0xffff, MEM_RESERVE,PAGE_READWRITE);
-  int ret=VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
+  VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
   int a=0;
   while(s[a])
   {
@@ -20,7 +20,7 @@ void UART_pxa_puts(char *s)
 void UART_pxa_setup()
 {
   UINT32 *base=(UINT32*)VirtualAlloc((void*)0x0,sizeof(void*)*0xffff, MEM_RESERVE,PAGE_READWRITE);
-  int ret=VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
+  VirtualCopy(base,(void *) ((FUART)/256),sizeof(void*)*0xffff	, PAGE_READWRITE|PAGE_NOCACHE|PAGE_PHYSICAL);
 
   // set DLAB
   base[0x0C/4]=128+2+1;

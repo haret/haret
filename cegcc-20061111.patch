@@ -80,7 +80,16 @@ Index: src/w32api/include/winuser.h
 ===================================================================
 --- src/w32api/include/winuser.h	(revision 784)
 +++ src/w32api/include/winuser.h	(working copy)
-@@ -3396,7 +3396,11 @@
+@@ -1204,6 +1204,8 @@
+ #define SPI_GETMOUSESPEED 0x0070
+ #define SPI_GETMOUSETRAILS 0x005E
+ #define SPI_GETNONCLIENTMETRICS 0x0029
++#define SPI_GETOEMINFO 0x0102
++#define SPI_GETPLATFORMTYPE 0x0101
+ #define SPI_GETPOWEROFFACTIVE 0x0054
+ #define SPI_GETPOWEROFFTIMEOUT 0x0050
+ #define SPI_GETSCREENREADER 0x0046
+@@ -3396,7 +3398,11 @@
  WINUSERAPI LPWSTR WINAPI CharUpperW(LPWSTR);
  WINUSERAPI DWORD WINAPI CharUpperBuffA(LPSTR,DWORD);
  WINUSERAPI DWORD WINAPI CharUpperBuffW(LPWSTR,DWORD);
@@ -92,7 +101,7 @@ Index: src/w32api/include/winuser.h
  WINUSERAPI DWORD WINAPI CheckMenuItem(HMENU,UINT,UINT);
  WINUSERAPI BOOL WINAPI CheckMenuRadioItem(HMENU,UINT,UINT,UINT,UINT);
  WINUSERAPI BOOL WINAPI CheckRadioButton(HWND,int,int,int);
-@@ -3429,8 +3433,12 @@
+@@ -3429,8 +3435,12 @@
  #define CreateDialogIndirectW(h,t,w,f) CreateDialogIndirectParamW(h,t,w,f,0)
  WINUSERAPI HWND WINAPI CreateDialogIndirectParamA(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
  WINUSERAPI HWND WINAPI CreateDialogIndirectParamW(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);

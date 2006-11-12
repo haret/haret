@@ -8,12 +8,16 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include "windows.h" // HINSTANCE
+
 #include "xtypes.h" // uint
 
 #ifdef _MSC_VER
 #define strcasecmp	_stricmp
 #define strncasecmp	_strnicmp
 #endif
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 // strchr() for wide chars
 extern wchar_t *wstrchr (wchar_t *s, wchar_t c);

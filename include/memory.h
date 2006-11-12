@@ -57,6 +57,9 @@ typedef uint32 mmuL2Desc;
 // Tiny page address
 #define MMU_L2_TINY_MASK	0xfffffc00
 
+// Autodetect physical memory size.
+void mem_autodetect(void);
+
 // Map physical memory to a virtual address. The function ensures
 // that at least 32K memory ahead of given address is available
 extern uint8 *memPhysMap (uint32 paddr);

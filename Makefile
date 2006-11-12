@@ -8,7 +8,7 @@
 #
 
 # Program version
-VERSION=0.3.8-pre
+VERSION=0.4.1
 
 # Output directory
 OUT=out/
@@ -17,9 +17,9 @@ OUT=out/
 CXXFLAGS = -MD -Wall -MD -O -march=armv5te -g -Iinclude -DVERSION=\"$(VERSION)\"
 LDFLAGS =
 
-LIBS = -lwinsock
+LIBS = src/haret.lds -lwinsock
 
-vpath %.cpp src src/wince
+vpath %.cpp src src/wince src/mach
 vpath %.S src src/wince
 vpath %.rc src/wince
 
@@ -63,11 +63,16 @@ $(OUT)%.lib: src/wince/%.def
 
 ################ Additional rules
 
+MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
+  mach-alpine.o mach-apache.o mach-beetles.o mach-blueangel.o \
+  mach-himalya.o mach-magician.o mach-universal.o mach-h4000.o \
+  mach-h4700.o mach-sable.o
+
 HARETOBJS := haret.o haret-res.o \
   s-cpu.o s-util.o memory.o gpio.o uart.o video.o \
-  asmstuff.o irqchain.o getsetcp.o irq.o cpu-pxa.o cpu-s3c24xx.o \
+  asmstuff.o irqchain.o getsetcp.o irq.o \
   util.o output.o script.o network.o cpu.o terminal.o linboot.o \
-  com_port.o \
+  com_port.o $(MACHOBJS) \
   toolhelp.lib
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS))

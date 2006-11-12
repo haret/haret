@@ -5,65 +5,16 @@
     For conditions of use see file COPYING
 */
 
-#include <string.h>
-#include <stdlib.h>
-
 #include "xtypes.h"
+#include "output.h" // Complain
+#include "memory.h" // memPhysMap
+#include "pxa2xx.h" // pxaAC97
+#include "machines.h" // Mach
 #include "cpu.h"
-#include "output.h"
-#include "haret.h"
-#include "memory.h"
-#include "util.h"
-
-static bool unknownDetect ()
-{ return true; }
-
-static int unknownSetupLoad ()
-{ return 0; }
-
-static int unknownShutdownPeripherals ()
-{ return 0; }
-
-static int unknownAttemptRecovery ()
-{ return 0; }
-
-struct cpu_fns *cpu = NULL;
-static cpu_fns cpu_unknown =
-{
-  L"Unknown",
-  unknownDetect,
-  unknownSetupLoad,
-  unknownShutdownPeripherals,
-  unknownAttemptRecovery
-};
-
-extern struct cpu_fns cpu_pxa;
-extern struct cpu_fns cpu_s3c24xx;
-
-static struct cpu_fns *cpus [] =
-{
-  &cpu_pxa,
-  &cpu_s3c24xx,
-  &cpu_unknown
-};
-
-void cpuDetect ()
-{
-  Output(L"Detecting cpu");
-  for (uint i = 0; i < sizeof (cpus) / sizeof (cpus [0]); i++)
-    if (cpus [i]->detect ())
-    {
-      cpu = cpus [i];
-      Log (L"Detected CPU family: %s", cpu->name);
-      return;
-    }
-  Complain (C_ERROR ("Cannot detect the family of your CPU:\n"
-                    L"some functions will not be available"));
-}
 
 uint32 cpuGetFamily (bool setval, uint32 *args, uint32 val)
 {
-  return (uint32)cpu->name;
+  return (uint32)Mach->name;
 }
 
 bool cpuDumpCP (void (*out) (void *data, const char *, ...),
@@ -104,19 +55,19 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   uint16 regs [64];
 
   // Disable AC97 interrupt generation
-  uint32 old_gcr = ac97->GCR;
-  ac97->GCR = old_gcr & ~(GCR_PRIRDY_IEN | GCR_SECRDY_IEN | GCR_SDONE_IE |
+  uint32 old_gcr = ac97->_GCR;
+  ac97->_GCR = old_gcr & ~(GCR_PRIRDY_IEN | GCR_SECRDY_IEN | GCR_SDONE_IE |
                           GCR_CDONE_IE | GCR_GIE);
-  uint32 old_pocr = ac97->POCR;
-  ac97->POCR = old_pocr & ~POCR_FEIE;
-  uint32 old_picr = ac97->PICR;
-  ac97->PICR = old_picr & ~PICR_FEIE;
-  uint32 old_mccr = ac97->MCCR;
-  ac97->MCCR = old_mccr & ~MCCR_FEIE;
-  uint32 old_mocr = ac97->MOCR;
-  ac97->MOCR = old_mocr & ~MOCR_FEIE;
-  uint32 old_micr = ac97->MICR;
-  ac97->MICR = old_micr & ~MICR_FEIE;
+  uint32 old_pocr = ac97->_POCR;
+  ac97->_POCR = old_pocr & ~POCR_FEIE;
+  uint32 old_picr = ac97->_PICR;
+  ac97->_PICR = old_picr & ~PICR_FEIE;
+  uint32 old_mccr = ac97->_MCCR;
+  ac97->_MCCR = old_mccr & ~MCCR_FEIE;
+  uint32 old_mocr = ac97->_MOCR;
+  ac97->_MOCR = old_mocr & ~MOCR_FEIE;
+  uint32 old_micr = ac97->_MICR;
+  ac97->_MICR = old_micr & ~MICR_FEIE;
 
   int i;
   for (i = 0; i < 64; i++)
@@ -128,11 +79,11 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
 
     cli ();
 
-    ac97->CAR &= ~CAR_CAIP;
+    ac97->_CAR &= ~CAR_CAIP;
     int to = 10000;
 
     // First read the Codec Access Register
-    while ((ac97->CAR & CAR_CAIP) && --to)
+    while ((ac97->_CAR & CAR_CAIP) && --to)
       ;
     if (!to)
     {
@@ -145,12 +96,12 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
     (void)*reg;
 
     // Drop the SDONE and RDCS bits
-    ac97->GSR |= GSR_SDONE | GSR_RDCS;
+    ac97->_GSR |= GSR_SDONE | GSR_RDCS;
 
     // Wait for the SDONE bit
-    while (!(ac97->GSR & (GSR_SDONE | GSR_RDCS)) && --to)
+    while (!(ac97->_GSR & (GSR_SDONE | GSR_RDCS)) && --to)
       ;
-    if (!to || (ac97->GSR & GSR_RDCS))
+    if (!to || (ac97->_GSR & GSR_RDCS))
     {
       sti ();
       out (data, "Register %x: access timed out\n", i * 2);
@@ -166,12 +117,12 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   }
   out (data, "\n");
 
-  ac97->POCR = old_pocr;
-  ac97->PICR = old_picr;
-  ac97->MCCR = old_mccr;
-  ac97->MOCR = old_mocr;
-  ac97->MICR = old_micr;
-  ac97->GCR = old_gcr;
+  ac97->_POCR = old_pocr;
+  ac97->_PICR = old_picr;
+  ac97->_MCCR = old_mccr;
+  ac97->_MOCR = old_mocr;
+  ac97->_MICR = old_micr;
+  ac97->_GCR = old_gcr;
 
   out (data, "GCR:  %08x  MCCR: %08x\n", old_gcr,  old_mccr);
   out (data, "POCR: %08x  PICR: %08x\n", old_pocr, old_picr);
@@ -184,16 +135,20 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
   return true;
 }
 
+DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
+
 // Returns the address of 1st level descriptor table
 uint32 cpuGetMMU ()
 {
-  return cpuGetCP (15, 2) & 0xffffc000;
+    return get_p15r2() & 0xffffc000;
 }
+
+DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
 // Returns the PID register contents
 uint32 cpuGetPID ()
 {
-  return cpuGetCP (15, 13) >> 25;
+    return get_p15r13() >> 25;
 }
 
 uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)

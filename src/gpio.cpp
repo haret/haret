@@ -20,7 +20,7 @@ void gpioSetDir (int num, bool out)
   if (num > 84)
     return;
 
-  uint32 *gpdr = (uint32 *)memPhysMap (GPDR);
+  uint32 *gpdr = (uint32 *)memPhysMap (GPDR0);
   uint32 ofs = num >> 5;
   uint32 mask = 1 << (num & 31);
 
@@ -35,7 +35,7 @@ bool gpioGetDir (int num)
   if (num > 84)
     return false;
 
-  uint32 *gpdr = (uint32 *)memPhysMap (GPDR);
+  uint32 *gpdr = (uint32 *)memPhysMap (GPDR0);
 
   return (gpdr [num >> 5] & (1 << (num & 31))) != 0;
 }
@@ -45,7 +45,7 @@ void gpioSetAlt (int num, int altfn)
   if (num > 84)
     return;
 
-  uint32 *gafr = (uint32 *)memPhysMap (GAFR);
+  uint32 *gafr = (uint32 *)memPhysMap (GAFR0_L);
   uint32 ofs = num >> 4;
   uint32 shft = (num & 15) << 1;
 
@@ -57,7 +57,7 @@ uint32 gpioGetAlt (int num)
   if (num > 84)
     return -1;
 
-  uint32 *gafr = (uint32 *)memPhysMap (GAFR);
+  uint32 *gafr = (uint32 *)memPhysMap (GAFR0_L);
 
   return (gafr [num >> 4] >> ((num & 15) << 1)) & 3;
 }
@@ -67,7 +67,7 @@ int gpioGetState (int num)
   if (num > 84)
     return -1;
 
-  uint32 *gplr = (uint32 *)memPhysMap (GPLR);
+  uint32 *gplr = (uint32 *)memPhysMap (GPLR0);
   return (gplr [num >> 5] >> (num & 31)) & 1;
 }
 
@@ -76,7 +76,7 @@ void gpioSetState (int num, bool state)
   if (num > 84)
     return;
 
-  uint32 *gpscr = (uint32 *)memPhysMap (state ? GPSR : GPCR);
+  uint32 *gpscr = (uint32 *)memPhysMap (state ? GPSR0 : GPCR0);
   gpscr [num >> 5] |= 1 << (num & 31);
 }
 
@@ -85,7 +85,7 @@ int gpioGetSleepState (int num)
   if (num > 84)
     return -1;
 
-  uint32 *pgsr = (uint32 *)memPhysMap (PGSR);
+  uint32 *pgsr = (uint32 *)memPhysMap (PGSR0);
   return (pgsr [num >> 5] >> (num & 31)) & 1;
 }
 
@@ -94,7 +94,7 @@ void gpioSetSleepState (int num, bool state)
   if (num > 84)
     return;
 
-  uint32 *pgsr = (uint32 *)memPhysMap (PGSR);
+  uint32 *pgsr = (uint32 *)memPhysMap (PGSR0);
   uint32 ofs = num >> 5;
   uint32 mask = 1 << (num & 31);
 
@@ -116,24 +116,24 @@ void gpioWatch (uint seconds)
   int fin_time = cur_time + seconds;
   int i, j;
 
-  uint32 *gplr = (uint32 *)memPhysMap (GPLR);
+  uint32 *gplr = (uint32 *)memPhysMap (GPLR0);
   uint32 old_gplr [3];
   for (i = 0; i < 3; i++)
     old_gplr [i] = gplr [i];
 
-  uint32 *gpdr = (uint32 *)memPhysMap (GPDR);
+  uint32 *gpdr = (uint32 *)memPhysMap (GPDR0);
   uint32 old_gpdr [3];
   for (i = 0; i < 3; i++)
     old_gpdr [i] = gpdr [i];
 
-  uint32 *gafr = (uint32 *)memPhysMap (GAFR);
+  uint32 *gafr = (uint32 *)memPhysMap (GAFR0_L);
   uint32 old_gafr [6];
   for (i = 0; i < 6; i++)
     old_gafr [i] = gafr [i];
 
   while (cur_time <= fin_time)
   {
-    gplr = (uint32 *)memPhysMap (GPLR);
+    gplr = (uint32 *)memPhysMap (GPLR0);
     for (i = 0; i < 3; i++)
     {
       uint32 val = gplr [i];
@@ -151,7 +151,7 @@ void gpioWatch (uint seconds)
       }
     }
 
-    gpdr = (uint32 *)memPhysMap (GPDR);
+    gpdr = (uint32 *)memPhysMap (GPDR0);
     for (i = 0; i < 3; i++)
     {
       uint32 val = gpdr [i];
@@ -169,7 +169,7 @@ void gpioWatch (uint seconds)
       }
     }
 
-    gafr = (uint32 *)memPhysMap (GAFR);
+    gafr = (uint32 *)memPhysMap (GAFR0_L);
     for (i = 0; i < 6; i++)
     {
       uint32 val = gafr [i];
@@ -246,8 +246,8 @@ bool gpioDump (void (*out) (void *data, const char *, ...),
                void *data, uint32 *args)
 {
   const uint rows = 84/4;
-  uint32 *grer = (uint32 *)memPhysMap (GRER);
-  uint32 *gfer = (uint32 *)memPhysMap (GFER);
+  uint32 *grer = (uint32 *)memPhysMap (GRER0);
+  uint32 *gfer = (uint32 *)memPhysMap (GFER0);
 
   out (data, "GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER\n");
   out (data, "------------------+-------------------+-------------------+------------------\n");

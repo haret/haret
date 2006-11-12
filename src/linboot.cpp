@@ -18,6 +18,7 @@
 #include "video.h"
 #include "cpu.h"
 #include "resource.h"
+#include "machines.h" // Mach
 
 // Kernel file name
 char *bootKernel = "zimage";
@@ -174,7 +175,7 @@ void bootLinux ()
   ksize = ftell (fk);
   fseek (fk, 0, SEEK_SET);
 
-  FILE *fi;
+  FILE *fi = NULL;
   if (bootInitrd && *bootInitrd)
   {
     fnprepare (bootInitrd, fn, sizeof (fn) / sizeof (wchar_t));
@@ -393,13 +394,15 @@ errexit:
 
   uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
 
-   // call SetupLoad()
-  (cpu->setup_load)();
+  // Call per-arch setup.
+  int ret = Mach->preHardwareShutdown();
+  if (ret)
+    return;
 
   cli ();
 
-  // call ShutdownPeripherals
-  (cpu->shutdown_peripherals)();
+  // Call per-arch boot prep function.
+  Mach->hardwareShutdown();
 
   try
   {
@@ -420,10 +423,6 @@ errexit:
   catch (...)
   {
     // UnresetDevices???
-
-	// call AttemptRecovery
-	(cpu->attempt_recovery)();
-
     sti ();
     SetKMode (FALSE);
     videoEndDraw ();

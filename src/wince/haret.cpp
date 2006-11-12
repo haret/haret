@@ -26,6 +26,7 @@
 #include "util.h"
 #include "cpu.h"
 #include "com_port.h"
+#include "machines.h" // setupMachineType
 
 #define WINDOW_CLASS TEXT("pmret")
 #define WINDOW_TITLE TEXT("HaRET")
@@ -50,7 +51,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
       SetWindowText (GetDlgItem (hWnd, ID_SCRIPTNAME), L"default.txt");
       CheckDlgButton(hWnd, IDC_COM1, BST_CHECKED);
       ShowWindow (hWnd, SW_SHOWMAXIMIZED);
-      cpuDetect ();
+      Log(L"Found machine %hs", Mach->name);
       Output(L"executing startup.txt");
       scrExecute ("startup.txt", false);
       return TRUE;
@@ -139,6 +140,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // Prep for early output.
   setupOutput();
 
+  // Detect some system settings
+  setupMachineType();
+
   // Initialize sockets
   Output(L"Running WSAStartup");
   WSADATA wsadata;
@@ -181,7 +185,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   else
   {
     /* allow immediate linux boot */
-    cpuDetect ();
     scrExecute ("startup.txt", false);
     scrExecute ("default.txt");
   }

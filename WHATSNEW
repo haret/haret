@@ -1,3 +1,20 @@
+20061112 0.4.1 <kevin@koconnor.net>
+
+  * Implement new Machine class to handle per-machine options.  Add
+    support for auto-detecting the current machine type.
+
+  * Import mach-types.h and pxa-regs.h from latest linux sources.
+    Update code to use linux defs instead of local defines.
+
+  * Add macro support for defining coprocessor accessor functions.
+
+  * When mapping a physical address, scan for wince 1Meg section
+    mapping that already exists.  This reduces the calls to
+    VirtualAlloc and makes HaRET much more stable.  (For example, now
+    "dump mmu" works reliably.)
+
+  * Fix all compile warnings.
+
 20061111 0.4.0 <kevin@koconnor.net>
 
   * Add the ability to log "Output()" messages to a disk file when a
