@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+# Script that can connect to haret via telnet and read/write commands
+# to it.  It supports using the "readline" library which permits up
+# arrow and down arrow capabilities.
+
+import sys
+import telnetlib
+import cmd
+import re
+import time
+
+import dis
+
+HARETPORT = 9999
+
+######################################################################
+# Command loop
+######################################################################
+
+class Prompts(cmd.Cmd):
+    def __init__(self, host, port):
+        cmd.Cmd.__init__(self)
+        self.link = telnetlib.Telnet(host, HARETPORT)
+        self.buf = ""
+        self.m = re.compile(r"HaRET\(\d+\)# $")
+        self.proc = None
+        self.logfile = open(self.getLogName(), 'a')
+        self.logfile.write(
+            "#################################################\n"
+            "# Start HARET connection on %s\n"
+            "#################################################\n"
+            % time.asctime())
+        # Drain initial message.
+        self.processData()
+    def getLogName(self):
+        return time.strftime("haretlog-%Y%m%d_%H%M%S.log")
+    def processData(self):
+        first = 1
+        lastflushtime = time.time()
+        while 1:
+            newdata = self.link.read_some()
+            if not newdata:
+                # Connection closed.
+                self.exit()
+            self.logfile.write(newdata)
+            curtime = time.time()
+            if curtime > lastflushtime + 3:
+                self.logfile.flush()
+                lastflushtime = curtime
+            self.buf += newdata
+            lines = self.buf.split('\r\n')
+            self.buf = lines.pop()
+            for line in lines:
+                if first:
+                    # Don't print first line (it's the command sent)
+                    first = 0
+                    continue
+                if self.proc is None:
+                    print line
+                else:
+                    self.proc(line)
+            m = self.m.match(self.buf)
+            if m is None:
+                continue
+            # Command prompt
+            self.prompt = self.buf
+            self.buf = ""
+            break
+        self.logfile.flush()
+    def sendAndProcess(self, line):
+        self.link.write(line + '\r')
+        self.processData()
+    def default(self, line):
+        self.proc = None
+        self.sendAndProcess(line)
+    def emptyline(self):
+        self.default("")
+    def do_wi(self, line):
+        self.proc = dis.procline
+        self.sendAndProcess("wi " + line)
+    def do_help(self, line):
+        self.default("help " + line)
+    def do_quit(self, line):
+        self.exit()
+    def do_EOF(self, line):
+        self.do_quit(line)
+    def exit(self):
+        print "\nConnection closed"
+        self.logfile.flush()
+        sys.exit(0)
+
+
+######################################################################
+# Startup
+######################################################################
+
+def printUsage():
+    print "Usage:\n   %s <host>" % (sys.argv[0],)
+    sys.exit(1)
+
+def main():
+    if len(sys.argv) != 2:
+        return printUsage()
+    host = sys.argv[1]
+
+    # Connect to remote server and dump info on MMU
+    print "========  Connecting to haret  ========"
+    cmd = Prompts(host, HARETPORT)
+    cmd.cmdloop()
+
+if __name__ == '__main__':
+    main()

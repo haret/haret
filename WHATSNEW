@@ -1,5 +1,7 @@
 20061112 0.4.1 <kevin@koconnor.net>
 
+  * Add "haretconsole" host based scripts.
+
   * Implement new Machine class to handle per-machine options.  Add
     support for auto-detecting the current machine type.
 
