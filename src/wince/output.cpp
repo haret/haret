@@ -121,6 +121,8 @@ void Status (const wchar_t *format, ...)
     SetWindowText (sb, buffer);
 }
 
+static FILE *outputLogfile = NULL;
+
 void Output (const wchar_t *format, ...)
 {
   wchar_t buffer [512];
@@ -129,8 +131,50 @@ void Output (const wchar_t *format, ...)
   _vsnwprintf (buffer, sizeof (buffer) / sizeof (wchar_t), format, args);
   va_end (args);
 
+  if (outputLogfile) {
+    fwprintf(outputLogfile, L"%s\r\n", buffer);
+    fflush(outputLogfile);
+  }
   if (output_fn)
     output_fn (buffer, NULL);
+}
+
+// Request output to be copied to a local log file.
+int
+openLogFile(const char *vn)
+{
+    char fn[200];
+    fnprepare(vn, fn, sizeof(fn));
+    if (outputLogfile)
+        fclose(outputLogfile);
+    outputLogfile = fopen(fn, "a");
+    if (!outputLogfile)
+        return -1;
+    return 0;
+}
+
+// Close a previously opened log file.
+void
+closeLogFile()
+{
+    if (outputLogfile)
+        fclose(outputLogfile);
+    outputLogfile = NULL;
+}
+
+// Initialize the output settings.
+void
+setupOutput()
+{
+    char fn[100];
+    fnprepare("earlyharetlog.txt", fn, sizeof(fn));
+    FILE *logfd=fopen(fn, "r");
+    if (logfd) {
+        // Requesting early logs..
+        fclose(logfd);
+        openLogFile("haretlog.txt");
+    }
+    Output(L"Finished initializing output");
 }
 
 static HWND pb;

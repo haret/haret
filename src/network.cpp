@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <windows.h>
 
 #include "xtypes.h"
 #include "cpu.h"
@@ -18,7 +19,6 @@
 #include "terminal.h"
 #include "script.h"
 
-#ifdef _WIN32_WCE
 #  include <winsock.h>
 #  define so_close	closesocket
 #  define so_ioctl	ioctlsocket
@@ -36,16 +36,6 @@ static struct __network_dummy
     WSACleanup ();
   }
 } __network_dummy_obj;
-
-#else
-#  include <sys/socket.h>
-#  include <netinet/in.h>
-#  include <arpa/inet.h>
-#  include <netdb.h>
-#  include <unistd.h>
-#  define so_close	close
-#  define so_ioctl	ioctl
-#endif
 
 static int sock;
 
@@ -88,16 +78,11 @@ static void sock_output (wchar_t *msg, wchar_t *title)
     if (!str [i])
       continue;
 
-#ifdef _WIN32_WCE
     BOOL flag;
     len += WideCharToMultiByte (CP_ACP, 0, str [i], wstrlen (str [i]),
                                 sbcs + len, sizeof (sbcs) - len, " ", &flag);
     while ((len > 0) && sbcs [len - 1] == 0)
       len--;
-#else
-    for (int j = 0; str [i] [j]; j++)
-      sbcs [len++] = str [i] [j];
-#endif
     // If there is a caption, add ": " after it
     if (i == 0)
     {
@@ -222,24 +207,20 @@ void scrListen (int port)
   if (listen (lsock, 1) < 0)
     goto conn_error;
 
-#ifdef _WIN32_WCE
   ShowCursor (TRUE);
   HCURSOR OldCursor;
   OldCursor = GetCursor ();
   SetCursor (LoadCursor (NULL, IDC_WAIT));
-#endif
 
   int addrlen;
   addrlen = sizeof (addr);
   sock = accept (lsock, (struct sockaddr *)&addr, &addrlen);
 
-#ifdef _WIN32_WCE
   if (OldCursor != (HCURSOR)-1)
   {
     SetCursor (OldCursor);
     OldCursor = (HCURSOR)-1;
   }
-#endif
 
   if (sock < 0)
   {
@@ -260,7 +241,6 @@ conn_error:
   output_fn = sock_output;
 
   // Display some welcome message
-#ifdef _WIN32_WCE
   SYSTEM_INFO si;
   GetSystemInfo (&si);
   OSVERSIONINFOW vi;
@@ -270,7 +250,6 @@ conn_error:
           L"Minimal virtual address: %08x, maximal virtual address: %08x",
           vi.dwMajorVersion, vi.dwMinorVersion,
           si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-#endif
   Output (L"CPU is %hs running in %hs mode\n"
           L"Enter 'HELP' for a short command summary.\n",
 	  cpu_id (cpuGetCP (15, 0)), cpu_mode (cpuGetPSR () & 0x1f));

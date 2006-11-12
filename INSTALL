@@ -4,35 +4,31 @@ This is HaRET, the Handheld Reverse Engineering Tool. For a detailed description
 see the files in the docs/ directory. This file documents how to build and
 install it.
 
-First, HaRET is a WinCE application. As far as I've seen gcc supports the
-arm-pe target but I don't know where the libraries and headers for it can be
-found. Thus for now it requires MSVC/ARM for building (just the plain minimum -
-the command-line compiler and a few DLLs).
+HaRET is now compiled with the gcc toolset.  Previous versions (see
+cvs tag haret-0_3_8 and earier) made use of the MSVC/ARM toolkit for
+compiling.
 
-To make things worse, I don't like to boot Windows every time I have to
-recompile the tool, thus I've found a solution - to use WINE, the Windows
-Emulator. MSVC runs almost flawlessly under WINE, although with some versions
-of WINE you'll get the "not enough environment space" error - if you encounter
-it, upgrade WINE to latest version, which kinda works.
+The gcc toolset in use is from the cegcc project.  See
+http://cegcc.sourceforge.net/ for more info.  This project is
+currently still in active development (as of 20061111).  One may use
+the following steps to obtain the same toolkit the main HaRET
+developers are using:
 
-Of course, if you're feeling better in Windows you can just compile it from
-the Windows GUI, but this is outside the scope of this document.
+1 - Obtain cegcc source (svn co
+    https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc)
 
-To build HaRET you must first edit Makefile and set the path to your MSVC/ARM
-at the top of makefile. Then if you use Windows CE (vs PocketPC) you'll have
-to change the line "-subsystem:WindowsCE,4" line into "-subsystem:WindowsCE"
-otherwise the application won't load (I think).
+2 - Use revision 777 (svn up -r 777)
 
-Also you will need GAPI headers and libraries. This is a very thin layer
-between software and the framebuffer. If you don't have it, try googling for
-gapi12.zip. Last time I've tried I found it in a lot of places. If all else
-fails, mail me and I'll send it to you.
+3 - Apply the patch from HaRET CVS (patch -p0 <
+    /path/to/haret/cegcc-20061111.patch)
 
-Now type 'make'. You can get a couple of rough edges here and there during
-compilation but once you have the corresponding tools set up correctly you
-should have little problems compiling it. You may have to hit Ctrl+C/Ctrl+D
-a couple of times if the compiler seems to hang, but otherwise it works :)
+4 - Optionally alter the build destination by modifying
+    src/mingw32ce.sh.  If you do this, be sure to modify HaRET's
+    makefile so that the BASE setting is the same.
 
-To run the executable you will need GX.DLL. It provides a simple API that is
-used to get direct access to video memory; HaRET uses it to find the physical
-address of video RAM.
+5 - Build the cegcc toolset (cd src; ./build-mingw32ce.sh)
+
+6 - Wait for toolchain to build.  The build may fail when trying to
+    build gdb, but this isn't a problem.
+
+7 - Build HaRET (cd /path/to/haret; make)

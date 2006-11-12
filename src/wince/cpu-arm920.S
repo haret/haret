@@ -4,7 +4,7 @@
 ;
 ;   For conditions of use see file COPYING
 ;
-;   $Id: cpu-arm920.asm,v 1.2 2005/04/21 21:06:14 zap Exp $
+;   $Id: cpu-arm920.S,v 1.1 2006/11/12 02:20:49 koconnor Exp $
 
 ;; taken from linux/arch/arm/mm/proc-arm920.S: MMU functions for ARM920
 ;; 

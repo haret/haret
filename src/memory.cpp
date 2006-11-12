@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <windows.h>
+#include <stdio.h> // FILE
 
 #include "xtypes.h"
 #include "cpu.h"
@@ -445,7 +446,7 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
   char chrdump [17];
   chrdump [16] = 0;
 
-  __try
+  try
   {
     while (offs < size)
     {
@@ -498,7 +499,7 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
     else
       Output (L" | %hs", chrdump);
   }
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     Complain (C_ERROR ("EXCEPTION while reading from address %08x"),
       vaddr + offs);
@@ -521,12 +522,12 @@ void memPhysDump (const char *fn, uint32 paddr, uint32 size)
 
 void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
 {
-  __try
+  try
   {
     while (wcount--)
       *vaddr++ = value;
   }
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     Complain (C_ERROR ("EXCEPTION while writing %08x to address %08x"),
       value, vaddr);
@@ -553,11 +554,11 @@ static bool memWrite (FILE *f, uint32 addr, uint32 size)
   while (size)
   {
     uint32 wc, sz = (size > 0x1000) ? 0x1000 : size;
-    __try
+    try
     {
       wc = fwrite ((void *)addr, 1, sz, f);
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    catch (...)
     {
       wc = 0;
       Complain (C_ERROR ("Exception caught!"));
@@ -673,7 +674,7 @@ bool memDumpMMU (void (*out) (void *data, const char *, ...),
 
   // Walk down the 1st level descriptor table
   InitProgress (0x1000);
-  __try
+  try
   {
     for (mb = 0; mb < 0x1000; mb++)
     {
@@ -748,7 +749,7 @@ bool memDumpMMU (void (*out) (void *data, const char *, ...),
       pL1 = l1d;
     }
   }
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     Complain (C_ERROR ("EXCEPTION CAUGHT AT MEGABYTE %d!"), mb);
   }

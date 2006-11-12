@@ -5,6 +5,7 @@
     For conditions of use see file COPYING
 */
 
+#include <string.h> // strlen, memmove
 #include <stdarg.h>
 #include <stdlib.h>
 

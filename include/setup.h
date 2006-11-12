@@ -21,9 +21,9 @@
 #ifndef __ASMARM_SETUP_H
 #define __ASMARM_SETUP_H
 
-#define u32	UINT32
-#define u16	UINT16
-#define u8	UINT8
+#define u32	unsigned int
+#define u16	unsigned short
+#define u8	unsigned char
 
 
 #ifndef CONFIG_ACCEPT_GPL

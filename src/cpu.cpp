@@ -49,7 +49,8 @@ static struct cpu_fns *cpus [] =
 
 void cpuDetect ()
 {
-  for (int i = 0; i < sizeof (cpus) / sizeof (cpus [0]); i++)
+  Output(L"Detecting cpu");
+  for (uint i = 0; i < sizeof (cpus) / sizeof (cpus [0]); i++)
     if (cpus [i]->detect ())
     {
       cpu = cpus [i];

@@ -1,31 +1,29 @@
-;
-;   Linux loader for Windows CE
-;   Copyright (C) 2003 Andrew Zabolotny
-;
-;   For conditions of use see file COPYING
-;
+@
+@   Linux loader for Windows CE
+@   Copyright (C) 2003 Andrew Zabolotny
+@
+@   For conditions of use see file COPYING
+@
 
-		area	|.text|, CODE
+		.text
 
-; u32 _cpu_get_cp (u32 cp, u32 reg)
-		export _cpu_get_cp
-|_cpu_get_cp|	proc
+@ u32 _cpu_get_cp (u32 cp, u32 reg)
+		.global _cpu_get_cp
+_cpu_get_cp:
 		ldr	r3, =mov_reg_cp
-		add	r3, r3,	r0 lsl #7
-		add	pc, r3,	r1 lsl #3
-		endp
+		add	r3, r3,	r0, lsl #7
+		add	pc, r3,	r1, lsl #3
 
-; void _cpu_set_cp (u32 cp, u32 reg, u32 val)
-		export _cpu_set_cp
-|_cpu_set_cp|	proc
+@ void _cpu_set_cp (u32 cp, u32 reg, u32 val)
+		.global _cpu_set_cp
+_cpu_set_cp:
 		ldr	r3, =mov_cp_reg
-		add	r3, r3,	r0 lsl #7
-		add	pc, r3,	r1 lsl #3
-		endp
+		add	r3, r3,	r0, lsl #7
+		add	pc, r3,	r1, lsl #3
 
-		ltorg
+		.ltorg
 
-|mov_reg_cp|	mrc	p0, 0, r0,c0,c0, 0
+mov_reg_cp:	mrc	p0, 0, r0,c0,c0, 0
 		mov	pc,lr	
 		mrc	p0, 0, r0,c1,c0, 0
 		mov	pc,lr	
@@ -538,7 +536,7 @@
 		mrc	p15, 0,	r0,c15,c0, 0
 		mov	pc,lr	
 
-|mov_cp_reg|	mcr	p0, 0, r2,c0,c0, 0
+mov_cp_reg:	mcr	p0, 0, r2,c0,c0, 0
 		mov	pc,lr	
 		mcr	p0, 0, r2,c1,c0, 0
 		mov	pc,lr	
@@ -1051,4 +1049,4 @@
 		mcr	p15, 0,	r2,c15,c0, 0
 		mov	pc,lr	
 
-		end
+		.end

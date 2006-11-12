@@ -21,11 +21,11 @@ uint32 cpuGetCP (uint cp, uint regno)
     return 0xffffffff;
 
   uint32 value;
-  __try
+  try
   {
     value = _cpu_get_cp (cp, regno);
   }
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     Complain (C_ERROR ("EXCEPTION reading coprocessor %d register %d"), cp, regno);
     value = 0xffffffff;
@@ -40,11 +40,11 @@ bool cpuSetCP (uint cp, uint regno, uint32 val)
     return false;
 
   bool rc = true;
-  __try
+  try
   {
     _cpu_set_cp (cp, regno, val);
   }
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     Complain (C_ERROR ("EXCEPTION writing to coprocessor %d register %d"), cp, regno);
     rc = false;

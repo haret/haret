@@ -8,8 +8,6 @@
 #ifndef _VIDEO_H
 #define _VIDEO_H
 
-#ifdef _WIN32_WCE
-
 #include <windows.h>
 
 // This class can be used to load a bitmap from a resource and display it
@@ -47,8 +45,6 @@ public:
         int cxPixels;
         int cyPixels;
   } RawFrameBufferInfo;
-#endif
-
 #endif
 
 // Return the physical address of video RAM

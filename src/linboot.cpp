@@ -5,6 +5,8 @@
     For conditions of use see file COPYING
 */
 
+#include <stdio.h> // FILE, fopen, fseek, ftell
+
 #include "haret.h"
 #include "xtypes.h"
 #define CONFIG_ACCEPT_GPL
@@ -16,8 +18,6 @@
 #include "video.h"
 #include "cpu.h"
 #include "resource.h"
-
-#pragma warning(4:4509)
 
 // Kernel file name
 char *bootKernel = "zimage";
@@ -354,7 +354,7 @@ errexit:
 
   Output (L"Preloader physical/virtual address: %08x", preloaderPA);
 
-  memcpy (preloader, &linux_preloader,
+  memcpy (preloader, (void *)&linux_preloader,
           (uint)&linux_preloader_end - (uint)&linux_preloader);
   ptable = (uint32 *)(preloader + 0x100);
 
@@ -401,7 +401,7 @@ errexit:
   // call ShutdownPeripherals
   (cpu->shutdown_peripherals)();
 
-  __try
+  try
   {
     //cpuSetDACR (0xffffffff);
 
@@ -417,7 +417,7 @@ errexit:
                  1 + (aksize >> 12));
   }
   // We should never get here, but if we crash try to recover ...
-  __except (EXCEPTION_EXECUTE_HANDLER)
+  catch (...)
   {
     // UnresetDevices???
 

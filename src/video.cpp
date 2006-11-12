@@ -6,7 +6,7 @@
 */
 
 #include <windows.h>
-#include <gx.h>
+//#include <gx.h>
 
 #include "xtypes.h"
 #include "video.h"
@@ -62,12 +62,16 @@ bool videoBeginDraw ()
     } 
     else
     {
+#if 1
+      return FALSE;
+#else
       if (GXOpenDisplay (GetDesktopWindow (), 0) == 0)
         return FALSE;
       vram = (uint16 *)GXBeginDraw ();
       videoW = GetSystemMetrics (SM_CXSCREEN);
       videoH = GetSystemMetrics (SM_CYSCREEN);
       return TRUE;
+#endif
     }
 }
 

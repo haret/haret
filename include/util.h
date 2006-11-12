@@ -8,6 +8,8 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include "xtypes.h" // uint
+
 #ifdef _MSC_VER
 #define strcasecmp	_stricmp
 #define strncasecmp	_strnicmp
@@ -19,6 +21,8 @@ extern wchar_t *wstrchr (wchar_t *s, wchar_t c);
 extern int wstrlen (wchar_t *s);
 // Create a duplicate of string with new char []
 extern char *strnew (const char *s);
+// Setup initial path.
+void preparePath(HINSTANCE hInst);
 // Prepend executable source directory to file name if it does not
 // already contain a path.
 extern void fnprepare (const char *ifn, char *ofn, int ofn_max);
@@ -35,7 +39,5 @@ public:
   void Collect (void *p);
   void FreeAll ();
 };
-
-extern wchar_t SourcePath [];
 
 #endif /* _UTIL_H */

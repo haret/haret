@@ -23,6 +23,20 @@ int wstrlen (wchar_t *s)
   return s - os;
 }
 
+static wchar_t SourcePath[200];
+
+void
+preparePath(HINSTANCE hInst)
+{
+    // Locate the directory containing the haret executable.
+    GetModuleFileName(hInst, SourcePath
+                      , sizeof (SourcePath) / sizeof (wchar_t));
+    wchar_t *x = wstrchr(SourcePath, 0);
+    while ((x > SourcePath) && (x [-1] != L'\\'))
+        x--;
+    *x = 0;
+}
+
 void fnprepare (const char *ifn, char *ofn, int ofn_max)
 {
   char *out = ofn;

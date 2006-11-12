@@ -4,7 +4,7 @@
 
     For conditions of use see file COPYING
 
-    $Id: cpu-s3c24xx.cpp,v 1.6 2005/04/21 21:06:14 zap Exp $
+    $Id: cpu-s3c24xx.cpp,v 1.7 2006/11/12 02:20:49 koconnor Exp $
 */
 
 
@@ -100,7 +100,7 @@ static void UART_s3c2440_putc(char c)
   while(UART_s3c2440_full(uart_base))
     UART_s3c2440_checksetup ();
 
-  ((volatile UINT8 *)uart_base)[S3C2410_UTXH] = c;
+  ((volatile u8 *)uart_base)[S3C2410_UTXH] = c;
 }
 
 static void UART_s3c2440_puts (char *s)
@@ -149,7 +149,7 @@ static void UART_s3c2410_putc (char c)
   while(UART_s3c2410_full(uart_base))
     UART_s3c2410_checksetup ();
 
-  ((volatile UINT8 *)uart_base) [S3C2410_UTXH] = c;
+  ((volatile u8 *)uart_base) [S3C2410_UTXH] = c;
 }
 
 static void UART_s3c2410_puts (char *s)

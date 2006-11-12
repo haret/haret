@@ -1,0 +1,107 @@
+Index: src/w32api/include/tlhelp32.h
+===================================================================
+--- src/w32api/include/tlhelp32.h	(revision 784)
++++ src/w32api/include/tlhelp32.h	(working copy)
+@@ -70,7 +70,7 @@
+ 	DWORD th32ParentProcessID;
+ 	LONG pcPriClassBase;
+ 	DWORD dwFlags;
+-	CHAR  szExeFile[MAX_PATH];
++	TCHAR szExeFile[MAX_PATH];
+ } PROCESSENTRY32,*PPROCESSENTRY32,*LPPROCESSENTRY32;
+ typedef struct tagTHREADENTRY32 {
+ 	DWORD dwSize;
+@@ -102,8 +102,8 @@
+ 	BYTE *modBaseAddr;
+ 	DWORD modBaseSize;
+ 	HMODULE hModule;
+-	char szModule[MAX_MODULE_NAME32 + 1];
+-	char szExePath[MAX_PATH];
++	TCHAR szModule[MAX_MODULE_NAME32 + 1];
++	TCHAR szExePath[MAX_PATH];
+ } MODULEENTRY32,*PMODULEENTRY32,*LPMODULEENTRY32;
+ BOOL WINAPI Heap32First(LPHEAPENTRY32,DWORD,DWORD);
+ BOOL WINAPI Heap32ListFirst(HANDLE,LPHEAPLIST32);
+@@ -121,7 +121,8 @@
+ BOOL WINAPI Thread32Next(HANDLE,LPTHREADENTRY32);
+ BOOL WINAPI Toolhelp32ReadProcessMemory(DWORD,LPCVOID,LPVOID,DWORD,LPDWORD);
+ HANDLE WINAPI CreateToolhelp32Snapshot(DWORD,DWORD);
+-#ifdef UNICODE
++BOOL WINAPI CloseToolhelp32Snapshot(HANDLE hSnapshot);
++#if defined(UNICODE) && !defined(_WIN32_WCE)
+ #define LPMODULEENTRY32 LPMODULEENTRY32W
+ #define LPPROCESSENTRY32 LPPROCESSENTRY32W
+ #define MODULEENTRY32 MODULEENTRY32W
+Index: src/w32api/include/winnt.h
+===================================================================
+--- src/w32api/include/winnt.h	(revision 784)
++++ src/w32api/include/winnt.h	(working copy)
+@@ -989,6 +989,7 @@
+ #define PAGE_EXECUTE_WRITECOPY	0x0080
+ #define PAGE_GUARD		0x0100
+ #define PAGE_NOCACHE		0x0200
++#define PAGE_PHYSICAL		0x0400
+ #define MEM_COMMIT           0x1000
+ #define MEM_RESERVE          0x2000
+ #define MEM_DECOMMIT         0x4000
+Index: src/w32api/include/winbase.h
+===================================================================
+--- src/w32api/include/winbase.h	(revision 784)
++++ src/w32api/include/winbase.h	(working copy)
+@@ -1728,7 +1728,11 @@
+ WINBASEAPI BOOL WINAPI LocalUnlock(HLOCAL);
+ WINBASEAPI BOOL WINAPI LockFile(HANDLE,DWORD,DWORD,DWORD,DWORD);
+ WINBASEAPI BOOL WINAPI LockFileEx(HANDLE,DWORD,DWORD,DWORD,DWORD,LPOVERLAPPED);
++#ifdef _WIN32_WCE
++#define LockResource(h) ((PVOID)(h))
++#else
+ WINBASEAPI PVOID WINAPI LockResource(HGLOBAL);
++#endif
+ #define LockSegment(w) GlobalFix((HANDLE)(w)) /* Obsolete: Has no effect. */
+ WINBASEAPI BOOL WINAPI LogonUserA(LPSTR,LPSTR,LPSTR,DWORD,DWORD,PHANDLE);
+ WINBASEAPI BOOL WINAPI LogonUserW(LPWSTR,LPWSTR,LPWSTR,DWORD,DWORD,PHANDLE);
+@@ -2040,6 +2044,15 @@
+ WINBASEAPI BOOL WINAPI MapUserPhysicalPagesScatter(PVOID*,ULONG_PTR,PULONG_PTR);
+ #endif
+ 
++typedef struct STORE_INFORMATION {
++  DWORD dwStoreSize;
++  DWORD dwFreeSize;
++} STORE_INFORMATION, *LPSTORE_INFORMATION;
++
++WINBASEAPI BOOL GetStoreInformation(LPSTORE_INFORMATION lpsi);
++
++WINBASEAPI BOOL CeSetThreadQuantum(HANDLE hThread, DWORD dwTime);
++
+ #ifdef UNICODE
+ typedef STARTUPINFOW STARTUPINFO,*LPSTARTUPINFO;
+ typedef WIN32_FIND_DATAW WIN32_FIND_DATA,*PWIN32_FIND_DATA,*LPWIN32_FIND_DATA;
+Index: src/w32api/include/winuser.h
+===================================================================
+--- src/w32api/include/winuser.h	(revision 784)
++++ src/w32api/include/winuser.h	(working copy)
+@@ -3396,7 +3396,11 @@
+ WINUSERAPI LPWSTR WINAPI CharUpperW(LPWSTR);
+ WINUSERAPI DWORD WINAPI CharUpperBuffA(LPSTR,DWORD);
+ WINUSERAPI DWORD WINAPI CharUpperBuffW(LPWSTR,DWORD);
++#ifdef _WIN32_WCE
++#define CheckDlgButton(h,i,c) SendDlgItemMessage(h, i, BM_SETCHECK, c, 0)
++#else
+ WINUSERAPI BOOL WINAPI CheckDlgButton(HWND,int,UINT);
++#endif
+ WINUSERAPI DWORD WINAPI CheckMenuItem(HMENU,UINT,UINT);
+ WINUSERAPI BOOL WINAPI CheckMenuRadioItem(HMENU,UINT,UINT,UINT,UINT);
+ WINUSERAPI BOOL WINAPI CheckRadioButton(HWND,int,int,int);
+@@ -3429,8 +3433,12 @@
+ #define CreateDialogIndirectW(h,t,w,f) CreateDialogIndirectParamW(h,t,w,f,0)
+ WINUSERAPI HWND WINAPI CreateDialogIndirectParamA(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
+ WINUSERAPI HWND WINAPI CreateDialogIndirectParamW(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
++#ifdef _WIN32_WCE
++#define CreateDialogParamW(h,n,w,f,p) CreateDialogIndirectParamW(h, (LPCDLGTEMPLATE)LoadResource(h, FindResource(h, n, RT_DIALOG)), w, f, p)
++#else
+ WINUSERAPI HWND WINAPI CreateDialogParamA(HINSTANCE,LPCSTR,HWND,DLGPROC,LPARAM);
+ WINUSERAPI HWND WINAPI CreateDialogParamW(HINSTANCE,LPCWSTR,HWND,DLGPROC,LPARAM);
++#endif
+ WINUSERAPI HICON WINAPI CreateIcon(HINSTANCE,int,int,BYTE,BYTE,const BYTE*,const BYTE*);
+ WINUSERAPI HICON WINAPI CreateIconFromResource(PBYTE,DWORD,BOOL,DWORD);
+ WINUSERAPI HICON WINAPI CreateIconFromResourceEx(PBYTE,DWORD,BOOL,DWORD,int,int,UINT);

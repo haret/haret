@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h> // va_list
+#include <windows.h> // Sleep
 
 #include "xtypes.h"
 #include "script.h"
@@ -19,7 +21,7 @@
 #include "cpu.h"
 #include "gpio.h"
 #include "linboot.h"
-#include "bench.h"
+//#include "bench.h"
 #include "irq.h"
 #include "com_port.h"
 
@@ -756,6 +758,7 @@ bool scrInterpret (const char *str, uint lineno)
   {
     bootLinux ();
   }
+#if 0
   else if (IsToken (tok, "BWMEM"))
   {
     uint32 count;
@@ -770,6 +773,7 @@ bool scrInterpret (const char *str, uint lineno)
 
     bw_mem (count, mode);
   }
+#endif
   else if (IsToken (tok, "H|ELP"))
   {
     char *vn = get_token (&x);

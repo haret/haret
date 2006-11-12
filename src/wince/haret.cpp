@@ -14,7 +14,9 @@
 
 #include <windows.h>
 #include <winsock.h>
-#include <Tlhelp32.h>
+#include <tlhelp32.h>
+#include <stdio.h> // _snwprintf
+#include <wctype.h> // iswspace
 
 #include "xtypes.h"
 #include "resource.h"
@@ -30,7 +32,6 @@
 
 HINSTANCE hInst;
 HWND MainWindow = 0;
-wchar_t SourcePath [200];
 
 static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   LPARAM lParam)
@@ -39,6 +40,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   {
     case WM_INITDIALOG:
     {
+      Output(L"In initdialog");
       MainWindow = hWnd;
 
       wchar_t title [30];
@@ -49,6 +51,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
       CheckDlgButton(hWnd, IDC_COM1, BST_CHECKED);
       ShowWindow (hWnd, SW_SHOWMAXIMIZED);
       cpuDetect ();
+      Output(L"executing startup.txt");
       scrExecute ("startup.txt", false);
       return TRUE;
     }
@@ -130,17 +133,19 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {
   hInst = hInstance;
 
-  GetModuleFileName (hInst, SourcePath, sizeof (SourcePath) / sizeof (wchar_t));
-  wchar_t *x = wstrchr (SourcePath, 0);
-  while ((x > SourcePath) && (x [-1] != L'\\'))
-    x--;
-  *x = 0;
+  // Initialize the path so fnprepare() works.
+  preparePath(hInstance);
+
+  // Prep for early output.
+  setupOutput();
 
   // Initialize sockets
+  Output(L"Running WSAStartup");
   WSADATA wsadata;
   WSAStartup (MAKEWORD(1, 1), &wsadata);
 
   /* commandline parsing */
+  Output(L"Parsing command-line");
   wchar_t *p;
   int run = 0;
   int kill = 0;
@@ -170,6 +175,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (run != 1)
   {
     /* To avoid fiddling with message queues et al we just fire up a regular dialog window */
+    Output(L"Starting gui");
     DialogBox (hInstance, MAKEINTRESOURCE (DLG_HaRET), HWND_DESKTOP, DialogFunc);
   }
   else
@@ -180,8 +186,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
     scrExecute ("default.txt");
   }
 
+  Output(L"Shutting down");
   memPhysReset ();
   WSACleanup ();
+  closeLogFile();
 
   return 0;
 }
