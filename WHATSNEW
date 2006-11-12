@@ -1,3 +1,11 @@
+20061112 0.4.2 <kevin@koconnor.net>
+
+  * Change Output to take a "char *" instead of "wchar_t *" for the
+    format.  Enable gcc's printf style warning checks.
+
+  * Move functionality of Log to new function Screen and implement it
+    with same code as Output.
+
 20061112 0.4.1 <kevin@koconnor.net>
 
   * Add "haretconsole" host based scripts.

@@ -144,8 +144,7 @@ void gpioWatch (uint seconds)
           if ((changes & (1 << j))
 	   && ((i * 32 + j) <= 84))
 	  {
-            Output (L"GPLR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
-            Log (L"GPLR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+            Screen("GPLR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
           }
         old_gplr [i] = val;
       }
@@ -162,8 +161,7 @@ void gpioWatch (uint seconds)
           if ((changes & (1 << j))
 	   && ((i * 32 + j) <= 84))
 	  {
-            Output (L"GPDR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
-            Log (L"GPDR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
+            Screen("GPDR[%d] changed to %d", i * 32 + j, (val >> j) & 1);
 	  }
         old_gpdr [i] = val;
       }
@@ -180,8 +178,7 @@ void gpioWatch (uint seconds)
           if (changes & (3 << j * 2)
 	   && ((i * 32 + j) <= 83))
 	  {
-            Output (L"GAFR[%d] changed to %d", i * 16 + j, (changes >> j * 2) & 3);
-            Log (L"GAFR[%d] changed to %d", i * 16 + j, (changes >> j * 2) & 3);
+            Screen("GAFR[%d] changed to %d", i * 16 + j, (changes >> j * 2) & 3);
 	  }
         old_gafr [i] = val;
       }
@@ -195,7 +192,7 @@ uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
-    Output (L"Valid GPIO indexes are 0..84, not %d", args [0]);
+    Output("Valid GPIO indexes are 0..84, not %d", args [0]);
     return -1;
   }
 
@@ -212,7 +209,7 @@ uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
-    Output (L"Valid GPIO indexes are 0..84, not %d", args [0]);
+    Output("Valid GPIO indexes are 0..84, not %d", args [0]);
     return -1;
   }
 
@@ -229,7 +226,7 @@ uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
-    Output (L"Valid GPIO indexes are 0..84, not %d", args [0]);
+    Output("Valid GPIO indexes are 0..84, not %d", args [0]);
     return -1;
   }
 

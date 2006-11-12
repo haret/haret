@@ -546,8 +546,8 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
         else
         {
           if (offs)
-            Output (L" | %hs", chrdump);
-          Output (L"%08x |\t", addr);
+            Output(" | %s", chrdump);
+          Output("%08x |\t", addr);
         }
       }
   
@@ -555,7 +555,7 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
       if (f)
         fprintf (f, " %08x", d);
       else
-        Output (L" %08x\t", d);
+        Output(" %08x\t", d);
   
       chrdump [(offs & 15) + 0] = dump_char ((d      ) & 0xff);
       chrdump [(offs & 15) + 1] = dump_char ((d >>  8) & 0xff);
@@ -570,7 +570,7 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
       if (f)
         fprintf (f, "         ");
       else
-        Output (L"         \t");
+        Output("         \t");
       chrdump [offs & 15] = 0;
       offs += 4;
     }
@@ -581,7 +581,7 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
       fclose (f);
     }
     else
-      Output (L" | %hs", chrdump);
+      Output(" | %s", chrdump);
   }
   catch (...)
   {

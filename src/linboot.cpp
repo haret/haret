@@ -228,7 +228,7 @@ void bootLinux ()
   // physical address.
   uint alloc_tries = 10;
   uint kernel_addr = memPhysAddr + 0x8000;
-  Output (L"Physical kernel address: %08x", kernel_addr);
+  Output("Physical kernel address: %08x", kernel_addr);
 
   GarbageCollector gc;
 
@@ -237,7 +237,7 @@ void bootLinux ()
     uint mem = (uint)malloc (kbsize + 4095);
     if (!mem)
     {
-      Output (L"FATAL: Not enough memory for kernel bundle!");
+      Output("FATAL: Not enough memory for kernel bundle!");
       gc.FreeAll ();
       return;
     }
@@ -259,13 +259,13 @@ void bootLinux ()
       break;
 
     gc.Collect ((void *)mem);
-    Output (L"WARNING: page %d has addr %08x, target addr %08x, retrying",
+    Output("WARNING: page %d has addr %08x, target addr %08x, retrying",
             i, memVirtToPhys ((uint32)kernel_bundle + (i << 12)),
             kernel_addr + (i << 12));
 
     if (!--alloc_tries)
     {
-      Output (L"FATAL: Cannot allocate kernel bundle in high memory!");
+      Output("FATAL: Cannot allocate kernel bundle in high memory!");
       gc.FreeAll ();
       return;
     }
@@ -318,7 +318,7 @@ errexit:
     uint32 mem = (uint32)malloc (preloader_size + 4095);
     if (!mem)
     {
-      Output (L"FATAL: Not enough memory for preloader!");
+      Output("FATAL: Not enough memory for preloader!");
       gc.FreeAll ();
       return;
     }
@@ -345,7 +345,7 @@ errexit:
 
     if (!--alloc_tries)
     {
-      Output (L"FATAL: Cannot allocate a contiguous physical memory area!");
+      Output("FATAL: Cannot allocate a contiguous physical memory area!");
       gc.FreeAll ();
       return;
     }
@@ -353,7 +353,7 @@ errexit:
 
   gc.FreeAll ();
 
-  Output (L"Preloader physical/virtual address: %08x", preloaderPA);
+  Output("Preloader physical/virtual address: %08x", preloaderPA);
 
   memcpy (preloader, (void *)&linux_preloader,
           (uint)&linux_preloader_end - (uint)&linux_preloader);
@@ -367,11 +367,11 @@ errexit:
   // (let's hope uncompressed kernel never happens to be larger than that).
   uint32 initrd_phys_addr = memPhysAddr + 0x8000 + 0x500000;
   if (isize)
-    Output (L"Physical initrd address: %08x", initrd_phys_addr);
+    Output("Physical initrd address: %08x", initrd_phys_addr);
 
   setup_linux_params (taglist, initrd_phys_addr, isize);
 
-  Output (L"Goodbye cruel world ...");
+  Output("Goodbye cruel world ...");
   Sleep (500);
 
   // Reset AC97
@@ -426,6 +426,6 @@ errexit:
     sti ();
     SetKMode (FALSE);
     videoEndDraw ();
-    Output (L"Linux boot failed because of a exception!");
+    Output("Linux boot failed because of a exception!");
   };
 }

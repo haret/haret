@@ -14,17 +14,22 @@
 #define C_WARN(s)	L"<3>" L##s
 #define C_ERROR(s)	L"<0>" L##s
 
-/* Log something to the on-screen log. */
-extern void Log (const wchar_t *format, ...);
 /* Complain about something. You can prepend one of the C_XXX macros
   (see below) to format to denote different severity levels. */
 extern void Complain (const wchar_t *format, ...);
 /* Display some text in status line */
 extern void Status (const wchar_t *format, ...);
+
 // Initialize output logging code.
 void setupOutput();
-/* Print some text through output_fn if set; otherwise do nothing */
-extern void Output (const wchar_t *format, ...);
+// Internal function for outputing to screen/logs/socket.
+void __output(int sendScreen, const char *fmt, ...)
+    __attribute__ ((format (printf, 2, 3)));
+// Print some text through output_fn if set and/or log if set
+#define Output(fmt, args...) __output(0, fmt , ##args )
+// Send output to screen, output_fn (if set), and/or log (if set)
+#define Screen(fmt, args...) __output(1, fmt , ##args )
+
 // Create a named log file to send all Output strings to
 int openLogFile(const char *vn);
 // Close any previously created log files.
@@ -36,6 +41,6 @@ extern void DoneProgress ();
 
 // This function can be assigned a value in order to redirect
 // message boxes elsewhere (such as to a socket)
-extern void (*output_fn) (wchar_t *msg, wchar_t *title);
+extern void (*output_fn) (const char *msg);
 
 #endif /* _MSGBOX_H */

@@ -471,7 +471,7 @@ static void conwrite (void *data, const char *format, ...)
   _vsnprintf (buff, sizeof (buff), format, args);
   va_end (args);
 
-  Output (L"%hs\t", buff);
+  Output("%s\t", buff);
 }
 
 bool scrInterpret (const char *str, uint lineno)
@@ -497,13 +497,15 @@ bool scrInterpret (const char *str, uint lineno)
       if (!get_expression (&x, &args [i]))
         break;
 
-    wchar_t tmp [200];
-    _snwprintf (tmp, sizeof (tmp), msg ? C_INFO ("%hs") : L"%hs", arg);
-    if (msg)
-      Complain (tmp, args [0], args [1], args [2], args [3]);
-    else
-      Output (tmp, args [0], args [1], args [2], args [3]);
-    Log (tmp, args [0], args [1], args [2], args [3]);
+    if (msg) {
+      wchar_t tmp[200];
+      _snwprintf(tmp, sizeof(tmp), C_INFO ("%hs"), arg);
+      Complain(tmp, args [0], args [1], args [2], args [3]);
+    } else {
+      char tmp[200];
+      _snprintf(tmp, sizeof(tmp), "%s", arg);
+      Screen(tmp, args [0], args [1], args [2], args [3]);
+    }
     delete [] arg;
   }
   else if (IsToken (tok, "VDU|MP")
@@ -607,7 +609,7 @@ bool scrInterpret (const char *str, uint lineno)
     char *vn = get_token (&x);
     if (!vn || !*vn)
     {
-      Output (L"line %d: Dumper name expected", line);
+      Output("line %d: Dumper name expected", line);
       return true;
     }
 
@@ -620,7 +622,7 @@ bool scrInterpret (const char *str, uint lineno)
       }
     if (!hwd)
     {
-      Output (L"line %d: No dumper %hs available, see HELP DUMP for a list", line, vn);
+      Output("line %d: No dumper %s available, see HELP DUMP for a list", line, vn);
       return true;
     }
 
@@ -641,7 +643,7 @@ bool scrInterpret (const char *str, uint lineno)
       f = fopen (fn, "wb");
       if (!f)
       {
-        Output (L"line %d: Cannot open file `%hs' for writing", line, fn);
+        Output("line %d: Cannot open file `%s' for writing", line, fn);
         return true;
       }
     }
@@ -767,7 +769,7 @@ bool scrInterpret (const char *str, uint lineno)
     if (!get_expression (&x, &count)
      || !(mode = get_token (&x)))
     {
-      Output (L"line %d: Expected <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>", line);
+      Output("line %d: Expected <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>", line);
       return true;
     }
 
@@ -783,8 +785,8 @@ bool scrInterpret (const char *str, uint lineno)
       char type [9];
       char args [10];
 
-      Output (L"Name\tType\tDescription");
-      Output (L"-----------------------------------------------------------");
+      Output("Name\tType\tDescription");
+      Output("-----------------------------------------------------------");
       for (size_t i = 0; i < ScriptVarsCount; i++)
       {
         args [0] = 0;
@@ -810,7 +812,7 @@ bool scrInterpret (const char *str, uint lineno)
 	      sprintf (args, "(%d)", ScriptVars [i].val_size);
             break;
         }
-        Output (L"%hs%hs\t%hs\t%hs", ScriptVars [i].name, args, type,
+        Output("%s%s\t%s\t%s", ScriptVars [i].name, args, type,
                 ScriptVars [i].desc);
       }
     }
@@ -823,61 +825,61 @@ bool scrInterpret (const char *str, uint lineno)
           sprintf (args, "(%d)", ScriptDumpers [i].nargs);
         else
           args [0] = 0;
-        Output (L"%hs%hs\t%hs", ScriptDumpers [i].name, args,
+        Output("%s%s\t%s", ScriptDumpers [i].name, args,
                 ScriptDumpers [i].desc);
       }
     }
     else if (!vn || !*vn)
     {
-      Output (L"----=====****** A summary of HaRET commands: ******=====----");
-      Output (L"Notations used below:");
-      Output (L"  [A|B] denotes either A or B");
-      Output (L"  <ABC> denotes a mandatory argument");
-      Output (L"  Any command name can be shortened to minimal unambiguous length,");
-      Output (L"  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
-      Output (L"BOOTLINUX");
-      Output (L"  Start booting linux kernel. See HELP VARS for variables affecting boot.");
-      Output (L"DUMP <hardware>[(args...)] [filename]");
-      Output (L"  Dump the state of given hardware to given file (or to connection if");
-      Output (L"  no filename specified). Use HELP DUMP to see available dumpers.");
-      Output (L"HELP [VARS|DUMP]");
-      Output (L"  Display a description of either commands, variables or dumpers.");
-      Output (L"MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
-      Output (L"  Display a message (if run from a script, displays a message box).");
-      Output (L"  <strformat> is a standard C format string (like in printf).");
-      Output (L"  Note that to type a string you will have to use '%%hs'.");
-      Output (L"BWMEM <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>");
-      Output (L"  Perform a memory benchmark similar to lmbench, but the numbers should");
-      Output (L"  not be directly compared to those of lmbench.");
-      Output (L"PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
-      Output (L"  Same as MESSAGE except that it outputs the text without decorations");
-      Output (L"  directly to the network pipe.");
-      Output (L"QUIT");
-      Output (L"  Quit the remote session.");
-      Output (L"SET <variable> <value>");
-      Output (L"  Assign a value to a variable. Use HELP VARS for a list of variables.");
-      Output (L"SLEEP <milliseconds>");
-      Output (L"  Sleep for given amount of milliseconds.");
-      Output (L"[V|P]DUMP <filename> <addr> <size>");
-      Output (L"  Dump an area of memory in hexadecimal/char format from given [V]irtual");
-      Output (L"  or [P]hysical address to specified file.");
-      Output (L"[V|P]D <addr> <size>");
-      Output (L"  Same as [V|P]DUMP but outputs to screen rather than to file.");
-      Output (L"[V|P]F[B|H|W] <addr> <count> <value>");
-      Output (L"  Fill memory at given [V]irtual or [P]hysical address with a value.");
-      Output (L"  The [B]yte/[H]alfword/[W]ord suffixes selects the size of");
-      Output (L"  <value> and in which units the <count> is measured.");
-      Output (L"[V|P]WF <filename> <addr> <size>");
-      Output (L"  Write a portion of [V]irtual or [P]hysical memory to given file.");
-      Output (L"WGPIO <seconds>");
-      Output (L"  Watch GPIO pins for given period of time and report changes.");
+      Output("----=====****** A summary of HaRET commands: ******=====----");
+      Output("Notations used below:");
+      Output("  [A|B] denotes either A or B");
+      Output("  <ABC> denotes a mandatory argument");
+      Output("  Any command name can be shortened to minimal unambiguous length,");
+      Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
+      Output("BOOTLINUX");
+      Output("  Start booting linux kernel. See HELP VARS for variables affecting boot.");
+      Output("DUMP <hardware>[(args...)] [filename]");
+      Output("  Dump the state of given hardware to given file (or to connection if");
+      Output("  no filename specified). Use HELP DUMP to see available dumpers.");
+      Output("HELP [VARS|DUMP]");
+      Output("  Display a description of either commands, variables or dumpers.");
+      Output("MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
+      Output("  Display a message (if run from a script, displays a message box).");
+      Output("  <strformat> is a standard C format string (like in printf).");
+      Output("  Note that to type a string you will have to use '%%hs'.");
+      Output("BWMEM <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>");
+      Output("  Perform a memory benchmark similar to lmbench, but the numbers should");
+      Output("  not be directly compared to those of lmbench.");
+      Output("PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
+      Output("  Same as MESSAGE except that it outputs the text without decorations");
+      Output("  directly to the network pipe.");
+      Output("QUIT");
+      Output("  Quit the remote session.");
+      Output("SET <variable> <value>");
+      Output("  Assign a value to a variable. Use HELP VARS for a list of variables.");
+      Output("SLEEP <milliseconds>");
+      Output("  Sleep for given amount of milliseconds.");
+      Output("[V|P]DUMP <filename> <addr> <size>");
+      Output("  Dump an area of memory in hexadecimal/char format from given [V]irtual");
+      Output("  or [P]hysical address to specified file.");
+      Output("[V|P]D <addr> <size>");
+      Output("  Same as [V|P]DUMP but outputs to screen rather than to file.");
+      Output("[V|P]F[B|H|W] <addr> <count> <value>");
+      Output("  Fill memory at given [V]irtual or [P]hysical address with a value.");
+      Output("  The [B]yte/[H]alfword/[W]ord suffixes selects the size of");
+      Output("  <value> and in which units the <count> is measured.");
+      Output("[V|P]WF <filename> <addr> <size>");
+      Output("  Write a portion of [V]irtual or [P]hysical memory to given file.");
+      Output("WGPIO <seconds>");
+      Output("  Watch GPIO pins for given period of time and report changes.");
 #if 0
-      Output (L"WIRQ <seconds>");
-      Output (L"  Watch which IRQ occurs for some period of time and report them.");
+      Output("WIRQ <seconds>");
+      Output("  Watch which IRQ occurs for some period of time and report them.");
 #endif
     }
     else
-      Output (L"No help on this topic available");
+      Output("No help on this topic available");
   }
   else if (IsToken (tok, "Q|UIT"))
     return false;

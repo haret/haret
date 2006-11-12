@@ -69,47 +69,33 @@ int haretNetworkTerminal::Write (const uchar *outdata, size_t len)
   return send (socket, (char *)outdata, len, 0);
 }
 
-static void sock_output (wchar_t *msg, wchar_t *title)
+static void
+sock_output(const char *msg)
 {
-  int len = 0;
-  char sbcs [300];
-  wchar_t *str [2] = { title, msg };
-  for (int i = 0; i < 2; i++)
-  {
-    if (!str [i])
-      continue;
+    uint len = strlen(msg);
+    char sbcs[300];
+    if (len > sizeof(sbcs)-10)
+        len = sizeof(sbcs)-10;
+    memcpy(sbcs, msg, len);
 
-    BOOL flag;
-    len += WideCharToMultiByte (CP_ACP, 0, str [i], wstrlen (str [i]),
-                                sbcs + len, sizeof (sbcs) - len, " ", &flag);
-    while ((len > 0) && sbcs [len - 1] == 0)
-      len--;
-    // If there is a caption, add ": " after it
-    if (i == 0)
+    if (sbcs [len - 1] == '\t')
+        len--;
+    else
+        sbcs [len++] = '\n';
+
+    // Convert CR to CR/LF since telnet requires this
+    char *dst = sbcs + sizeof (sbcs) - 1;
+    char *eol = sbcs + len - 1;
+    while (eol >= sbcs)
     {
-      sbcs [len++] = ':';
-      sbcs [len++] = ' ';
+        if ((*dst-- = *eol) == '\n')
+            *dst-- = '\r';
+        eol--;
     }
-  }
 
-  if (sbcs [len - 1] == '\t')
-    len--;
-  else
-    sbcs [len++] = '\n';
-
-  // Convert CR to CR/LF since telnet requires this
-  char *dst = sbcs + sizeof (sbcs) - 1;
-  char *eol = sbcs + len - 1;
-  while (eol >= sbcs)
-  {
-    if ((*dst-- = *eol) == '\n')
-      *dst-- = '\r';
-    eol--;
-  }
-
-  dst++;
-  len = sbcs + sizeof (sbcs) - dst;
-  send (sock, dst, len, 0);
+    dst++;
+    len = sbcs + sizeof (sbcs) - dst;
+    send (sock, dst, len, 0);
 }
 
 DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
@@ -236,7 +222,7 @@ conn_error:
 
   Status (L"Connect from %hs:%d", inet_ntoa (addr.sin_addr),
           htons (addr.sin_port));
-  Log (L"Incoming connection from %hs:%d", inet_ntoa (addr.sin_addr),
+  Screen("Incoming connection from %s:%d", inet_ntoa (addr.sin_addr),
        htons (addr.sin_port));
 
   // Close the gate
@@ -256,15 +242,15 @@ conn_error:
   SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
   SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
 
-  Output (L"Welcome, this is HaRET running on WindowsCE v%d.%d\n"
-          L"Minimal virtual address: %08x, maximal virtual address: %08x",
-          vi.dwMajorVersion, vi.dwMinorVersion,
-          si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-  Output (L"Detected machine '%hs' (Plat='%s' OEM='%s')\n"
-          L"CPU is %hs running in %hs mode\n"
-          L"Enter 'HELP' for a short command summary.\n",
-          Mach->name, bufplat, bufoem,
-	  cpu_id(), cpu_mode (cpuGetPSR () & 0x1f));
+  Output("Welcome, this is HaRET running on WindowsCE v%ld.%ld\n"
+         "Minimal virtual address: %p, maximal virtual address: %p",
+         vi.dwMajorVersion, vi.dwMinorVersion,
+         si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
+  Output("Detected machine '%s' (Plat='%ls' OEM='%ls')\n"
+         "CPU is %s running in %s mode\n"
+         "Enter 'HELP' for a short command summary.\n",
+         Mach->name, bufplat, bufoem,
+         cpu_id(), cpu_mode (cpuGetPSR () & 0x1f));
 
   {
     haretNetworkTerminal t (sock);
@@ -272,18 +258,10 @@ conn_error:
       for (int line = 1; ; line++)
       {
         // Some kind of prompt
-	wchar_t prompt [16];
-	_snwprintf (prompt, sizeof (prompt) / sizeof (wchar_t), 
-	            L"HaRET(%d)# ", line);
+        char prompt[16];
+        _snprintf(prompt, sizeof(prompt), "HaRET(%d)# ", line);
 
-        // Convert to SBCS (simple because we don't have non-ascii chars)
-	int i;
-        char sbcsprompt [10];
-	for (i = 0; prompt [i]; i++)
-	  sbcsprompt [i] = (char)prompt [i];
-	sbcsprompt [i] = 0;
-
-        if (!t.Readline (sbcsprompt))
+        if (!t.Readline(prompt))
           break;
 
         if (!scrInterpret ((char *)t.GetStr (), line))
@@ -294,7 +272,7 @@ conn_error:
   output_fn = NULL;
   so_close (sock);
 
-  Log (L"Connection from %hs:%d terminated", inet_ntoa (addr.sin_addr),
+  Screen("Connection from %s:%d terminated", inet_ntoa (addr.sin_addr),
        htons (addr.sin_port));
 
 finish:

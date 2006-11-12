@@ -41,7 +41,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   {
     case WM_INITDIALOG:
     {
-      Output(L"In initdialog");
+      Output("In initdialog");
       MainWindow = hWnd;
 
       wchar_t title [30];
@@ -51,8 +51,8 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
       SetWindowText (GetDlgItem (hWnd, ID_SCRIPTNAME), L"default.txt");
       CheckDlgButton(hWnd, IDC_COM1, BST_CHECKED);
       ShowWindow (hWnd, SW_SHOWMAXIMIZED);
-      Log(L"Found machine %hs", Mach->name);
-      Output(L"executing startup.txt");
+      Screen("Found machine %s", Mach->name);
+      Output("executing startup.txt");
       scrExecute ("startup.txt", false);
       return TRUE;
     }
@@ -144,12 +144,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   setupMachineType();
 
   // Initialize sockets
-  Output(L"Running WSAStartup");
+  Output("Running WSAStartup");
   WSADATA wsadata;
   WSAStartup (MAKEWORD(1, 1), &wsadata);
 
   /* commandline parsing */
-  Output(L"Parsing command-line");
+  Output("Parsing command-line");
   wchar_t *p;
   int run = 0;
   int kill = 0;
@@ -179,7 +179,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (run != 1)
   {
     /* To avoid fiddling with message queues et al we just fire up a regular dialog window */
-    Output(L"Starting gui");
+    Output("Starting gui");
     DialogBox (hInstance, MAKEINTRESOURCE (DLG_HaRET), HWND_DESKTOP, DialogFunc);
   }
   else
@@ -189,7 +189,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
     scrExecute ("default.txt");
   }
 
-  Output(L"Shutting down");
+  Output("Shutting down");
   memPhysReset ();
   WSACleanup ();
   closeLogFile();

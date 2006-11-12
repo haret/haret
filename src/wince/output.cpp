@@ -18,21 +18,19 @@
 
 // This function can be assigned a value in order to redirect
 // message boxes elsewhere (such as to a socket)
-void (*output_fn) (wchar_t *msg, wchar_t *title) = NULL;
+void (*output_fn)(const char *msg) = NULL;
 
 extern HINSTANCE hInst;
 extern HWND MainWindow;
 
-void Log (const wchar_t *format, ...)
+static void
+Log(const char *msg)
 {
   if (MainWindow == 0)
     return;
-    
+
   wchar_t buff [512];
-  va_list args;
-  va_start (args, format);
-  _vsnwprintf (buff, sizeof (buff) / sizeof (wchar_t), format, args);
-  va_end (args);
+  _snwprintf(buff, sizeof(buff) / sizeof(buff[0]), L"%hs", msg);
 
   wchar_t *eol = wstrchr (buff, 0);
   // Append a newline at the end
@@ -102,9 +100,11 @@ void Complain (const wchar_t *format, ...)
   _vsnwprintf (buffer, sizeof (buffer) / sizeof (wchar_t), format, args);
   va_end (args);
 
-  if (output_fn)
-    output_fn (buffer, title);
-  else
+  if (output_fn) {
+    char buf[1024];
+    _snprintf(buf, sizeof(buf), "%ls: %ls", title, buffer);
+    output_fn(buf);
+  } else
     MessageBox (0, buffer, title, MB_OK | MB_APPLMODAL | severity);
 }
 
@@ -123,20 +123,24 @@ void Status (const wchar_t *format, ...)
 
 static FILE *outputLogfile = NULL;
 
-void Output (const wchar_t *format, ...)
+void
+__output(int sendScreen, const char *format, ...)
 {
-  wchar_t buffer [512];
-  va_list args;
-  va_start (args, format);
-  _vsnwprintf (buffer, sizeof (buffer) / sizeof (wchar_t), format, args);
-  va_end (args);
+    char buf[512];
 
-  if (outputLogfile) {
-    fwprintf(outputLogfile, L"%s\r\n", buffer);
-    fflush(outputLogfile);
-  }
-  if (output_fn)
-    output_fn (buffer, NULL);
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buf, sizeof(buf), format, args);
+    va_end(args);
+
+    if (outputLogfile) {
+        fwprintf(outputLogfile, L"%hs\r\n", buf);
+        fflush(outputLogfile);
+    }
+    if (sendScreen)
+        Log(buf);
+    if (output_fn)
+        output_fn(buf);
 }
 
 // Request output to be copied to a local log file.
@@ -174,7 +178,7 @@ setupOutput()
         fclose(logfd);
         openLogFile("haretlog.txt");
     }
-    Output(L"Finished initializing output");
+    Output("Finished initializing output");
 }
 
 static HWND pb;

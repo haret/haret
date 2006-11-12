@@ -66,7 +66,7 @@ findMachineType()
     while (p < &mach_end) {
         Machine *m = *p;
         p++;
-        Output(L"Looking at machine %hs", m->name);
+        Output("Looking at machine %s", m->name);
         if (wcscmp(platform, m->PlatformType) != 0)
             continue;
         for (uint32 j=0; j<ARRAY_SIZE(m->OEMInfo) && m->OEMInfo[j]; j++) {
@@ -90,17 +90,17 @@ void
 setupMachineType()
 {
     if (Mach) {
-        Output(L"Error: machine already defined to '%hs'", Mach->name);
+        Output("Error: machine already defined to '%s'", Mach->name);
         return;
     }
 
     // Detect the memory on the machine via wince first.
-    Output(L"Detecting memory");
+    Output("Detecting memory");
     mem_autodetect();
 
     // Determine what the current machine type is.
-    Output(L"Detecting current machine");
+    Output("Detecting current machine");
     Mach = findMachineType();
-    Output(L"Initializing for machine '%hs'", Mach->name);
+    Output("Initializing for machine '%s'", Mach->name);
     Mach->init();
 }
