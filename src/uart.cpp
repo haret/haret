@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "haret.h"
+#include "pkfuncs.h" // VirtualCopy
 #include "uart.h"
 
 #define FUART 0x40100000

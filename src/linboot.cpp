@@ -6,18 +6,18 @@
 */
 
 #include <stdio.h> // FILE, fopen, fseek, ftell
+#include <windows.h>
+#include "pkfuncs.h" // SetProcPermissions, SetKMode
 
-#include "haret.h"
 #include "xtypes.h"
 #define CONFIG_ACCEPT_GPL
 #include "setup.h"
-#include "memory.h"
-#include "util.h"
-#include "output.h"
-#include "gpio.h"
+#include "memory.h" // memVirtToPhys, memPhysWrite
+#include "util.h" // fnprepare, GarbageCollector
+#include "output.h" // Output, Complain
 #include "video.h"
-#include "cpu.h"
 #include "resource.h"
+#include "cpu.h" // cli, sti
 #include "machines.h" // Mach
 #include "script.h" // REG_VAR_STR
 

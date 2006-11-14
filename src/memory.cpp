@@ -5,18 +5,16 @@
     For conditions of use see file COPYING
 */
 
-#include <stddef.h>
-#include <string.h>
 #include <windows.h>
 #include <stdio.h> // FILE
 #include <ctype.h> // toupper
+#include "pkfuncs.h" // VirtualCopy
 
 #include "xtypes.h"
-#include "cpu.h"
+#include "cpu.h" // cpuGetMMU
 #include "memory.h"
-#include "output.h"
-#include "util.h"
-#include "haret.h"
+#include "output.h" // Output, Complain
+#include "util.h" // fnprepare
 #include "script.h" // REG_VAR_INT
 
 // RAM start physical address
@@ -143,8 +141,6 @@ void memPhysReset ()
 }
 
 #else
-
-extern "C" BOOL SetKMode (BOOL fMode);
 
 // The amount of physical memory locations to cache
 #define PHYS_CACHE_COUNT 8
