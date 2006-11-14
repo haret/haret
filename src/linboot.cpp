@@ -169,7 +169,7 @@ static void bootLinux ()
   videoBitmap thermoblue;
   videoBitmap eyes;
 
-  fnprepare (bootKernel, fn, sizeof (fn) / sizeof (wchar_t));
+  fnprepare (bootKernel, fn, sizeof (fn));
   FILE *fk = fopen (fn, "rb");
   if (!fk)
   {
@@ -187,7 +187,7 @@ static void bootLinux ()
   FILE *fi = NULL;
   if (bootInitrd && *bootInitrd)
   {
-    fnprepare (bootInitrd, fn, sizeof (fn) / sizeof (wchar_t));
+    fnprepare (bootInitrd, fn, sizeof (fn));
     fi = fopen (fn, "rb");
     if (fi)
     {
