@@ -27,6 +27,7 @@
 #include "cpu.h"
 #include "com_port.h"
 #include "machines.h" // setupMachineType
+#include "network.h" // scrListen
 
 #define WINDOW_CLASS TEXT("pmret")
 #define WINDOW_TITLE TEXT("HaRET")

@@ -19,6 +19,7 @@
 #include "terminal.h"
 #include "script.h"
 #include "machines.h" // Mach
+#include "network.h"
 
 #  include <winsock.h>
 #  define so_close	closesocket
