@@ -46,19 +46,19 @@ Q=@
 endif
 
 $(OUT)%.o: %.cpp
-	@echo "Compiling $<"
+	@echo "  Compiling $<"
 	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OUT)%.o: %.S
-	@echo "Assembling $<"
+	@echo "  Assembling $<"
 	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OUT)%.o: %.rc
-	@echo "Building resource file from $<"
+	@echo "  Building resource file from $<"
 	$(Q)$(RC) $(RCFLAGS) -i $< -o $@
 
 $(OUT)%.lib: src/wince/%.def
-	@echo "Building library $@"
+	@echo "  Building library $@"
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
 ################ Additional rules
@@ -76,11 +76,11 @@ HARETOBJS := haret.o haret-res.o \
   toolhelp.lib
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS))
-	@echo "Linking $@"
+	@echo "  Linking $@"
 	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
 $(OUT)haret.exe: $(OUT)haret-debug
-	@echo "Stripping $^ to make $@"
+	@echo "  Stripping $^ to make $@"
 	$(Q)$(STRIP) $^ -o $@
 
 clean:
