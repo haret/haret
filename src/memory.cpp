@@ -9,6 +9,7 @@
 #include <string.h>
 #include <windows.h>
 #include <stdio.h> // FILE
+#include <ctype.h> // toupper
 
 #include "xtypes.h"
 #include "cpu.h"
@@ -16,11 +17,17 @@
 #include "output.h"
 #include "util.h"
 #include "haret.h"
+#include "script.h" // REG_VAR_INT
 
 // RAM start physical address
 uint32 memPhysAddr = 0xa0000000;
 // RAM size (autodetected)
 uint32 memPhysSize;
+
+REG_VAR_INT(0, "RAMADDR", memPhysAddr
+            , "Physical RAM start address (default = 0xa0000000)")
+REG_VAR_INT(0, "RAMSIZE", memPhysSize
+            , "Physical RAM size (default = autodetected)")
 
 /* Autodetect RAM physical size at startup */
 void
@@ -429,6 +436,8 @@ memPhysMap(uint32 paddr)
 
     return memPhysMap_wm(paddr);
 }
+REG_VAR_ROFUNC(0, "P2V", memPhysMap, 1
+               , "Physical To Virtual address translation")
 
 uint32 memPhysRead (uint32 paddr)
 {
@@ -501,6 +510,8 @@ uint32 memVirtToPhys (uint32 vaddr)
 
   return paddr;
 }
+REG_VAR_ROFUNC(0, "V2P", memVirtToPhys, 1
+               , "Virtual To Physical address translation")
 
 static uchar dump_char (uchar c)
 {
@@ -510,7 +521,9 @@ static uchar dump_char (uchar c)
     return c;
 }
 
-void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
+// Dump a portion of memory to file
+static void
+memDump(const char *fn, uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
 {
   char fnbuff [200];
   FILE *f = NULL;
@@ -590,7 +603,8 @@ void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base)
   }
 }
 
-void memPhysDump (const char *fn, uint32 paddr, uint32 size)
+// Dump a portion of physical memory to file
+static void memPhysDump (const char *fn, uint32 paddr, uint32 size)
 {
   while (size)
   {
@@ -604,7 +618,40 @@ void memPhysDump (const char *fn, uint32 paddr, uint32 size)
   }
 }
 
-void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
+static void
+cmd_memaccess(const char *tok, const char *x)
+{
+    bool virt = toupper(tok[0]) == 'V';
+    char *fn = NULL;
+    if (tok [2])
+        fn = get_token(&x);
+
+    uint32 addr, size;
+    if (!get_expression(&x, &addr)
+        || !get_expression(&x, &size))
+    {
+        Complain(C_ERROR("line %d: Expected %hs<vaddr> <size>"),
+                 ScriptLine, fn ? "<fname>" : "");
+        return;
+    }
+
+    if (virt)
+        memDump(fn, (uint8 *)addr, size);
+    else
+        memPhysDump(fn, addr, size);
+}
+REG_CMD_ALT(0, "VDU|MP", cmd_memaccess, vdump, 0)
+REG_CMD_ALT(0, "PDU|MP", cmd_memaccess, pdump,
+        "[V|P]DUMP <filename> <addr> <size>\n"
+        "  Dump an area of memory in hexadecimal/char format from given [V]irtual\n"
+        "  or [P]hysical address to specified file.")
+REG_CMD_ALT(0, "VD", cmd_memaccess, vd, 0)
+REG_CMD(0, "PD", cmd_memaccess,
+        "[V|P]D <addr> <size>\n"
+        "  Same as [V|P]DUMP but outputs to screen rather than to file.")
+
+// Fill given number of words in virtual memory with given value
+static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
 {
   try
   {
@@ -618,7 +665,8 @@ void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
   }
 }
 
-void memPhysFill (uint32 paddr, uint32 wcount, uint32 value)
+// Fill given number of words in physical memory with given value
+static void memPhysFill (uint32 paddr, uint32 wcount, uint32 value)
 {
   while (wcount)
   {
@@ -632,6 +680,59 @@ void memPhysFill (uint32 paddr, uint32 wcount, uint32 value)
     paddr += words << 2;
   }
 }
+
+static void
+cmd_memfill(const char *tok, const char *x)
+{
+    uint32 addr, size, value;
+
+    char fill_type = toupper(tok[0]);
+    char fill_size = toupper(tok[2]);
+
+    if (!get_expression(&x, &addr)
+        || !get_expression(&x, &size)
+        || !get_expression(&x, &value))
+    {
+        Complain(C_ERROR("line %d: Expected <addr> <size> <value>"), ScriptLine);
+        return;
+    }
+
+    switch (fill_size)
+    {
+    case 'B':
+        value &= 0xff;
+        value = value | (value << 8) | (value << 16) | (value << 24);
+        size = (size + 3) >> 2;
+        break;
+
+    case 'H':
+        value &= 0xffff;
+        value = value | (value << 16);
+        size = (size + 1) >> 1;
+        break;
+    }
+
+    switch (fill_type)
+    {
+    case 'V':
+        memFill((uint32 *)addr, size, value);
+        break;
+
+    case 'P':
+        memPhysFill(addr, size, value);
+        break;
+    }
+}
+REG_CMD_ALT(0, "VFB", cmd_memfill, vfb, 0)
+REG_CMD_ALT(0, "VFH", cmd_memfill, vfh, 0)
+REG_CMD_ALT(0, "VFW", cmd_memfill, vfw, 0)
+REG_CMD_ALT(0, "PFB", cmd_memfill, pfb, 0)
+REG_CMD_ALT(0, "PFH", cmd_memfill, pfh, 0)
+REG_CMD(0, "PFW", cmd_memfill,
+        "[V|P]F[B|H|W] <addr> <count> <value>\n"
+        "  Fill memory at given [V]irtual or [P]hysical address with a value.\n"
+        "  The [B]yte/[H]alfword/[W]ord suffixes selects the size of\n"
+        "  <value> and in which units the <count> is measured.")
 
 static bool memWrite (FILE *f, uint32 addr, uint32 size)
 {
@@ -660,7 +761,8 @@ static bool memWrite (FILE *f, uint32 addr, uint32 size)
   return true;
 }
 
-bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size)
+// Write a portion of virtual memory to file
+static bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size)
 {
   FILE *f = fopen (fn, "wb");
   if (!f)
@@ -676,7 +778,8 @@ bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size)
   return true;
 }
 
-bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
+// Write a portion of physical memory to file
+static bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
 {
   FILE *f = fopen (fn, "wb");
   if (!f)
@@ -699,6 +802,37 @@ bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
   fclose (f);
   return true;
 }
+
+static void
+cmd_memtofile(const char *tok, const char *x)
+{
+    bool virt = toupper (tok [0]) == 'V';
+    char *fn = strnew (get_token (&x));
+    if (!fn)
+    {
+        Complain (C_ERROR ("line %d: file name expected"), ScriptLine);
+        return;
+    }
+
+    uint32 addr, size;
+    if (!get_expression (&x, &addr)
+        || !get_expression (&x, &size))
+    {
+        delete [] fn;
+        Complain (C_ERROR ("line %d: Expected <filename> <address> <size>"), ScriptLine);
+        return;
+    }
+
+    if (virt)
+        memVirtWriteFile (fn, addr, size);
+    else
+        memPhysWriteFile (fn, addr, size);
+    delete [] fn;
+}
+REG_CMD_ALT(0, "PWF", cmd_memtofile, pwf, 0)
+REG_CMD(0, "VWF", cmd_memtofile,
+        "[V|P]WF <filename> <addr> <size>\n"
+        "  Write a portion of [V]irtual or [P]hysical memory to given file.")
 
 static char *__flags_l1 (uint32 d)
 {
@@ -731,7 +865,7 @@ static char *__flags_l2 (uint32 d)
   return x;
 }
 
-bool memDumpMMU (void (*out) (void *data, const char *, ...),
+static bool memDumpMMU (void (*out) (void *data, const char *, ...),
                  void *data, uint32 *args)
 {
   out (data, "----- Virtual address map -----\n\n");
@@ -842,8 +976,10 @@ bool memDumpMMU (void (*out) (void *data, const char *, ...),
   DoneProgress ();
   return true;
 }
+REG_DUMP(0, "MMU", memDumpMMU, 0,
+         "Virtual memory map (4Gb address space).")
 
-uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
+static uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
 {
   uint8 *mem = (uint8 *)args [0];
   if (setval)
@@ -853,8 +989,9 @@ uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "VMB", memScrVMB, 1, "Virtual Memory Byte access")
 
-uint32 memScrVMH (bool setval, uint32 *args, uint32 val)
+static uint32 memScrVMH (bool setval, uint32 *args, uint32 val)
 {
   uint16 *mem = (uint16 *)args [0];
   if (setval)
@@ -864,8 +1001,9 @@ uint32 memScrVMH (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "VMH", memScrVMH, 1, "Virtual Memory Halfword access")
 
-uint32 memScrVMW (bool setval, uint32 *args, uint32 val)
+static uint32 memScrVMW (bool setval, uint32 *args, uint32 val)
 {
   uint32 *mem = (uint32 *)args [0];
   if (setval)
@@ -875,8 +1013,9 @@ uint32 memScrVMW (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "VMW", memScrVMW, 1, "Virtual Memory Word access")
 
-uint32 memScrPMB (bool setval, uint32 *args, uint32 val)
+static uint32 memScrPMB (bool setval, uint32 *args, uint32 val)
 {
   uint8 *mem = (uint8 *)memPhysMap (args [0]);
   if (setval)
@@ -886,8 +1025,9 @@ uint32 memScrPMB (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "PMB", memScrPMB, 1, "Physical Memory Byte access")
 
-uint32 memScrPMH (bool setval, uint32 *args, uint32 val)
+static uint32 memScrPMH (bool setval, uint32 *args, uint32 val)
 {
   uint16 *mem = (uint16 *)memPhysMap (args [0]);
   if (setval)
@@ -897,8 +1037,9 @@ uint32 memScrPMH (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "PMH", memScrPMH, 1, "Physical Memory Halfword access")
 
-uint32 memScrPMW (bool setval, uint32 *args, uint32 val)
+static uint32 memScrPMW (bool setval, uint32 *args, uint32 val)
 {
   uint32 *mem = (uint32 *)memPhysMap (args [0]);
   if (setval)
@@ -908,3 +1049,4 @@ uint32 memScrPMW (bool setval, uint32 *args, uint32 val)
   }
   return *mem;
 }
+REG_VAR_RWFUNC(0, "PMW", memScrPMW, 1, "Physical Memory Word access")

@@ -39,12 +39,6 @@ static inline void Attr Name (uint32 val) {                     \
 extern uint32 cpuGetCP (uint cp, uint regno);
 // Set a coprocessor register
 extern bool cpuSetCP (uint cp, uint regno, uint32 val);
-// Dump the 16 registers of coprocessor #cp
-extern bool cpuDumpCP (void (*out) (void *data, const char *, ...),
-                       void *data, uint32 *args);
-// Dump the state of on-chip AC97 controller
-extern bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
-                         void *data, uint32 *args);
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
 // Get current Process Identifier register (0-127)
@@ -61,8 +55,6 @@ extern "C" uint32 cpuGetPSR ();
 extern "C" void cli ();
 // Enable interrupts
 extern "C" void sti ();
-// Coprocessor register access for scripting
-extern uint32 cpuScrCP (bool setval, uint32 *args, uint32 val);
 
 // Get pid register
 DEF_GETCPR(getPIDReg, p15, 0, c13, c0, 0)

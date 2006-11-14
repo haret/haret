@@ -72,32 +72,6 @@ extern bool memPhysWrite (uint32 paddr, uint32 value);
 // Translate a virtual address to physical
 extern uint32 memVirtToPhys (uint32 vaddr);
 
-// Dump the MMU to the file mmap.txt
-extern bool memDumpMMU (void (*out) (void *data, const char *, ...),
-                        void *data, uint32 *args);
-// Dump a portion of memory to file
-extern void memDump (const char *fn, uint8 *vaddr, uint32 size, uint32 base = (uint32)-1);
-// Dump a portion of physical memory to file
-extern void memPhysDump (const char *fn, uint32 paddr, uint32 size);
-
-// Fill given number of words in virtual memory with given value
-extern void memFill (uint32 *vaddr, uint32 wcount, uint32 value);
-// Fill given number of words in physical memory with given value
-extern void memPhysFill (uint32 paddr, uint32 wcount, uint32 value);
-
-// Write a portion of virtual memory to file
-extern bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size);
-// Write a portion of physical memory to file
-extern bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size);
-
-// Memory read/write routines for scripting
-extern uint32 memScrVMB (bool setval, uint32 *args, uint32 val);
-extern uint32 memScrVMH (bool setval, uint32 *args, uint32 val);
-extern uint32 memScrVMW (bool setval, uint32 *args, uint32 val);
-extern uint32 memScrPMB (bool setval, uint32 *args, uint32 val);
-extern uint32 memScrPMH (bool setval, uint32 *args, uint32 val);
-extern uint32 memScrPMW (bool setval, uint32 *args, uint32 val);
-
 // Physical memory location (default 0xa0000000 as per Intel specs)
 extern uint32 memPhysAddr;
 // Physical memory size (detected at startup)

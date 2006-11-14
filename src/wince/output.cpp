@@ -9,10 +9,12 @@
 #include <windowsx.h>
 #include <commctrl.h>
 #include <stdio.h>
+#include <ctype.h> // toupper
 
 #include "output.h"
 #include "util.h"
 #include "resource.h"
+#include "script.h" // REG_CMD
 
 //#define USE_WAIT_CURSOR
 
@@ -142,6 +144,37 @@ __output(int sendScreen, const char *format, ...)
     if (output_fn)
         output_fn(buf);
 }
+
+static void
+cmd_print(const char *tok, const char *x)
+{
+    bool msg = (toupper(tok[0]) == 'M');
+    char *arg = strnew(get_token(&x));
+    uint32 args [4];
+    for (int i = 0; i < 4; i++)
+        if (!get_expression (&x, &args [i]))
+            break;
+
+    if (msg) {
+        wchar_t tmp[200];
+        _snwprintf(tmp, sizeof(tmp), C_INFO ("%hs"), arg);
+        Complain(tmp, args [0], args [1], args [2], args [3]);
+    } else {
+        char tmp[200];
+        _snprintf(tmp, sizeof(tmp), "%s", arg);
+        Screen(tmp, args [0], args [1], args [2], args [3]);
+    }
+    delete [] arg;
+}
+REG_CMD(0, "M|ESSAGE", cmd_print,
+        "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
+        "  Display a message (if run from a script, displays a message box).\n"
+        "  <strformat> is a standard C format string (like in printf).\n"
+        "  Note that to type a string you will have to use '%%hs'.")
+REG_CMD_ALT(0, "P|RINT", cmd_print, print,
+        "PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
+        "  Same as MESSAGE except that it outputs the text without decorations\n"
+        "  directly to the network pipe.")
 
 // Request output to be copied to a local log file.
 int

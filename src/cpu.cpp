@@ -10,15 +10,21 @@
 #include "memory.h" // memPhysMap
 #include "pxa2xx.h" // pxaAC97
 #include "machines.h" // Mach
+#include "script.h" // REG_VAR_ROFUNC
 #include "cpu.h"
 
-uint32 cpuGetFamily (bool setval, uint32 *args, uint32 val)
+REG_VAR_ROFUNC(0, "PSR", cpuGetPSR, 0, "Program Status Register")
+
+static uint32
+cpuGetFamily(bool setval, uint32 *args, uint32 val)
 {
   return (uint32)Mach->name;
 }
+REG_VAR_ROFUNC(0, "CPU", cpuGetFamily, 0, "Autodetected CPU family")
 
-bool cpuDumpCP (void (*out) (void *data, const char *, ...),
-                void *data, uint32 *args)
+static bool
+cpuDumpCP(void (*out) (void *data, const char *, ...),
+          void *data, uint32 *args)
 {
   uint cp = args [0];
 
@@ -33,9 +39,12 @@ bool cpuDumpCP (void (*out) (void *data, const char *, ...),
          i, cpuGetCP (cp, i), i + 8, cpuGetCP (cp, i + 8));
   return true;
 }
+REG_DUMP(0, "CP", cpuDumpCP, 1,
+         "Value of 16 coprocessor registers (arg = coproc number)")
 
-bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
-                  void *data, uint32 *args)
+static bool
+cpuDumpAC97(void (*out) (void *data, const char *, ...),
+            void *data, uint32 *args)
 {
   uint unit = args [0];
 
@@ -134,6 +143,8 @@ bool cpuDumpAC97 (void (*out) (void *data, const char *, ...),
          (i + 32) * 2, regs [i + 32], (i + 48) * 2, regs [i + 48]);
   return true;
 }
+REG_DUMP(0, "AC97", cpuDumpAC97, 1,
+         "PXA AC97 ctrl (64x16-bit regs) (arg = ctrl number, 0..3).")
 
 DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 
@@ -142,6 +153,9 @@ uint32 cpuGetMMU ()
 {
     return get_p15r2() & 0xffffc000;
 }
+REG_VAR_ROFUNC(
+    0, "MMU", cpuGetMMU, 0,
+    "Memory Management Unit level 1 descriptor table physical addr")
 
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
@@ -151,9 +165,10 @@ uint32 cpuGetPID ()
     return get_p15r13() >> 25;
 }
 
-uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)
+static uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)
 {
   if (setval)
     return cpuSetCP (args [0], args [1], val) ? 0 : -1;
   return cpuGetCP (args [0], args [1]);
 }
+REG_VAR_RWFUNC(0, "CP", cpuScrCP, 2, "Coprocessor Registers access")

@@ -19,17 +19,26 @@
 #include "cpu.h"
 #include "resource.h"
 #include "machines.h" // Mach
+#include "script.h" // REG_VAR_STR
 
 // Kernel file name
-char *bootKernel = "zimage";
+static char *bootKernel = "zimage";
 // Initrd file name
-char *bootInitrd = "initrd";
+static char *bootInitrd = "initrd";
 // Kernel command line
-char *bootCmdline = "root=/dev/ram0 ro console=tty0";
+static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
 // Milliseconds to sleep for nicer animation :-)
-uint32 bootSpeed = 5;
+static uint32 bootSpeed = 5;
 // ARM machine type (see linux/arch/arm/tools/mach-types)
-uint32 bootMachineType = 339;
+static uint32 bootMachineType = 339;
+
+REG_VAR_STR(0, "KERNEL", bootKernel, "Linux kernel file name")
+REG_VAR_STR(0, "INITRD", bootInitrd, "Initial Ram Disk file name")
+REG_VAR_STR(0, "CMDLINE", bootCmdline, "Kernel command line")
+REG_VAR_INT(0, "BOOTSPD", bootSpeed
+            , "Boot animation speed, usec/scanline (0-no delay)")
+REG_VAR_INT(0, "MTYPE", bootMachineType
+            , "ARM machine type (see linux/arch/arm/tools/mach-types)")
 
 // Our own assembly functions
 extern "C" uint32 linux_start (uint32 MachType, uint32 NumPages,
@@ -152,7 +161,7 @@ static bool read_file (FILE *f, uint8 *buff, uint32 size, uint32 totsize,
  * kernel bundle to desired location (since it knows the physical location).
  * Finally, it passes control to kernel.
  */
-void bootLinux ()
+static void bootLinux ()
 {
   char fn [200];
   videoBitmap logo;
@@ -429,3 +438,12 @@ errexit:
     Output("Linux boot failed because of a exception!");
   };
 }
+
+static void
+cmd_bootlinux(const char *cmd, const char *args)
+{
+    bootLinux();
+}
+REG_CMD(0, "BOOT|LINUX", cmd_bootlinux,
+        "BOOTLINUX\n"
+        "  Start booting linux kernel. See HELP VARS for variables affecting boot.")

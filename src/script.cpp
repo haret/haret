@@ -5,106 +5,37 @@
     For conditions of use see file COPYING
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <stdio.h> // fopen, FILE
+#include <ctype.h> // isspace, toupper
 #include <stdarg.h> // va_list
-#include <windows.h> // Sleep
 
 #include "xtypes.h"
 #include "script.h"
-#include "memory.h"
-#include "video.h"
-#include "output.h"
-#include "util.h"
-#include "cpu.h"
-#include "gpio.h"
-#include "linboot.h"
-//#include "bench.h"
-#include "irq.h"
-#include "com_port.h"
+#include "output.h" // Output, Complain
+#include "util.h" // fnprepare
 
 static const char *quotes = "\"'";
 // Currently processed line (for error display)
-static uint line;
+uint ScriptLine;
 
-#define ScriptVarsCount (sizeof (ScriptVars) / sizeof (varDescriptor))
-static varDescriptor ScriptVars [] =
-{
-  { "CPU", "Autodetected CPU family",
-    varROFunc, { (uint32 *)&cpuGetFamily }, 0 },
-  { "MMU", "Memory Management Unit level 1 descriptor table physical addr",
-    varROFunc, { (uint32 *)&cpuGetMMU }, 0 },
-  { "PID", "Current Process Identifier register value",
-    varROFunc, { (uint32 *)&cpuGetPID }, 0 },
-  { "PSR", "Program Status Register",
-    varROFunc, { (uint32 *)&cpuGetPSR }, 0 },
-  { "VRAM", "Video Memory physical address",
-    varROFunc, { (uint32 *)&vidGetVRAM }, 0 },
-  { "KERNEL", "Linux kernel file name",
-    varString, { (uint32 *)&bootKernel } },
-  { "INITRD", "Initial Ram Disk file name",
-    varString, { (uint32 *)&bootInitrd } },
-  { "CMDLINE", "Kernel command line",
-    varString, { (uint32 *)&bootCmdline } },
-  { "IGPIO", "The list of GPIOs to ignore during WGPIO",
-    varBitSet, { (uint32 *)&gpioIgnore }, 84 },
-  { "BOOTSPD", "Boot animation speed, usec/scanline (0-no delay)",
-    varInteger, { &bootSpeed } },
-  { "MTYPE", "ARM machine type (see linux/arch/arm/tools/mach-types)",
-    varInteger, { &bootMachineType } },
-  { "RAMADDR", "Physical RAM start address (default = 0xa0000000)",
-    varInteger, { &memPhysAddr } },
-  { "RAMSIZE", "Physical RAM size (default = autodetected)",
-    varInteger, { &memPhysSize } },
-  { "V2P", "Virtual To Physical address translation",
-    varROFunc, { (uint32 *)&memVirtToPhys }, 1 },
-  { "P2V", "Physical To Virtual address translation",
-    varROFunc, { (uint32 *)&memPhysMap }, 1 },
-  { "CP", "Coprocessor Registers access",
-    varRWFunc, { (uint32 *)&cpuScrCP }, 2 },
-  { "VMB", "Virtual Memory Byte access",
-    varRWFunc, { (uint32 *)&memScrVMB }, 1 },
-  { "VMH", "Virtual Memory Halfword access",
-    varRWFunc, { (uint32 *)&memScrVMH }, 1 },
-  { "VMW", "Virtual Memory Word access",
-    varRWFunc, { (uint32 *)&memScrVMW }, 1 },
-  { "PMB", "Physical Memory Byte access",
-    varRWFunc, { (uint32 *)&memScrPMB }, 1 },
-  { "PMH", "Physical Memory Halfword access",
-    varRWFunc, { (uint32 *)&memScrPMH }, 1 },
-  { "PMW", "Physical Memory Word access",
-    varRWFunc, { (uint32 *)&memScrPMW }, 1 },
-  { "GPLR", "General Purpose I/O Level Register",
-    varRWFunc, { (uint32 *)&gpioScrGPLR }, 1 },
-  { "GPDR", "General Purpose I/O Direction Register",
-    varRWFunc, { (uint32 *)&gpioScrGPDR }, 1 },
-  { "GAFR", "General Purpose I/O Alternate Function Select Register",
-    varRWFunc, { (uint32 *)&gpioScrGAFR }, 1 },
-  { "COM", "COM port number initialized to 115200,8N1 before booting linux",
-    varRWFunc, { (uint32 *)&comScrNumber }}
-};
-
-#define ScriptDumpersCount (sizeof (ScriptDumpers) / sizeof (hwDumper))
-static struct hwDumper ScriptDumpers [] =
-{
-  { "GPIO", "GPIO machinery state in a human-readable format.",
-    0, gpioDump },
-  { "GPIOST", "GPIO state suitable for include/asm/arch/xxx-init.h",
-    0, gpioDumpState },
-  { "CP", "Value of 16 coprocessor registers (arg = coproc number)",
-    1, cpuDumpCP },
-  { "MMU", "Virtual memory map (4Gb address space).",
-    0, memDumpMMU },
-  { "AC97", "PXA AC97 ctrl (64x16-bit regs) (arg = ctrl number, 0..3).",
-    1, cpuDumpAC97 }
-};
+// Symbols added by linker.
+extern "C" {
+    extern varDescriptor vars_start[];
+    extern varDescriptor vars_end;
+    extern haret_cmd_s commands_start[];
+    extern haret_cmd_s commands_end;
+    extern hwDumper dumpcommands_start[];
+    extern hwDumper dumpcommands_end;
+}
+#define vars_count (&vars_end - vars_start)
+#define commands_count (&commands_end - commands_start)
+#define dumpcommands_count (&dumpcommands_end - dumpcommands_start)
 
 static varDescriptor *UserVars = NULL;
 static int UserVarsCount = 0;
 
-static char *get_token (const char **s)
+char *
+get_token(const char **s)
 {
   const char *x = *s;
   static char storage [1000];
@@ -206,7 +137,7 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
       if (*v > var->val_size)
       {
         Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
-                  line, var->val_size);
+                  ScriptLine, var->val_size);
         return false;
       }
       *v = BitGet (var->bsval, *v);
@@ -263,7 +194,8 @@ varDescriptor *NewVar (char *vn, varType vt)
 // Eat the closing ')'
 #define PAREN_EAT	2
 
-static bool get_expression (const char **s, uint32 *v, int priority = 0, int flags = 0)
+bool
+get_expression(const char **s, uint32 *v, int priority, int flags)
 {
   uint32 b;
   char *x = get_token (s);
@@ -304,7 +236,7 @@ static bool get_expression (const char **s, uint32 *v, int priority = 0, int fla
         return false;
 
       default:
-        Complain (C_ERROR ("line %d: Unexpected input '%hs'"), line, *s);
+        Complain (C_ERROR ("line %d: Unexpected input '%hs'"), ScriptLine, *s);
         return false;
     }
   }
@@ -317,16 +249,16 @@ static bool get_expression (const char **s, uint32 *v, int priority = 0, int fla
       *v = strtoul (x, &err, 0);
       if (*err)
       {
-        Complain (C_ERROR ("line %d: Expected a number, got %hs"), line, x);
+        Complain (C_ERROR ("line %d: Expected a number, got %hs"), ScriptLine, x);
         return false;
       }
     }
     // Look through variables
-    else if (!GetVar (x, s, v, ScriptVars, ScriptVarsCount)
+    else if (!GetVar (x, s, v, vars_start, vars_count)
           && !GetVar (x, s, v, UserVars, UserVarsCount))
     {
       Complain (C_ERROR ("line %d: Unknown variable '%hs' in expression"),
-                line, x);
+                ScriptLine, x);
       return false;
     }
   }
@@ -377,7 +309,7 @@ static bool get_expression (const char **s, uint32 *v, int priority = 0, int fla
       case ')':
         if (!(flags & PAREN_EXPECT))
         {
-          Complain (C_ERROR ("line %d: Unexpected ')'"), line);
+          Complain (C_ERROR ("line %d: Unexpected ')'"), ScriptLine);
           return false;
         }
         if (flags & PAREN_EAT)
@@ -392,7 +324,7 @@ static bool get_expression (const char **s, uint32 *v, int priority = 0, int fla
 
   if (flags & PAREN_EXPECT)
   {
-    Complain (C_ERROR ("line %d: No closing ')'"), line);
+    Complain (C_ERROR ("line %d: No closing ')'"), ScriptLine);
     return false;
   }
 
@@ -406,7 +338,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
 
   if (peek_char (s) != '(')
   {
-    Complain (C_ERROR ("line %d: %hs(%d args) expected"), line, keyw, count);
+    Complain (C_ERROR ("line %d: %hs(%d args) expected"), ScriptLine, keyw, count);
     return false;
   }
 
@@ -419,7 +351,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
     if (!get_expression (s, args, 0, count ? 0 : PAREN_EXPECT | PAREN_EAT))
     {
 error:
-      Complain (C_ERROR ("line %d: not enough arguments to function %hs"), line, kw);
+      Complain (C_ERROR ("line %d: not enough arguments to function %hs"), ScriptLine, kw);
       delete [] kw;
       return false;
     }
@@ -476,418 +408,236 @@ static void conwrite (void *data, const char *format, ...)
 
 bool scrInterpret (const char *str, uint lineno)
 {
-  line = lineno;
+    ScriptLine = lineno;
 
-  const char *x = str;
-  while (*x && isspace (*x))
-    x++;
-  if (*x == '#' || !*x)
+    const char *x = str;
+    while (*x && isspace(*x))
+        x++;
+    if (*x == '#' || !*x)
+        return true;
+
+    char *tok = get_token(&x);
+
+    // Okay, now see what keyword is this :)
+    for (int i = 0; i < commands_count; i++)
+        if (IsToken(tok, commands_start[i].name)) {
+            commands_start[i].func(tok, x);
+            return true;
+        }
+
+    if (IsToken(tok, "Q|UIT"))
+        return false;
+    else
+        Complain(C_ERROR("Unknown keyword: `%hs'"), tok);
+
     return true;
+}
 
-  char *tok = get_token (&x);
-
-  // Okay, now see what keyword is this :)
-  if (IsToken (tok, "M|ESSAGE")
-   || IsToken (tok, "P|RINT"))
-  {
-    bool msg = (toupper (tok [0]) == 'M');
-    char *arg = strnew (get_token (&x));
-    uint32 args [4];
-    for (int i = 0; i < 4; i++)
-      if (!get_expression (&x, &args [i]))
-        break;
-
-    if (msg) {
-      wchar_t tmp[200];
-      _snwprintf(tmp, sizeof(tmp), C_INFO ("%hs"), arg);
-      Complain(tmp, args [0], args [1], args [2], args [3]);
-    } else {
-      char tmp[200];
-      _snprintf(tmp, sizeof(tmp), "%s", arg);
-      Screen(tmp, args [0], args [1], args [2], args [3]);
-    }
-    delete [] arg;
-  }
-  else if (IsToken (tok, "VDU|MP")
-        || IsToken (tok, "PDU|MP")
-        || IsToken (tok, "VD")
-        || IsToken (tok, "PD"))
-  {
-    bool virt = toupper (tok [0]) == 'V';
-    char *fn = NULL;
-    if (tok [2])
-     fn = get_token (&x);
-
-    uint32 addr, size;
-    if (!get_expression (&x, &addr)
-     || !get_expression (&x, &size))
-    {
-      Complain (C_ERROR ("line %d: Expected %hs<vaddr> <size>"),
-                line, fn ? "<fname>" : "");
-      return true;
-    }
-
-    if (virt)
-      memDump (fn, (uint8 *)addr, size);
-    else
-      memPhysDump (fn, addr, size);
-  }
-  else if (IsToken (tok, "VFB")
-        || IsToken (tok, "VFH")
-        || IsToken (tok, "VFW")
-        || IsToken (tok, "PFB")
-        || IsToken (tok, "PFH")
-        || IsToken (tok, "PFW"))
-  {
-    uint32 addr, size, value;
-
-    char fill_type = toupper (tok [0]);
-    char fill_size = toupper (tok [2]);
-
-    if (!get_expression (&x, &addr)
-     || !get_expression (&x, &size)
-     || !get_expression (&x, &value))
-    {
-      Complain (C_ERROR ("line %d: Expected <addr> <size> <value>"), line);
-      return true;
-    }
-
-    switch (fill_size)
-    {
-      case 'B':
-        value &= 0xff;
-        value = value | (value << 8) | (value << 16) | (value << 24);
-        size = (size + 3) >> 2;
-        break;
-
-      case 'H':
-        value &= 0xffff;
-        value = value | (value << 16);
-        size = (size + 1) >> 1;
-        break;
-    }
-
-    switch (fill_type)
-    {
-      case 'V':
-        memFill ((uint32 *)addr, size, value);
-        break;
-
-      case 'P':
-        memPhysFill (addr, size, value);
-        break;
-    }
-  }
-  else if (IsToken (tok, "PWF")
-        || IsToken (tok, "VWF"))
-  {
-    bool virt = toupper (tok [0]) == 'V';
-    char *fn = strnew (get_token (&x));
-    if (!fn)
-    {
-      Complain (C_ERROR ("line %d: file name expected"), line);
-      return true;
-    }
-
-    uint32 addr, size;
-    if (!get_expression (&x, &addr)
-     || !get_expression (&x, &size))
-    {
-      delete [] fn;
-      Complain (C_ERROR ("line %d: Expected <filename> <address> <size>"), line);
-      return true;
-    }
-
-    if (virt)
-      memVirtWriteFile (fn, addr, size);
-    else
-      memPhysWriteFile (fn, addr, size);
-    delete [] fn;
-  }
-  else if (IsToken (tok, "D|UMP"))
-  {
+static void
+cmd_dump(const char *cmd, const char *x)
+{
     char *vn = get_token (&x);
     if (!vn || !*vn)
     {
-      Output("line %d: Dumper name expected", line);
-      return true;
+        Output("line %d: Dumper name expected", ScriptLine);
+        return;
     }
 
     hwDumper *hwd = NULL;
-    for (uint i = 0; i < ScriptDumpersCount; i++)
-      if (!strcasecmp (vn, ScriptDumpers [i].name))
-      {
-        hwd = ScriptDumpers + i;
-        break;
-      }
+    for (int i = 0; i < dumpcommands_count; i++)
+        if (!strcasecmp (vn, dumpcommands_start[i].name))
+        {
+            hwd = dumpcommands_start + i;
+            break;
+        }
     if (!hwd)
     {
-      Output("line %d: No dumper %s available, see HELP DUMP for a list", line, vn);
-      return true;
+        Output("line %d: No dumper %s available, see HELP DUMP for a list", ScriptLine, vn);
+        return;
     }
 
     uint32 args [50];
     if (!get_args (&x, hwd->name, args, hwd->nargs))
-      return true;
+        return;
 
     vn = get_token (&x);
     if (vn && !*vn)
-      vn = NULL;
+        vn = NULL;
 
     FILE *f = NULL;
     if (vn)
     {
-      char fn [200];
-      fnprepare (vn, fn, sizeof (fn));
+        char fn [200];
+        fnprepare (vn, fn, sizeof (fn));
 
-      f = fopen (fn, "wb");
-      if (!f)
-      {
-        Output("line %d: Cannot open file `%s' for writing", line, fn);
-        return true;
-      }
+        f = fopen (fn, "wb");
+        if (!f)
+        {
+            Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
+            return;
+        }
     }
 
     hwd->dump (f ? (void (*) (void *, const char *, ...))fprintf : conwrite,
                f, args);
     fclose (f);
-  }
-  else if (IsToken (tok, "WG|PIO"))
-  {
-    uint32 sec;
-    if (!get_expression (&x, &sec))
-    {
-      Complain (C_ERROR ("line %d: Expected <seconds>"), line);
-      return true;
-    }
-    gpioWatch (sec);
-  }
-#if 0
-  else if (IsToken (tok, "WI|RQ"))
-  {
-    uint32 sec;
-    if (!get_expression (&x, &sec))
-    {
-      Complain (C_ERROR ("line %d: Expected <seconds>"), line);
-      return true;
-    }
-    irqWatch (sec);
-  }
-#endif
-  else if (IsToken (tok, "S|LEEP"))
-  {
-    uint32 msec;
-    if (!get_expression (&x, &msec))
-    {
-      Complain (C_ERROR ("line %d: Expected <milliseconds>"), line);
-      return true;
-    }
-    Sleep (msec);
-  }
-  else if (IsToken (tok, "S|ET"))
-  {
+}
+REG_CMD(0, "D|UMP", cmd_dump,
+        "DUMP <hardware>[(args...)] [filename]\n"
+        "  Dump the state of given hardware to given file (or to connection if\n"
+        "  no filename specified). Use HELP DUMP to see available dumpers.")
+
+static void
+cmd_set(const char *cmd, const char *x)
+{
     char *vn = get_token (&x);
     if (!*vn)
     {
-      Complain (C_ERROR ("line %d: Expected either <varname> or `LIST'"), line);
-      return true;
+        Complain (C_ERROR ("line %d: Expected either <varname> or `LIST'"), ScriptLine);
+        return;
     }
 
-    varDescriptor *var = FindVar (vn, ScriptVars, ScriptVarsCount);
+    varDescriptor *var = FindVar (vn, vars_start, vars_count);
     if (!var)
-      var = FindVar (vn, UserVars, UserVarsCount);
+        var = FindVar (vn, UserVars, UserVarsCount);
     if (!var)
-      var = NewVar (vn, varInteger);
+        var = NewVar (vn, varInteger);
 
     switch (var->type)
     {
-      case varInteger:
+    case varInteger:
         if (!get_expression (&x, var->ival))
         {
-          Complain (C_ERROR ("line %d: Expected numeric <value>"), line);
-          return true;
+            Complain (C_ERROR ("line %d: Expected numeric <value>"), ScriptLine);
+            return;
         }
         break;
-      case varString:
+    case varString:
         // If val_size is zero, it means a const char* in .text segment
         if (var->val_size)
-          delete [] var->sval;
+            free(*var->sval);
         *var->sval = strnew (get_token (&x));
         var->val_size = 1;
-		if (var->notify_set != NULL)
-			(var->notify_set)();
+        if (var->notify_set != NULL)
+            (var->notify_set)();
         break;
-      case varBitSet:
-      {
+    case varBitSet:
+    {
         uint32 idx, val;
         if (!get_expression (&x, &idx)
-         || !get_expression (&x, &val))
+            || !get_expression (&x, &val))
         {
-          Complain (C_ERROR ("line %d: Expected <index> <value>"), line);
-          return true;
+            Complain (C_ERROR ("line %d: Expected <index> <value>"), ScriptLine);
+            return;
         }
         if (idx > var->val_size)
         {
-          Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
-                    line, var->val_size);
-          return true;
+            Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
+                      ScriptLine, var->val_size);
+            return;
         }
         BitSet (var->bsval, idx, !!val);
         break;
-      }
-      case varRWFunc:
-      {
+    }
+    case varRWFunc:
+    {
         uint32 val;
         uint32 args [50];
 
         if (!get_args (&x, var->name, args, var->val_size))
-          return true;
+            return;
         if (!get_expression (&x, &val))
         {
-          Complain (C_ERROR ("line %d: Expected <value>"), line);
-          return true;
+            Complain (C_ERROR ("line %d: Expected <value>"), ScriptLine);
+            return;
         }
         var->fval (true, args, val);
         break;
-      }
-      default:
-        Complain (C_ERROR ("line %d: `%hs' is a read-only variable"), line,
-                 var->name);
-        return true;
     }
-  }
-  else if (IsToken (tok, "BOOT|LINUX"))
-  {
-    bootLinux ();
-  }
-#if 0
-  else if (IsToken (tok, "BWMEM"))
-  {
-    uint32 count;
-    char *mode;
-
-    if (!get_expression (&x, &count)
-     || !(mode = get_token (&x)))
-    {
-      Output("line %d: Expected <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>", line);
-      return true;
+    default:
+        Complain (C_ERROR ("line %d: `%hs' is a read-only variable"), ScriptLine,
+                  var->name);
+        return;
     }
+}
+REG_CMD(0, "S|ET", cmd_set,
+        "SET <variable> <value>\n"
+        "  Assign a value to a variable. Use HELP VARS for a list of variables.")
 
-    bw_mem (count, mode);
-  }
-#endif
-  else if (IsToken (tok, "H|ELP"))
-  {
+static void
+cmd_help(const char *cmd, const char *x)
+{
     char *vn = get_token (&x);
 
     if (!strcasecmp (vn, "VARS"))
     {
-      char type [9];
-      char args [10];
+        char type [9];
+        char args [10];
 
-      Output("Name\tType\tDescription");
-      Output("-----------------------------------------------------------");
-      for (size_t i = 0; i < ScriptVarsCount; i++)
-      {
-        args [0] = 0;
-        type [0] = 0;
-        switch (ScriptVars [i].type)
+        Output("Name\tType\tDescription");
+        Output("-----------------------------------------------------------");
+        for (int i = 0; i < vars_count; i++)
         {
-          case varInteger:
-            strcpy (type, "int");
-            break;
-          case varString:
-            strcpy (type, "string");
-            break;
-          case varBitSet:
-            strcpy (type, "bitset");
-            break;
-          case varROFunc:
-            strcpy (type, "ro func");
-	    // fallback
-          case varRWFunc:
-    	    if (!type [0])
-	      strcpy (type, "rw func");
-            if (ScriptVars [i].val_size)
-	      sprintf (args, "(%d)", ScriptVars [i].val_size);
-            break;
+            args [0] = 0;
+            type [0] = 0;
+            switch (vars_start [i].type)
+            {
+            case varInteger:
+                strcpy (type, "int");
+                break;
+            case varString:
+                strcpy (type, "string");
+                break;
+            case varBitSet:
+                strcpy (type, "bitset");
+                break;
+            case varROFunc:
+                strcpy (type, "ro func");
+                // fallback
+            case varRWFunc:
+                if (!type [0])
+                    strcpy (type, "rw func");
+                if (vars_start [i].val_size)
+                    sprintf (args, "(%d)", vars_start [i].val_size);
+                break;
+            }
+            Output("%s%s\t%s\t%s", vars_start [i].name, args, type,
+                   vars_start [i].desc);
         }
-        Output("%s%s\t%s\t%s", ScriptVars [i].name, args, type,
-                ScriptVars [i].desc);
-      }
     }
     else if (!strcasecmp (vn, "DUMP"))
     {
-      char args [10];
-      for (size_t i = 0; i < ScriptDumpersCount; i++)
-      {
-        if (ScriptDumpers [i].nargs)
-          sprintf (args, "(%d)", ScriptDumpers [i].nargs);
-        else
-          args [0] = 0;
-        Output("%s%s\t%s", ScriptDumpers [i].name, args,
-                ScriptDumpers [i].desc);
-      }
+        char args [10];
+        for (int i = 0; i < dumpcommands_count; i++)
+        {
+            if (dumpcommands_start[i].nargs)
+                sprintf (args, "(%d)", dumpcommands_start[i].nargs);
+            else
+                args [0] = 0;
+            Output("%s%s\t%s", dumpcommands_start[i].name, args,
+                   dumpcommands_start[i].desc);
+        }
     }
     else if (!vn || !*vn)
     {
-      Output("----=====****** A summary of HaRET commands: ******=====----");
-      Output("Notations used below:");
-      Output("  [A|B] denotes either A or B");
-      Output("  <ABC> denotes a mandatory argument");
-      Output("  Any command name can be shortened to minimal unambiguous length,");
-      Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
-      Output("BOOTLINUX");
-      Output("  Start booting linux kernel. See HELP VARS for variables affecting boot.");
-      Output("DUMP <hardware>[(args...)] [filename]");
-      Output("  Dump the state of given hardware to given file (or to connection if");
-      Output("  no filename specified). Use HELP DUMP to see available dumpers.");
-      Output("HELP [VARS|DUMP]");
-      Output("  Display a description of either commands, variables or dumpers.");
-      Output("MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
-      Output("  Display a message (if run from a script, displays a message box).");
-      Output("  <strformat> is a standard C format string (like in printf).");
-      Output("  Note that to type a string you will have to use '%%hs'.");
-      Output("BWMEM <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>");
-      Output("  Perform a memory benchmark similar to lmbench, but the numbers should");
-      Output("  not be directly compared to those of lmbench.");
-      Output("PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]");
-      Output("  Same as MESSAGE except that it outputs the text without decorations");
-      Output("  directly to the network pipe.");
-      Output("QUIT");
-      Output("  Quit the remote session.");
-      Output("SET <variable> <value>");
-      Output("  Assign a value to a variable. Use HELP VARS for a list of variables.");
-      Output("SLEEP <milliseconds>");
-      Output("  Sleep for given amount of milliseconds.");
-      Output("[V|P]DUMP <filename> <addr> <size>");
-      Output("  Dump an area of memory in hexadecimal/char format from given [V]irtual");
-      Output("  or [P]hysical address to specified file.");
-      Output("[V|P]D <addr> <size>");
-      Output("  Same as [V|P]DUMP but outputs to screen rather than to file.");
-      Output("[V|P]F[B|H|W] <addr> <count> <value>");
-      Output("  Fill memory at given [V]irtual or [P]hysical address with a value.");
-      Output("  The [B]yte/[H]alfword/[W]ord suffixes selects the size of");
-      Output("  <value> and in which units the <count> is measured.");
-      Output("[V|P]WF <filename> <addr> <size>");
-      Output("  Write a portion of [V]irtual or [P]hysical memory to given file.");
-      Output("WGPIO <seconds>");
-      Output("  Watch GPIO pins for given period of time and report changes.");
-#if 0
-      Output("WIRQ <seconds>");
-      Output("  Watch which IRQ occurs for some period of time and report them.");
-#endif
+        Output("----=====****** A summary of HaRET commands: ******=====----");
+        Output("Notations used below:");
+        Output("  [A|B] denotes either A or B");
+        Output("  <ABC> denotes a mandatory argument");
+        Output("  Any command name can be shortened to minimal unambiguous length,");
+        Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
+        for (int i = 0; i < commands_count; i++)
+            if (commands_start[i].desc)
+                Output("%s", commands_start[i].desc);
+        Output("QUIT");
+        Output("  Quit the remote session.");
     }
     else
-      Output("No help on this topic available");
-  }
-  else if (IsToken (tok, "Q|UIT"))
-    return false;
-  else
-    Complain (C_ERROR ("Unknown keyword: `%hs'"), tok);
-
-  return true;
+        Output("No help on this topic available");
 }
+REG_CMD(0, "H|ELP", cmd_help,
+        "HELP [VARS|DUMP]\n"
+        "  Display a description of either commands, variables or dumpers.")
 
 void scrExecute (const char *scrfn, bool complain)
 {
@@ -902,7 +652,7 @@ void scrExecute (const char *scrfn, bool complain)
     return;
   }
 
-  for (line = 1; ; line++)
+  for (ScriptLine = 1; ; ScriptLine++)
   {
     char str [200];
     if (!fgets (str, sizeof (str), f))
@@ -912,7 +662,7 @@ void scrExecute (const char *scrfn, bool complain)
     while ((x [-1] == '\n') || (x [-1] == '\r'))
       *(--x) = 0;
 
-    scrInterpret (str, line);
+    scrInterpret (str, ScriptLine);
   }
 
   fclose (f);

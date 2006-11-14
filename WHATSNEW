@@ -1,5 +1,10 @@
 20061112 0.4.2 <kevin@koconnor.net>
 
+  * Implement command registration capability.  Now it is possible to
+    register a new command by using the REG_CMD macro found in
+    script.h.  This means script.cpp shouldn't need to be modified as
+    new commands are added.
+
   * Change Output to take a "char *" instead of "wchar_t *" for the
     format.  Enable gcc's printf style warning checks.
 

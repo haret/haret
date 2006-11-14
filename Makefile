@@ -69,7 +69,7 @@ MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
   mach-h4700.o mach-sable.o
 
 HARETOBJS := haret.o haret-res.o \
-  s-cpu.o memory.o gpio.o uart.o video.o \
+  s-cpu.o memory.o gpio.o uart.o video.o wincmds.o \
   asmstuff.o irqchain.o getsetcp.o irq.o \
   util.o output.o script.o network.o cpu.o terminal.o linboot.o \
   com_port.o $(MACHOBJS) \

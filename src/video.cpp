@@ -13,12 +13,13 @@
 #include "haret.h"
 #include "memory.h"
 #include "output.h"
+#include "script.h" // REG_VAR_ROFUNC
 
 uint16 *vram = NULL;
 uint videoW, videoH;
 
 // Is there another way to find this not involving GAPI?
-uint32 vidGetVRAM ()
+static uint32 vidGetVRAM ()
 {
     uint32 vaddr = 0; // virtual address
     RawFrameBufferInfo frameBufferInfo;
@@ -43,6 +44,7 @@ uint32 vidGetVRAM ()
 
     return 0;
 } 
+REG_VAR_ROFUNC(0, "VRAM", vidGetVRAM, 0, "Video Memory physical address")
 
 bool videoBeginDraw ()
 {

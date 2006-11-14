@@ -11,7 +11,6 @@
 
 #include "xtypes.h"
 #include "haret.h"
-#include "irq.h"
 #include "output.h"
 #include "memory.h"
 
@@ -57,7 +56,7 @@ static char *irq_names [32] =
       irq_count [i]++;
       */
 
-void irqWatch (uint seconds)
+static void irqWatch (uint seconds)
 {
   int cur_time = time (NULL);
   int fin_time = cur_time + seconds;
@@ -104,5 +103,20 @@ void irqWatch (uint seconds)
             Output (L"  IRQ from GPIO%d occured %d times", j, irq_gpio_count [j]);
     }
 }
+
+static void
+cmd_wirq(const char *cmd, const char *args)
+{
+    uint32 sec;
+    if (!get_expression (&x, &sec))
+    {
+        Complain (C_ERROR ("line %d: Expected <seconds>"), line);
+        return;
+    }
+    irqWatch (sec);
+}
+REG_CMD(0, "WI|RQ", cmd_wirq,
+        "WIRQ <seconds>\n"
+        "  Watch which IRQ occurs for some period of time and report them.")
 
 #endif

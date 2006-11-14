@@ -108,6 +108,29 @@ bw_mem(int nbytes, char *mode)
 	return;
 }
 
+#if 0
+static void
+cmd_bwmem(const char *cmd, const char *args)
+{
+    uint32 count;
+    char *mode;
+
+    if (!get_expression (&x, &count)
+        || !(mode = get_token (&x)))
+    {
+        Output("line %d: Expected <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>", line);
+        return;
+    }
+
+    bw_mem (count, mode);
+}
+REG_CMD(0, "BWMEM", cmd_bwmem,
+        "BWMEM <size> <rd|wr|rdwr|cp|fwr|frd|fcp|bzero|bcopy>\n"
+        "  Perform a memory benchmark similar to lmbench, but the numbers should\n"
+        "  not be directly compared to those of lmbench.")
+#endif
+
+
 void
 rd(register TYPE *p, register TYPE *lastone)
 {	

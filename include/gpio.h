@@ -26,24 +26,5 @@ extern void gpioSetState (int num, bool state);
 extern int gpioGetSleepState (int num);
 // Set GPIO sleep mode pin state
 extern void gpioSetSleepState (int num, bool state);
-// Watch for given number of seconds which GPIO pins change
-extern void gpioWatch (uint seconds);
-// Dump the overall GPIO state
-extern bool gpioDump (void (*out) (void *data, const char *, ...),
-                      void *data, uint32 *args);
-// Dump GPIO state in a linux-specific format
-extern bool gpioDumpState (void (*out) (void *data, const char *, ...),
-                           void *data, uint32 *args);
-
-// GPLR access for scripting
-uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val);
-// GPDR access for scripting
-uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val);
-// GAFR access for scripting
-uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val);
-// Get CPU family
-uint32 cpuGetFamily (bool setval, uint32 *args, uint32 val);
-
-extern uint32 gpioIgnore [];
 
 #endif /* _IO_H */

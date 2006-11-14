@@ -47,9 +47,6 @@ public:
   } RawFrameBufferInfo;
 #endif
 
-// Return the physical address of video RAM
-extern uint32 vidGetVRAM ();
-
 // The pointer to video memory (valid between BeginDraw/EndDraw)
 extern uint16 *vram;
 // Screen width and height (assigned by BeginDraw)

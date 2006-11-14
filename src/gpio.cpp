@@ -11,9 +11,13 @@
 #include "gpio.h"
 #include "memory.h"
 #include "output.h"
+#include "script.h" // REG_VAR_BITSET
 
 // Which GPIO changes to ignore during watch
 uint32 gpioIgnore [3] = { 0, 0, 0 };
+
+REG_VAR_BITSET(0, "IGPIO", gpioIgnore, 84
+               , "The list of GPIOs to ignore during WGPIO")
 
 void gpioSetDir (int num, bool out)
 {
@@ -104,7 +108,8 @@ void gpioSetSleepState (int num, bool state)
     pgsr [ofs] &= ~mask;
 }
 
-void gpioWatch (uint seconds)
+// Watch for given number of seconds which GPIO pins change
+static void gpioWatch (uint seconds)
 {
   if (seconds > 60)
   {
@@ -188,7 +193,22 @@ void gpioWatch (uint seconds)
   }
 }
 
-uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
+static void
+cmd_wgpio(const char *cmd, const char *x)
+{
+    uint32 sec;
+    if (!get_expression (&x, &sec))
+    {
+        Complain (C_ERROR ("line %d: Expected <seconds>"), ScriptLine);
+        return;
+    }
+    gpioWatch (sec);
+}
+REG_CMD(0, "WG|PIO", cmd_wgpio,
+        "WGPIO <seconds>\n"
+        "  Watch GPIO pins for given period of time and report changes.")
+
+static uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
@@ -204,8 +224,9 @@ uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetState (args [0]);
 }
+REG_VAR_RWFUNC(0, "GPLR", gpioScrGPLR, 1, "General Purpose I/O Level Register")
 
-uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
+static uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
@@ -221,8 +242,10 @@ uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetDir (args [0]);
 }
+REG_VAR_RWFUNC(0, "GPDR", gpioScrGPDR, 1
+               , "General Purpose I/O Direction Register")
 
-uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
+static uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
 {
   if (args [0] > 84)
   {
@@ -238,8 +261,11 @@ uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetAlt (args [0]);
 }
+REG_VAR_RWFUNC(0, "GAFR", gpioScrGAFR, 1
+               , "General Purpose I/O Alternate Function Select Register")
 
-bool gpioDump (void (*out) (void *data, const char *, ...),
+// Dump the overall GPIO state
+static bool gpioDump (void (*out) (void *data, const char *, ...),
                void *data, uint32 *args)
 {
   const uint rows = 84/4;
@@ -264,8 +290,11 @@ bool gpioDump (void (*out) (void *data, const char *, ...),
   }
   return true;
 }
+REG_DUMP(0, "GPIO", gpioDump, 0,
+         "GPIO machinery state in a human-readable format.")
 
-bool gpioDumpState (void (*out) (void *data, const char *, ...),
+// Dump GPIO state in a linux-specific format
+static bool gpioDumpState (void (*out) (void *data, const char *, ...),
                     void *data, uint32 *args)
 {
   int i;
@@ -287,3 +316,5 @@ bool gpioDumpState (void (*out) (void *data, const char *, ...),
          i, gpioGetSleepState (i));
   return true;
 }
+REG_DUMP(0, "GPIOST", gpioDumpState, 0,
+         "GPIO state suitable for include/asm/arch/xxx-init.h")

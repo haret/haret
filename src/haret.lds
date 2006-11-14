@@ -28,6 +28,21 @@ SECTIONS
     mach_start = .;
     *(.rdata.mach)
     mach_end = .;
+
+    /* List of haret commands */
+    commands_start = .;
+    *(.rdata.cmds)
+    commands_end = .;
+    dumpcommands_start = .;
+    *(.rdata.dumpcmds)
+    dumpcommands_end = .;
+  }
+
+  .data : {
+    /* List of haret variables */
+    vars_start = .;
+    *(.data.vars)
+    vars_end = .;
   }
 }
 

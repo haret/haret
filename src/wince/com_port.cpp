@@ -4,11 +4,12 @@
 #include "xtypes.h"
 #include "com_port.h"
 #include "output.h"
+#include "script.h" // REG_VAR_RWFUNC
 
 static HANDLE port_handle = INVALID_HANDLE_VALUE;
 static uint32 port_number = 0;
 
-uint32 comScrNumber (bool setval, uint32 *args, uint32 val)
+static uint32 comScrNumber (bool setval, uint32 *args, uint32 val)
 {
   if (setval)
   {
@@ -26,6 +27,9 @@ uint32 comScrNumber (bool setval, uint32 *args, uint32 val)
   }
   return port_number;
 }
+REG_VAR_RWFUNC(
+    0, "COM", comScrNumber, 0
+    , "COM port number initialized to 115200,8N1 before booting linux")
 
 int com_port_open ()
 {

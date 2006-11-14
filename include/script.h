@@ -8,6 +8,66 @@
 #ifndef _SCRIPT_H
 #define _SCRIPT_H
 
+// Interpret one line of scripting language; returns false on QUIT
+bool scrInterpret (const char *str, uint lineno);
+// Execute the script from given file
+extern void scrExecute (const char *scrfn, bool complain = true);
+// Parse the next part of the string as an expression
+bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
+// Parse the next string as a literal token
+char *get_token(const char **s);
+// The current line of the script being parsed
+extern uint ScriptLine;
+
+
+/****************************************************************
+ * Macros to declare a new command.
+ ****************************************************************/
+
+// Registration of script commands
+#define REG_CMD(Pred, Name, Func, Desc)         \
+    __REG_CMD(Pred, Name, Func, Func, Desc)
+
+#define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)        \
+    __REG_CMD(Pred, Name, Func, Func ##Alt, Desc)
+
+// Registration of variables
+#define REG_VAR_STR(Pred, Name, Var, Desc)                      \
+    __REG_VAR(Var, Name, Desc, varString, { (uint32*)&Var } )
+
+#define REG_VAR_INT(Pred, Name, Var, Desc)              \
+    __REG_VAR(Var, Name, Desc, varInteger, { &Var })
+
+#define REG_VAR_BITSET(Pred, Name, Var, ArgCount, Desc)         \
+    __REG_VAR(Var, Name, Desc, varBitSet, { Var }, ArgCount)
+
+#define REG_VAR_ROFUNC(Pred, Name, Func, ArgCount, Desc)                \
+    __REG_VAR(Func, Name, Desc, varROFunc, { (uint32*)&Func }, ArgCount)
+
+#define REG_VAR_RWFUNC(Pred, Name, Func, ArgCount, Desc)                \
+    __REG_VAR(Func, Name, Desc, varRWFunc, { (uint32*)&Func }, ArgCount)
+
+// Registration of script dump commands
+#define REG_DUMP(Pred, Name, Func, ArgCount, Desc)      \
+struct hwDumper Ref ##Func                              \
+    __attribute__ ((__section__ (".rdata.dumpcmds")))   \
+    = { Name, Desc, ArgCount, Func };
+
+
+/****************************************************************
+ * Internals to declaring commands
+ ****************************************************************/
+
+#define __REG_CMD(Pred, Name, Func, Decl, Desc)         \
+struct haret_cmd_s Ref ##Decl                           \
+    __attribute__ ((__section__ (".rdata.cmds")))       \
+    = { Name, Desc, Func };
+
+#define __REG_VAR(Decl, Vals...)                        \
+struct varDescriptor Ref ##Decl                         \
+    __attribute__ ((__section__ (".data.vars")))        \
+    = { Vals };
+
 // Variable types (HaRET scripting has very loose type checking anyway...)
 enum varType
 {
@@ -36,7 +96,7 @@ struct varDescriptor
     uint32 (*fval) (bool setval, uint32 *args, uint32 val);
   };
   // A optional value size (for bitset in bits, for funcs number of args,
-  // for others no meaning)
+  // for string whether free is necessary, for others no meaning)
   uint val_size;
 
   void (*notify_set)(void);
@@ -56,11 +116,10 @@ struct hwDumper
                 void *data, uint32 *args);
 };
 
-// Interpret one line of scripting language; returns false on QUIT
-bool scrInterpret (const char *str, uint lineno);
-// Execute the script from given file
-extern void scrExecute (const char *scrfn, bool complain = true);
-// Listen for a connection on given port and execute commands
-void scrListen (int port);
+// Structure to hold commands
+struct haret_cmd_s {
+    const char *name, *desc;
+    void (*func)(const char *cmd, const char *args);
+};
 
 #endif /* _SCRIPT_H */
