@@ -17,68 +17,15 @@ junkdata:	.space 0x10000		@ Spare space for data cache flush
 		sub 	pc, pc, #4
 		.endm
 
-@ Disable interrupts
-		.global	cli
-cli:
-		mrs	r0, cpsr
-		orr	r0, r0, #0xc0
-		msr	cpsr_c, r0
-		mov	pc, lr
-
-@ Enable interrupts
-		.global	sti
-sti:
-		mrs	r0, cpsr
-		bic	r0, r0, #0xc0
-		msr	cpsr_c, r0
-		mov	pc, lr
-
-@ Get Program Status Register
-		.global	cpuGetPSR
-cpuGetPSR:
-		mrs	r0, cpsr
-		mov	pc, lr
-
-@ Get Domain Access Control Register
-		.global	cpuGetDACR
-cpuGetDACR:
-		mrc	p15, 0, r0, c3, c0, 0
-		mov	pc, lr
-
-@ Set Domain Access Control Register
-		.global	cpuSetDACR
-cpuSetDACR:
-		mcr	p15, 0, r0, c3, c0, 0
-		CPWAIT
-		mov	pc, lr
-
-@ this next section is to help remove the amount of
-@ self modifying code done by HaRET itself
-
-		.global	cpuGetPid
-cpuGetPid:
-		mrc	p15, 0, r0, c13, c0, 0
-		mov	pc, r14
-
-		.global	cpuGetIDCode
-cpuGetIDCode:
-		mrc	p15, 0, r0, c0, c0, 0
-		mov	pc, r14
-
-		.global cpuGetTTBase
-cpuGetTTBase:
-		mrc	p15, 0, r0, c2, c0, 0
-		mov	pc, r14
-
 @ Flush CPU caches
 		.global	cpuFlushCache
 cpuFlushCache:
 @ Flush both data cache and mini-data cache
 		ldr	r0, =junkdata
 		add	r1, r0, #0x10000
-fc_loop:	ldr	r2, [r0], #32
+	1:	ldr	r2, [r0], #32
 		teq	r0, r1
-		bne	fc_loop
+		bne	1b
 
 		mov	r0, #0
 		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer

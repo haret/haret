@@ -50,11 +50,29 @@ extern "C" uint32 cpuGetDACR ();
 // Set Domain Access Control Register to given value (in supervisor mode)
 extern "C" void cpuSetDACR (uint32 value);
 // Get Program Status Register value
-extern "C" uint32 cpuGetPSR ();
-// Disable interrupts
-extern "C" void cli ();
-// Enable interrupts
-extern "C" void sti ();
+static inline uint32 cpuGetPSR(void) {
+    uint32 val;
+    asm volatile("mrs %0, cpsr" : "=r" (val));
+    return val;
+}
+// Disable interrupts (and fiq)
+static inline void cli() {
+    unsigned long temp;
+    __asm__ __volatile__(
+        "mrs    %0, cpsr\n"
+        "       orr    %0, %0, #0xc0\n"
+        "       msr    cpsr_c, %0"
+        : "=r" (temp) : : "memory");
+}
+// Enable interrupts (and fiq)
+static inline void sti() {
+    unsigned long temp;
+    __asm__ __volatile__(
+        "mrs    %0, cpsr\n"
+        "       bic    %0, %0, #0xc0\n"
+        "       msr    cpsr_c, %0"
+        : "=r" (temp) : : "memory");
+}
 
 // Get pid register
 DEF_GETCPR(getPIDReg, p15, 0, c13, c0, 0)
