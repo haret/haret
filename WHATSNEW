@@ -66,6 +66,12 @@ next release <kevin@koconnor.net>
     existing features were disabled - gx based framebuffer detection
     and the BWMEM command - both were causing compile problems.
 
+20061027 0.3.8 Paul Sokolovsky <pmiscml@gmail.com>
+
+  * Support for big kernels (up to 5Mb of uncompressed size, zImage
+    sizes up to at least 1.5Mb are ok).
+  * Fix regression of QVGA bootlogo display, introduced in 0.3.7.
+
 02-May-2006 v0.3.7, <ynezz@hysteria.sk>
     -*- Updated main dialog to WM GUI behavior
     -*- Replaced code for getting framebuffer pointer
