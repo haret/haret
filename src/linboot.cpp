@@ -398,8 +398,6 @@ errexit:
   CeSetThreadQuantum (GetCurrentThread (), 0);
   /* Allow current process to access any memory domains */
   SetProcPermissions (0xffffffff);
-  /* Go into kernel mode (well, wince is always in system mode...) */
-  SetKMode (TRUE);
 
   uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
 
@@ -408,7 +406,7 @@ errexit:
   if (ret)
     return;
 
-  cli ();
+  take_control();
 
   // Call per-arch boot prep function.
   Mach->hardwareShutdown();
@@ -432,8 +430,7 @@ errexit:
   catch (...)
   {
     // UnresetDevices???
-    sti ();
-    SetKMode (FALSE);
+    return_control();
     videoEndDraw ();
     Output("Linux boot failed because of a exception!");
   };

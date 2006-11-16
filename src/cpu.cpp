@@ -5,6 +5,9 @@
     For conditions of use see file COPYING
 */
 
+#include "windows.h"
+#include "pkfuncs.h" // LockPages, SetKMode
+
 #include "xtypes.h"
 #include "output.h" // Complain
 #include "memory.h" // memPhysMap
@@ -86,7 +89,7 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
     // In the case of error ...
     regs [i] = 0xffff;
 
-    cli ();
+    take_control();
 
     ac97->_CAR &= ~CAR_CAIP;
     int to = 10000;
@@ -96,7 +99,7 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
       ;
     if (!to)
     {
-      sti ();
+      return_control();
       out (data, "Register %x: codec is busy\n", i * 2);
       continue;
     }
@@ -112,14 +115,14 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
       ;
     if (!to || (ac97->_GSR & GSR_RDCS))
     {
-      sti ();
+      return_control();
       out (data, "Register %x: access timed out\n", i * 2);
       continue;
     }
 
     regs [i] = *reg;
 
-    sti ();
+    return_control();
 
     // Shit, if we remove this it won't work correctly :-(
     out (data, ".\b");
@@ -172,3 +175,60 @@ static uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)
   return cpuGetCP (args [0], args [1]);
 }
 REG_VAR_RWFUNC(0, "CP", cpuScrCP, 2, "Coprocessor Registers access")
+
+// Symbols added by linker.
+extern "C" {
+    extern uint32 cpuFlushCache_data;
+    extern uint32 cpuFlushCache_dataend;
+}
+
+static int controlCount;
+
+// Take over CPU control from wince.  After calling this, the
+// application should not be interrupted by any interrupts or faults.
+// In general, the code should not make any OS calls until after
+// return_control is invoked.
+void
+take_control()
+{
+    if (controlCount++)
+        // Already in a critical section.
+        return;
+
+    // Need to touch cpuflushcache pages or cpuflushcache can cause
+    // page faults in the middle of its cache flush.
+    uint32 *p = &cpuFlushCache_data;
+    while (p < &cpuFlushCache_dataend) {
+        volatile uint32 x;
+        x = *p++;
+    }
+
+    // Ask wince to do privilege escalation.
+    SetKMode(TRUE);
+
+    // Disable interrupts.
+    unsigned long temp;
+    __asm__ __volatile__(
+        "mrs    %0, cpsr\n"
+        "       orr    %0, %0, #0xc0\n"
+        "       msr    cpsr_c, %0"
+        : "=r" (temp) : : "memory");
+}
+
+void
+return_control()
+{
+    if (--controlCount)
+        // Still in the critical section.
+        return;
+
+    // Reenable interrupts.
+    unsigned long temp;
+    __asm__ __volatile__(
+        "mrs    %0, cpsr\n"
+        "       bic    %0, %0, #0xc0\n"
+        "       msr    cpsr_c, %0"
+        : "=r" (temp) : : "memory");
+
+    SetKMode(FALSE);
+}

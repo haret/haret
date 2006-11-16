@@ -55,24 +55,6 @@ static inline uint32 cpuGetPSR(void) {
     asm volatile("mrs %0, cpsr" : "=r" (val));
     return val;
 }
-// Disable interrupts (and fiq)
-static inline void cli() {
-    unsigned long temp;
-    __asm__ __volatile__(
-        "mrs    %0, cpsr\n"
-        "       orr    %0, %0, #0xc0\n"
-        "       msr    cpsr_c, %0"
-        : "=r" (temp) : : "memory");
-}
-// Enable interrupts (and fiq)
-static inline void sti() {
-    unsigned long temp;
-    __asm__ __volatile__(
-        "mrs    %0, cpsr\n"
-        "       bic    %0, %0, #0xc0\n"
-        "       msr    cpsr_c, %0"
-        : "=r" (temp) : : "memory");
-}
 
 // Get pid register
 DEF_GETCPR(getPIDReg, p15, 0, c13, c0, 0)
@@ -84,5 +66,10 @@ static inline uint32 MVAddr(uint32 addr) {
         addr |= getPIDReg() & 0xfe000000;
     return addr;
 }
+
+// Take control of the cpu -- don't let wince interrupt.
+void take_control();
+// Return to normal processing.
+void return_control();
 
 #endif /* _CPU_H */

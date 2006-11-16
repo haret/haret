@@ -5,23 +5,25 @@
 @   For conditions of use see file COPYING
 @
 
-		.bss
-
-junkdata:	.space 0x10000		@ Spare space for data cache flush
-
-		.text
-
 		.macro	CPWAIT
 		mrc	p15, 0, r0, c2, c0, 0
 		mov	r0, r0
 		sub 	pc, pc, #4
 		.endm
 
+		.bss
+
+		.global	cpuFlushCache_data, cpuFlushCache_dataend
+cpuFlushCache_data:	.space 0x10000	@ Spare space for data cache flush
+cpuFlushCache_dataend:
+
+		.text
+
 @ Flush CPU caches
 		.global	cpuFlushCache
 cpuFlushCache:
 @ Flush both data cache and mini-data cache
-		ldr	r0, =junkdata
+		ldr	r0, =cpuFlushCache_data
 		add	r1, r0, #0x10000
 	1:	ldr	r2, [r0], #32
 		teq	r0, r1
