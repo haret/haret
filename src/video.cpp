@@ -6,14 +6,15 @@
 */
 
 #include <windows.h>
-//#include <gx.h>
+#include <gx.h> // GXOpenDisplay
 
 #include "xtypes.h"
-#include "video.h"
-#include "haret.h"
-#include "memory.h"
-#include "output.h"
+#include "haret.h" // hInst
+#include "memory.h" // memVirtToPhys
+#include "output.h" // Complain
 #include "script.h" // REG_VAR_ROFUNC
+#include "lateload.h" // LATE_LOAD
+#include "video.h"
 
 uint16 *vram = NULL;
 uint videoW, videoH;
@@ -47,6 +48,9 @@ uint32 vidGetVRAM()
 }
 REG_VAR_ROFUNC(0, "VRAM", vidGetVRAM, 0, "Video Memory physical address")
 
+__LATE_LOAD(GXOpenDisplay, L"?GXOpenDisplay@@YAHPAUHWND__@@K@Z", L"gx")
+__LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx")
+
 bool videoBeginDraw ()
 {
     RawFrameBufferInfo frameBufferInfo;
@@ -65,16 +69,14 @@ bool videoBeginDraw ()
     } 
     else
     {
-#if 1
-      return FALSE;
-#else
-      if (GXOpenDisplay (GetDesktopWindow (), 0) == 0)
+      if (! late_GXOpenDisplay || ! late_GXBeginDraw)
         return FALSE;
-      vram = (uint16 *)GXBeginDraw ();
-      videoW = GetSystemMetrics (SM_CXSCREEN);
-      videoH = GetSystemMetrics (SM_CYSCREEN);
+      if (late_GXOpenDisplay(GetDesktopWindow (), 0) == 0)
+        return FALSE;
+      vram = (uint16 *)late_GXBeginDraw();
+      videoW = GetSystemMetrics(SM_CXSCREEN);
+      videoH = GetSystemMetrics(SM_CYSCREEN);
       return TRUE;
-#endif
     }
 }
 
