@@ -456,6 +456,21 @@ bool memPhysWrite (uint32 paddr, uint32 value)
   return true;
 }
 
+// Return a long lived (externally visible) virtual mapping from
+// another (possibly process local) virtual mapping.
+uint32
+cachedMVA(void *addr)
+{
+    uint32 *mmu = (uint32*)memPhysMap(cpuGetMMU());
+    uint32 paddr = memVirtToPhys((uint32)addr);
+    uint32 base = paddr >> 20;
+    int pos = searchMMUforPhys(mmu, base, 1);
+    //Output(L"cachedMVA: paddr=%08x pos=%08x pos2=%08x", paddr, pos, pos2);
+    if (pos == -1)
+        return 0;
+    return (uint32)((pos << 20) | (paddr & ((1<<20) - 1)));
+}
+
 uint32 memVirtToPhys (uint32 vaddr)
 {
   uint32 mmu = cpuGetMMU ();

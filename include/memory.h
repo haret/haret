@@ -71,6 +71,9 @@ extern uint32 memPhysRead (uint32 paddr);
 extern bool memPhysWrite (uint32 paddr, uint32 value);
 // Translate a virtual address to physical
 extern uint32 memVirtToPhys (uint32 vaddr);
+// Translate a virtual address to a long lived (externally visible)
+// virtual address.
+uint32 cachedMVA(void *addr);
 
 // Physical memory location (default 0xa0000000 as per Intel specs)
 extern uint32 memPhysAddr;
