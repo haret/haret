@@ -62,7 +62,7 @@ next release <kevin@koconnor.net>
 
   * Update code so that haret compiles with cegcc.  This involves a
     few minor code changes to the C++ code and some file renames.  The
-    assembler syntax was also updated to work with with gas.  Two
+    assembler syntax was also updated to work with gas.  Two
     existing features were disabled - gx based framebuffer detection
     and the BWMEM command - both were causing compile problems.
 
