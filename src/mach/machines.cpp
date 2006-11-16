@@ -3,6 +3,7 @@
 
 #include "util.h" // ARRAY_SIZE
 #include "memory.h" // mem_autodetect
+#include "lateload.h" // setup_LateLoading
 #include "output.h" // Output
 #include "script.h" // setupCommands
 #include "machines.h"
@@ -94,6 +95,9 @@ setupMachineType()
         Output("Error: machine already defined to '%s'", Mach->name);
         return;
     }
+
+    // Bind to DLLs dynamically.
+    setup_LateLoading();
 
     // Detect the memory on the machine via wince first.
     Output("Detecting memory");

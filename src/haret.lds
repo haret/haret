@@ -29,13 +29,10 @@ SECTIONS
     *(.rdata.mach)
     mach_end = .;
 
-    /* List of haret commands */
-    commands_start = .;
-    *(.rdata.cmds)
-    commands_end = .;
-    dumpcommands_start = .;
-    *(.rdata.dumpcmds)
-    dumpcommands_end = .;
+    /* List of late bound function calls */
+    latelist_start = .;
+    *(.rdata.late)
+    latelist_end = .;
   }
 
   .data : {
@@ -43,9 +40,23 @@ SECTIONS
     vars_start = .;
     *(.data.vars)
     vars_end = .;
+
+    /* List of haret commands */
+    commands_start = .;
+    *(.data.cmds)
+    commands_end = .;
+    dumpcommands_start = .;
+    *(.data.dumpcmds)
+    dumpcommands_end = .;
   }
 }
 
 /* Create two symbols around all code. */
 _text_start = ADDR(.text);
 _text_end = ADDR(.text) + SIZEOF(.text);
+_data_start = ADDR(.data);
+_data_end = ADDR(.data) + SIZEOF(.data);
+_rdata_start = ADDR(.rdata);
+_rdata_end = ADDR(.rdata) + SIZEOF(.rdata);
+_bss_start = ADDR(.bss);
+_bss_end = ADDR(.bss) + SIZEOF(.bss);

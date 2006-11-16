@@ -17,7 +17,7 @@ OUT=out/
 CXXFLAGS = -MD -Wall -MD -O -march=armv5te -g -Iinclude -DVERSION=\"$(VERSION)\"
 LDFLAGS =
 
-LIBS = src/haret.lds -lwinsock
+LIBS = -lwinsock
 
 vpath %.cpp src src/wince src/mach
 vpath %.S src src/wince
@@ -70,12 +70,12 @@ MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
 
 HARETOBJS := haret.o haret-res.o \
   s-cpu.o memory.o gpio.o uart.o video.o wincmds.o \
-  asmstuff.o irqchain.o getsetcp.o irq.o \
+  asmstuff.o irqchain.o getsetcp.o irq.o lateload.o \
   util.o output.o script.o network.o cpu.o terminal.o linboot.o \
   com_port.o $(MACHOBJS) \
   toolhelp.lib
 
-$(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS))
+$(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 	@echo "  Linking $@"
 	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
