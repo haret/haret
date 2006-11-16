@@ -1,3 +1,19 @@
+20061115 0.4.3 <kevin@koconnor.net>
+
+  * Add pxa specific interrupt watching code.  This allows one to
+    trace interrupts, trace memory access, and set instruction
+    breakpoints.  This command is only available when haret is run on
+    a pxa processor.
+
+  * Add the ability to bind functions to dlls at runtime instead of at
+    compile time.  This allows the code to run on older OSs, while
+    still offering advanced functionality on newer pdas.  This is
+    available via the LOAD_LATE macro in lateload.h.
+
+  * Add support for enabling/disabling commands and variables at
+    startup.  This is useful to disable commands that aren't
+    applicable to a certain platform.
+
 20061112 0.4.2 <kevin@koconnor.net>
 
   * Implement command registration capability.  Now it is possible to
