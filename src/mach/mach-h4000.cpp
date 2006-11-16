@@ -2,7 +2,7 @@
 #include "mach-types.h"
 //#include "asic3.h"
 
-class MachH4000 : public MachinePXA27x {
+class MachH4000 : public MachinePXA {
 public:
     MachH4000() {
         name = "H4000";
