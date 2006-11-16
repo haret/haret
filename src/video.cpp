@@ -19,9 +19,9 @@ uint16 *vram = NULL;
 uint videoW, videoH;
 
 // Is there another way to find this not involving GAPI?
-static uint32 vidGetVRAM ()
+uint16 *vidGetVirtVRAM()
 {
-    uint32 vaddr = 0; // virtual address
+    uint16 *vaddr = 0; // virtual address
     RawFrameBufferInfo frameBufferInfo;
     
     HDC hdc = GetDC (NULL);
@@ -30,20 +30,21 @@ static uint32 vidGetVRAM ()
     ReleaseDC (NULL, hdc);
     
     if (result > 0)
-      vaddr = (uint32)frameBufferInfo.pFramePointer;
+      vaddr = (uint16*)frameBufferInfo.pFramePointer;
     else if (videoBeginDraw ())
     {
-      vaddr = (uint32)vram;
+      vaddr = vram;
       videoEndDraw ();
     }
 
-    if (vaddr != 0)
-    {
-      return memVirtToPhys (vaddr);
-    }
+    return vaddr;
+}
 
-    return 0;
-} 
+// This is the way to find the framebuffer information not involving GAPI.
+uint32 vidGetVRAM()
+{
+    return memVirtToPhys((uint32)vidGetVirtVRAM());
+}
 REG_VAR_ROFUNC(0, "VRAM", vidGetVRAM, 0, "Video Memory physical address")
 
 bool videoBeginDraw ()
