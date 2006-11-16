@@ -15,7 +15,7 @@ OUT=out/
 
 # Default compiler flags
 CXXFLAGS = -MD -Wall -MD -O -march=armv5te -g -Iinclude -DVERSION=\"$(VERSION)\"
-LDFLAGS = -Wl,-M -Wl,--cref
+LDFLAGS =
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
 
