@@ -10,9 +10,10 @@
 #include <stdarg.h> // va_list
 
 #include "xtypes.h"
-#include "script.h"
+#include "cbitmap.h" // TEST/SET/CLEARBIT
 #include "output.h" // Output, Complain
 #include "util.h" // fnprepare
+#include "script.h"
 
 static const char *quotes = "\"'";
 // Currently processed line (for error display)
@@ -33,6 +34,53 @@ extern "C" {
 
 static varDescriptor *UserVars = NULL;
 static int UserVarsCount = 0;
+
+void
+setupCommands()
+{
+    // Variables
+    for (int i = 0; i < vars_count; i++) {
+        varDescriptor *x = &vars_start[i];
+        if (x->testAvail) {
+            Output("Testing for var %s", x->name);
+            int ret = x->testAvail();
+            if (!ret) {
+                Output("Not registering var %s", x->name);
+                continue;
+            }
+            Output("Registering var %s", x->name);
+        }
+        x->isAvail = 1;
+    }
+    // Dump commands
+    for (int i = 0; i < dumpcommands_count; i++) {
+        hwDumper *x = &dumpcommands_start[i];
+        if (x->testAvail) {
+            Output("Testing for dumpcommand %s", x->name);
+            int ret = x->testAvail();
+            if (!ret) {
+                Output("Not registering dumpcommand %s", x->name);
+                continue;
+            }
+            Output("Registering dumpcommand %s", x->name);
+        }
+        x->isAvail = 1;
+    }
+    // Commands
+    for (int i = 0; i < commands_count; i++) {
+        haret_cmd_s *x = &commands_start[i];
+        if (x->testAvail) {
+            Output("Testing for command %s", x->name);
+            int ret = x->testAvail();
+            if (!ret) {
+                Output("Not registering command %s", x->name);
+                continue;
+            }
+            Output("Registering command %s", x->name);
+        }
+        x->isAvail = 1;
+    }
+}
 
 char *
 get_token(const char **s)
@@ -88,32 +136,18 @@ static char peek_char (const char **s)
   return *x;
 }
 
-static void BitSet (uint32 *bs, uint num, bool state)
-{
-  uint32 ofs = num >> 5;
-  uint32 mask = 1 << (num & 31);
-  if (state)
-    bs [ofs] |= mask;
-  else
-    bs [ofs] &= ~mask;
-}
-
-static bool BitGet (uint32 *bs, uint num)
-{
-  uint32 ofs = num >> 5;
-  uint32 mask = 1 << (num & 31);
-  return !!(bs [ofs] & mask);
-}
-
 static bool get_args (const char **s, const char *keyw, uint32 *args,
                       uint count);
 
-static varDescriptor *FindVar (const char *vn, varDescriptor *Vars, int VarCount)
+static varDescriptor *
+FindVar(const char *vn, varDescriptor *Vars, int VarCount)
 {
-  for (int i = 0; i < VarCount; i++)
-    if (!strcasecmp (vn, Vars [i].name))
-      return Vars + i;
-  return NULL;
+    for (int i = 0; i < VarCount; i++) {
+        varDescriptor *var = &Vars[i];
+        if (var->isAvail && !strcasecmp(vn, var->name))
+            return var;
+    }
+    return NULL;
 }
 
 static bool GetVar (const char *vn, const char **s, uint32 *v,
@@ -140,7 +174,18 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
                   ScriptLine, var->val_size);
         return false;
       }
-      *v = BitGet (var->bsval, *v);
+      *v = TESTBIT(var->bsval, *v);
+      break;
+    case varIntList:
+      if (!get_args (s, vn, v, 1))
+        return false;
+      if (*v > var->val_size || *v >= var->bsval[0])
+      {
+        Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
+                  ScriptLine, var->bsval[0]);
+        return false;
+      }
+      *v = var->bsval[*v];
       break;
     case varROFunc:
     case varRWFunc:
@@ -158,7 +203,8 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
   return true;
 }
 
-varDescriptor *NewVar (char *vn, varType vt)
+static varDescriptor *
+NewVar (char *vn, varType vt)
 {
   varDescriptor *ouv = UserVars;
   UserVars = (varDescriptor *)
@@ -419,17 +465,18 @@ bool scrInterpret (const char *str, uint lineno)
     char *tok = get_token(&x);
 
     // Okay, now see what keyword is this :)
-    for (int i = 0; i < commands_count; i++)
-        if (IsToken(tok, commands_start[i].name)) {
-            commands_start[i].func(tok, x);
+    for (int i = 0; i < commands_count; i++) {
+        haret_cmd_s *hc = &commands_start[i];
+        if (hc->isAvail && IsToken(tok, hc->name)) {
+            hc->func(tok, x);
             return true;
         }
+    }
 
     if (IsToken(tok, "Q|UIT"))
         return false;
-    else
-        Complain(C_ERROR("Unknown keyword: `%hs'"), tok);
 
+    Complain(C_ERROR("Unknown keyword: `%hs'"), tok);
     return true;
 }
 
@@ -444,12 +491,13 @@ cmd_dump(const char *cmd, const char *x)
     }
 
     hwDumper *hwd = NULL;
-    for (int i = 0; i < dumpcommands_count; i++)
-        if (!strcasecmp (vn, dumpcommands_start[i].name))
-        {
-            hwd = dumpcommands_start + i;
+    for (int i = 0; i < dumpcommands_count; i++) {
+        hwDumper *hd = &dumpcommands_start[i];
+        if (hd->isAvail && !strcasecmp(vn, hd->name)) {
+            hwd = hd;
             break;
         }
+    }
     if (!hwd)
     {
         Output("line %d: No dumper %s available, see HELP DUMP for a list", ScriptLine, vn);
@@ -518,8 +566,6 @@ cmd_set(const char *cmd, const char *x)
             free(*var->sval);
         *var->sval = strnew (get_token (&x));
         var->val_size = 1;
-        if (var->notify_set != NULL)
-            (var->notify_set)();
         break;
     case varBitSet:
     {
@@ -536,7 +582,18 @@ cmd_set(const char *cmd, const char *x)
                       ScriptLine, var->val_size);
             return;
         }
-        BitSet (var->bsval, idx, !!val);
+        if (val)
+            SETBIT(var->bsval, idx);
+        else
+            CLEARBIT(var->bsval, idx);
+        break;
+    }
+    case varIntList:
+    {
+        uint32 idx=1;
+        while (idx < var->val_size && get_expression(&x, &var->bsval[idx]))
+            idx++;
+        var->bsval[0] = idx;
         break;
     }
     case varRWFunc:
@@ -576,11 +633,14 @@ cmd_help(const char *cmd, const char *x)
 
         Output("Name\tType\tDescription");
         Output("-----------------------------------------------------------");
-        for (int i = 0; i < vars_count; i++)
-        {
+        for (int i = 0; i < vars_count; i++) {
+            varDescriptor *var = &vars_start[i];
+            if (!var->isAvail)
+                continue;
+
             args [0] = 0;
             type [0] = 0;
-            switch (vars_start [i].type)
+            switch (var->type)
             {
             case varInteger:
                 strcpy (type, "int");
@@ -591,31 +651,34 @@ cmd_help(const char *cmd, const char *x)
             case varBitSet:
                 strcpy (type, "bitset");
                 break;
+            case varIntList:
+                strcpy (type, "int list");
+                break;
             case varROFunc:
                 strcpy (type, "ro func");
                 // fallback
             case varRWFunc:
-                if (!type [0])
-                    strcpy (type, "rw func");
-                if (vars_start [i].val_size)
-                    sprintf (args, "(%d)", vars_start [i].val_size);
+                if (!type[0])
+                    strcpy(type, "rw func");
+                if (var->val_size)
+                    sprintf(args, "(%d)", var->val_size);
                 break;
             }
-            Output("%s%s\t%s\t%s", vars_start [i].name, args, type,
-                   vars_start [i].desc);
+            Output("%s%s\t%s\t%s", var->name, args, type, var->desc);
         }
     }
     else if (!strcasecmp (vn, "DUMP"))
     {
         char args [10];
-        for (int i = 0; i < dumpcommands_count; i++)
-        {
-            if (dumpcommands_start[i].nargs)
-                sprintf (args, "(%d)", dumpcommands_start[i].nargs);
+        for (int i = 0; i < dumpcommands_count; i++) {
+            hwDumper *hd = &dumpcommands_start[i];
+            if (!hd->isAvail)
+                continue;
+            if (hd->nargs)
+                sprintf (args, "(%d)", hd->nargs);
             else
                 args [0] = 0;
-            Output("%s%s\t%s", dumpcommands_start[i].name, args,
-                   dumpcommands_start[i].desc);
+            Output("%s%s\t%s", hd->name, args, hd->desc);
         }
     }
     else if (!vn || !*vn)
@@ -626,9 +689,11 @@ cmd_help(const char *cmd, const char *x)
         Output("  <ABC> denotes a mandatory argument");
         Output("  Any command name can be shortened to minimal unambiguous length,");
         Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
-        for (int i = 0; i < commands_count; i++)
-            if (commands_start[i].desc)
-                Output("%s", commands_start[i].desc);
+        for (int i = 0; i < commands_count; i++) {
+            haret_cmd_s *hc = &commands_start[i];
+            if (hc->isAvail && hc->desc)
+                Output("%s", hc->desc);
+        }
         Output("QUIT");
         Output("  Quit the remote session.");
     }

@@ -3,7 +3,8 @@
 
 #include "util.h" // ARRAY_SIZE
 #include "memory.h" // mem_autodetect
-#include "output.h"
+#include "output.h" // Output
+#include "script.h" // setupCommands
 #include "machines.h"
 
 // Global current machine setting.
@@ -103,4 +104,7 @@ setupMachineType()
     Mach = findMachineType();
     Output("Initializing for machine '%s'", Mach->name);
     Mach->init();
+
+    // Setup variable/command lists.
+    setupCommands();
 }
