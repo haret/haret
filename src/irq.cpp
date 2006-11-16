@@ -370,7 +370,7 @@ stop_traps(void)
 // Commands and variables are only applicable if AllocPhysMem is
 // available and if this is a PXA based pda.
 static int testAvail() {
-    return ptr_AllocPhysMem && dynamic_cast<MachinePXA*>(Mach);
+    return late_AllocPhysMem && dynamic_cast<MachinePXA*>(Mach);
 }
 
 // Mask of ignored interrupts (set in script.cpp)
@@ -687,8 +687,8 @@ irqWatch(uint seconds)
     // Allocate space for the irq handlers in physically continuous ram.
     void *rawCode = 0;
     ulong dummy;
-    rawCode = ptr_AllocPhysMem(size_handlerCode()
-                               , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
+    rawCode = late_AllocPhysMem(size_handlerCode()
+                                , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
     irqChainCode *code = (irqChainCode *)rawCode;
     struct irqData *data;
     if (!rawCode) {
