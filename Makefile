@@ -8,14 +8,16 @@
 #
 
 # Program version
-VERSION=0.4.2
+VERSION=0.4.4
 
 # Output directory
 OUT=out/
 
 # Default compiler flags
 CXXFLAGS = -MD -Wall -MD -O -march=armv5te -g -Iinclude -DVERSION=\"$(VERSION)\"
-LDFLAGS =
+LDFLAGS = -Wl,-M -Wl,--cref
+# LDFLAGS to debug invalid imports in exe
+#LDFLAGS = -Wl,-M -Wl,--cref
 
 LIBS = -lwinsock
 
