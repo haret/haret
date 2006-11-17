@@ -53,7 +53,7 @@ static MachinePXA27x RefMachinePXA27x;
 
 // Symbols added by linker.
 extern "C" {
-    extern Machine *mach_start;
+    extern Machine *mach_start[];
     extern Machine *mach_end;
 }
 
@@ -64,7 +64,7 @@ findMachineType()
     wchar_t oeminfo[128], platform[128];
     SystemParametersInfo(SPI_GETOEMINFO, sizeof(oeminfo), oeminfo, 0);
     SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(platform), platform, 0);
-    Machine **p = &mach_start;
+    Machine **p = mach_start;
     while (p < &mach_end) {
         Machine *m = *p;
         p++;
