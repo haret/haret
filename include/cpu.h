@@ -41,14 +41,8 @@ extern uint32 cpuGetCP (uint cp, uint regno);
 extern bool cpuSetCP (uint cp, uint regno, uint32 val);
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
-// Get current Process Identifier register (0-127)
-extern uint32 cpuGetPID ();
 // Flush all CPU data caches (must be in supervisor mode)
 extern "C" void cpuFlushCache ();
-// Get Domain Access Control Register to given value
-extern "C" uint32 cpuGetDACR ();
-// Set Domain Access Control Register to given value (in supervisor mode)
-extern "C" void cpuSetDACR (uint32 value);
 // Get Program Status Register value
 static inline uint32 cpuGetPSR(void) {
     uint32 val;
@@ -71,5 +65,7 @@ static inline uint32 MVAddr(uint32 addr) {
 void take_control();
 // Return to normal processing.
 void return_control();
+// Force wince to map in all haret application pages.
+void touchAppPages(void);
 
 #endif /* _CPU_H */

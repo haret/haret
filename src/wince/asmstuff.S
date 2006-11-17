@@ -12,10 +12,8 @@
 		.endm
 
 		.bss
-
-		.global	cpuFlushCache_data, cpuFlushCache_dataend
-cpuFlushCache_data:	.space 0x10000	@ Spare space for data cache flush
-cpuFlushCache_dataend:
+		.space  32
+junkdata:	.space 0x10000		@ Spare space for data cache flush
 
 		.text
 
@@ -23,7 +21,7 @@ cpuFlushCache_dataend:
 		.global	cpuFlushCache
 cpuFlushCache:
 @ Flush both data cache and mini-data cache
-		ldr	r0, =cpuFlushCache_data
+		ldr	r0, =junkdata
 		add	r1, r0, #0x10000
 	1:	ldr	r2, [r0], #32
 		teq	r0, r1

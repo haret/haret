@@ -163,10 +163,12 @@ REG_VAR_ROFUNC(
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
 // Returns the PID register contents
-uint32 cpuGetPID ()
+static uint32 cpuGetPID()
 {
     return get_p15r13() >> 25;
 }
+REG_VAR_ROFUNC(0, "PID", cpuGetPID, 0,
+               "Current Process Identifier register value")
 
 static uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)
 {
@@ -178,8 +180,48 @@ REG_VAR_RWFUNC(0, "CP", cpuScrCP, 2, "Coprocessor Registers access")
 
 // Symbols added by linker.
 extern "C" {
-    extern uint32 cpuFlushCache_data;
-    extern uint32 cpuFlushCache_dataend;
+    extern uint32 _text_start;
+    extern uint32 _text_end;
+    extern uint32 _data_start;
+    extern uint32 _data_end;
+    extern uint32 _rdata_start;
+    extern uint32 _rdata_end;
+    extern uint32 _bss_start;
+    extern uint32 _bss_end;
+}
+
+// Access all the pages in a pointer range.  (This forces wince to
+// make sure the page is mapped.)
+static void
+touchPages(uint32 *start, uint32 *end)
+{
+    if (PAGE_ALIGN((uint32)start) != (uint32)start)
+        Output("Internal error. touchPages range not page aligned");
+
+    while (start < end) {
+        volatile uint32 dummy;
+        dummy = *start;
+        start += (PAGE_SIZE/sizeof(*start));
+    }
+}
+
+// Touch all the code pages of the HaRET application.
+//
+// wm5 has been seen lazily mapping in code pages.  That is, it may
+// not actually load certain functions (or parts of a function) into
+// memory until they are actually used.  This presents problems for
+// certain haret functions that try to take full control of the CPU,
+// because part of the code could might not yet be mapped.  When this
+// code is accessed it causes a fault that hands control back to wm5.
+// A solution is to touch all code pages to ensure the code is really
+// in memory.
+void
+touchAppPages(void)
+{
+    touchPages(&_text_start, &_text_end);
+    touchPages(&_data_start, &_data_end);
+    touchPages(&_rdata_start, &_rdata_end);
+    touchPages(&_bss_start, &_bss_end);
 }
 
 static int controlCount;
@@ -195,16 +237,11 @@ take_control()
         // Already in a critical section.
         return;
 
-    // Need to touch cpuflushcache pages or cpuflushcache can cause
-    // page faults in the middle of its cache flush.
-    uint32 *p = &cpuFlushCache_data;
-    while (p < &cpuFlushCache_dataend) {
-        volatile uint32 x;
-        x = *p++;
-    }
-
     // Ask wince to do privilege escalation.
     SetKMode(TRUE);
+
+    // Map in pages to prevent page faults in critical section.
+    touchAppPages();
 
     // Disable interrupts.
     unsigned long temp;
