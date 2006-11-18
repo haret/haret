@@ -108,7 +108,4 @@ setupMachineType()
     Mach = findMachineType();
     Output("Initializing for machine '%s'", Mach->name);
     Mach->init();
-
-    // Setup variable/command lists.
-    setupCommands();
 }

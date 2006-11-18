@@ -144,6 +144,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
   // Detect some system settings
   setupMachineType();
 
+  // Setup variable/command lists.
+  setupCommands();
+
   // Initialize sockets
   Output("Running WSAStartup");
   WSADATA wsadata;
