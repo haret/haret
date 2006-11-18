@@ -240,6 +240,8 @@ static BOOL CALLBACK pbDialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   return FALSE;
 }
 
+static uint LastProgress;
+
 bool InitProgress (uint Max)
 {
 #ifdef USE_WAIT_CURSOR
@@ -265,6 +267,7 @@ bool InitProgress (uint Max)
   SetCursor (LoadCursor (NULL, IDC_WAIT));
 #endif
 
+  LastProgress = 0;
   SendMessage (slider, TBM_SETRANGEMAX, TRUE, Max);
   SendMessage (slider, TBM_SETTICFREQ, 10, 0);
   return true;
@@ -279,8 +282,14 @@ bool SetProgress (uint Value)
   if (!slider)
     return false;
 
+  LastProgress = Value;
   SendMessage (slider, TBM_SETSELEND, TRUE, Value);
   return true;
+}
+
+bool AddProgress(int add)
+{
+    return SetProgress(LastProgress + add);
 }
 
 void DoneProgress ()

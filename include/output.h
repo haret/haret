@@ -37,6 +37,7 @@ void closeLogFile();
 
 extern bool InitProgress (uint Max);
 extern bool SetProgress (uint Value);
+extern bool AddProgress(int add);
 extern void DoneProgress ();
 
 // This function can be assigned a value in order to redirect
