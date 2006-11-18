@@ -22,6 +22,7 @@
 #include "cpu.h" // take_control, return_control, touchAppPages
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
+#include "linboot.h"
 
 // Kernel file name
 static char *bootKernel = "zimage";
@@ -713,8 +714,11 @@ copy_pages(char **pages, const char *src, uint32 size)
 void
 bootRamLinux(const char *kernel, uint32 kernelSize
              , const char *initrd, uint32 initrdSize
-             , int bootViaResume)
+             , const char *cmdline, int bootViaResume)
 {
+    if (cmdline)
+        bootCmdline = const_cast<char *>(cmdline);
+
     // Obtain physically continous ram for the kernel
     struct bootmem *bm = prepForKernel(kernelSize, initrdSize);
     if (!bm)
