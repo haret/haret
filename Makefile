@@ -63,6 +63,10 @@ $(OUT)%.lib: src/wince/%.def
 	@echo "  Building library $@"
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
+$(OUT)%.exe: out/%-debug
+	@echo "  Stripping $^ to make $@"
+	$(Q)$(STRIP) $^ -o $@
+
 ################ Additional rules
 
 MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
@@ -80,10 +84,6 @@ HARETOBJS := haret.o haret-res.o \
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 	@echo "  Linking $@"
 	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
-
-$(OUT)haret.exe: $(OUT)haret-debug
-	@echo "  Stripping $^ to make $@"
-	$(Q)$(STRIP) $^ -o $@
 
 clean:
 	rm -rf $(OUT)
