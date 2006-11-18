@@ -17,10 +17,12 @@ junkdata:	.space 0x10000		@ Spare space for data cache flush
 
 		.text
 
-@ Flush CPU caches
+@ Flush CPU caches - this MUST be called between
+@ take_control()/return_control()
+@
+@ Dirties r0, r1, r2
 		.global	cpuFlushCache
 cpuFlushCache:
-@ Flush both data cache and mini-data cache
 		ldr	r0, =junkdata
 		add	r1, r0, #0x10000
 	1:	ldr	r2, [r0], #32
@@ -35,86 +37,69 @@ cpuFlushCache:
 
 		mov	pc, lr
 
-@ Flush caches and jump to the preloader.
-@ IN:	r0 = boot machine type
-@	r1 = number of pages
-@	r2 = physical RAM address
-@	r3 = physical address of the preloader
-@	r4 = number of pages for tags + kernel
-		.global	linux_start
-linux_start:
-		mov	r9, r0			@ save machine type
-		ldr	r4, [sp]		@ get fifth arg from stack
+@ Assembler stub that (when relocated) can store the location of a
+@ stack and C executable function to jump to.
+        .section .text.preload
+        .global stackJumper
+stackJumper:
+stack:          .long 0
+data:           .long 0
+execCode:       .long 0
+asm_handler:
+        ldr     r0, [pc, #(data - . - 8)]
+        ldr     sp, [pc, #(stack - . - 8)]
+        ldr     pc, [pc, #(execCode - . - 8)]
 
-		mov	r0, #0
-		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
-		mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
-		mcr	p15, 0, r0, c7, c7, 0	@ Invalidate I+D caches & BTB
-		CPWAIT
+@ Code that can disable the MMU and jump to a function.
+@ In:   r0 = Physical address of this function
+@       r1 = Virtual address of MMU in non-cached ram.
+@       r2 = Physical address of code to jump to
+        .section .text.trampoline
+        .global mmu_trampoline, mmu_trampoline_end
+mmu_trampoline:
+	@ Store previous registers on stack.
+        stmdb   sp, {r4-r14}
 
-		mov	pc, r3			@ jump to linux_preloader
+        @ Write back all cpu caches
+        mov     r4, r0
+        mov     r5, r1
+        mov     r6, r2
+        bl      cpuFlushCache
 
-@ Turn off MMU, copy kernel to proper location and jump to kernel loader.
-@ This procedure is copied to a virtual address that has a 1:1 mapping with
-@ the same physical address, thus we don't have to hold the breath while
-@ turning MMU off. The table of physical address of every 4K of kernel 
-@ is at linux_preloader + 0x100
-@ IN:	r9 = boot machine type
-@	r1 = number of pages
-@	r2 = physical RAM address 
-@	r4 = number of pages for tags + kernel
-		.global	linux_preloader
-		.global	linux_preloader_end
-linux_preloader:
-		add	r3, pc, #0xf8		@ r3 = linux_preloader+0x100
-		add	r2, r2, #0x100		@ tag list address (0xa0000100)
-		mov	r10, r2			@ r10 = tag list address
+        @ Turn off mapping for this code
+        mov     r1, r4, lsr #20
+        mov     r0, r1, asl #20         @ r0 = funcaddr & 0xfff00000
+        orr     r0, r0, #0x00000C00
+        orr     r0, r0, #0x00000002     @ r0 |= 0xC02
+        str     r0, [r5, r1, asl #2]    @ mmu[funcaddr>>20] = r0
 
-		mov	r0, #0
-		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
-		mcr	p15, 0, r0, c7, c7, 0	@ invalidate I+D & BTB
+        @ Force MMU update and invalidate I cache
+        mov	r0, #0
+        mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
+        mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
+        mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
+        CPWAIT
 
-		mrc	p15, 0, r0, c1, c0, 0
-		bic	r0, r0, #5		@ MMU & Dcache off
-		bic	r0, r0, #0x1000         @ Icache off
-		mcr	p15, 0, r0, c1, c0, 0	@ disable the MMU & caches
-		CPWAIT
+        @ Jump to code with shared virtual/physical mapping
+        add     pc, r4, #(1f - mmu_trampoline)
 
-		mov	r0, #0
-		mcr	p15, 0, r0, c13, c0, 0	@ clear PID
-		mcr	p15, 0, r0, c8, c7, 0	@ invalidate I+D TLB
-		CPWAIT
+1:      @ Code is running at a vm address that is the same as its
+        @ physical address.  Now disable the MMU.
+        mrc	p15, 0, r0, c1, c0, 0
+        bic	r0, r0, #5		@ MMU & Dcache off
+        bic	r0, r0, #0x1000         @ Icache off
+        mcr	p15, 0, r0, c1, c0, 0	@ disable the MMU & caches
+        CPWAIT
 
-nextpage:	ldr	r7, [r3], #4		@ Get next physical address
-		add	r8, r7, #0x1000		@ Copy 4K
+        mov	r0, #0
+        mcr	p15, 0, r0, c13, c0, 0	@ clear PID
+        mcr	p15, 0, r0, c8, c7, 0	@ invalidate I+D TLB
+        mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
+        CPWAIT
 
-copypage:	ldr	r0, [r7], #4
-		str	r0, [r2], #4
-		teq	r7, r8
-		bne	copypage
+        @ MMU is now disabled.  Call function.
+        bx      r6
 
-		tst	r2, #0x00000100		@ tag list should be at 0xa0000100
-		addne	r2, r2, #0x6f00		@ but kernel should be at 0xa0008000
-		movne	r5, r2			@ save kernel physical address in r5
+mmu_trampoline_end:
 
-		subs	r4, r4, #1		@ skip tags and kernel pages
-		addeq	r2, r5, #0x00500000	@ place initrd at kernel + 5Mb
-
-		subs	r1, r1, #1
-		bne	nextpage
-
-@ turn off LCD controller...
-@		mov	r1, #0x44000000
-@		ldr	r2, [r1]
-@		orr	r2, r2, #0x400
-@		str	r2, [r1]
-
-		mov	r0, #0
-		mov	r1, r9			@ saved machine type
-		mov	r2, r10			@ saved tag list address
-
-@ Jump into the kernel (which is 0x8000-0x0100 past the tags)
-		add	pc, r10, #0x7f00
-linux_preloader_end:
-
-		.end
+        .end

@@ -1,25 +1,27 @@
 /*
-    Linux loader for Windows CE
-    Copyright (C) 2003 Andrew Zabolotny
+ * Linux loader for Windows CE
+ *
+ * (C) Copyright 2006 Kevin O'Connor <kevin@koconnor.net>
+ * Copyright (C) 2003 Andrew Zabolotny
+ *
+ * This file may be distributed under the terms of the GNU GPL license.
+ */
 
-    For conditions of use see file COPYING
-*/
 
 #include <stdio.h> // FILE, fopen, fseek, ftell
-#include <windows.h>
-#include "pkfuncs.h" // SetProcPermissions, SetKMode
+#include <ctype.h> // toupper
 
-#include "xtypes.h"
 #define CONFIG_ACCEPT_GPL
 #include "setup.h"
-#include "memory.h" // memVirtToPhys, memPhysWrite
-#include "util.h" // fnprepare, GarbageCollector
-#include "output.h" // Output, Complain
-#include "video.h"
-#include "resource.h"
-#include "cpu.h" // cli, sti
+
+#include "xtypes.h"
+#include "script.h" // REG_CMD
+#include "util.h"  // fnprepare
+#include "memory.h" // memPhysMap, memPhysAddr, memPhysSize
+#include "output.h" // Output, Screen
+#include "cpu.h" // take_control, return_control, touchAppPages
+#include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
-#include "script.h" // REG_VAR_STR
 
 // Kernel file name
 static char *bootKernel = "zimage";
@@ -30,7 +32,7 @@ static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
 // Milliseconds to sleep for nicer animation :-)
 static uint32 bootSpeed = 5;
 // ARM machine type (see linux/arch/arm/tools/mach-types)
-static uint32 bootMachineType = 339;
+static uint32 bootMachineType = 0;
 
 REG_VAR_STR(0, "KERNEL", bootKernel, "Linux kernel file name")
 REG_VAR_STR(0, "INITRD", bootInitrd, "Initial Ram Disk file name")
@@ -40,20 +42,39 @@ REG_VAR_INT(0, "BOOTSPD", bootSpeed
 REG_VAR_INT(0, "MTYPE", bootMachineType
             , "ARM machine type (see linux/arch/arm/tools/mach-types)")
 
-// Our own assembly functions
-extern "C" uint32 linux_start (uint32 MachType, uint32 NumPages,
-  uint32 KernelPA, uint32 PreloaderPA, uint32 TagKernelNumPages);
-extern "C" void linux_preloader ();
-extern "C" void linux_preloader_end ();
+// Color codes useful when writing to framebuffer.
+enum {
+    COLOR_BLACK   = 0x0000,
+    COLOR_WHITE   = 0xFFFF,
+    COLOR_RED     = 0xf800,
+    COLOR_GREEN   = 0x07e0,
+    COLOR_BLUE    = 0x001f,
+    COLOR_YELLOW  = COLOR_RED | COLOR_GREEN,
+    COLOR_CYAN    = COLOR_GREEN | COLOR_BLUE,
+    COLOR_MAGENTA = COLOR_RED | COLOR_BLUE,
+};
+
+
+/****************************************************************
+ * Linux utility functions
+ ****************************************************************/
+
+// Recommended tags placement = RAM start + 256
+#define PHYSOFFSET_TAGS   0x100
+// Recommended kernel placement = RAM start + 32K
+#define PHYSOFFSET_KERNEL 0x8000
+// Initrd will be put at the address of kernel + 5MB
+#define PHYSOFFSET_INITRD (PHYSOFFSET_KERNEL + 0x500000)
+// Maximum size of the tags structure.
+#define TAGSIZE (PAGE_SIZE - 0x100)
 
 /* Set up kernel parameters. ARM/Linux kernel uses a series of tags,
  * every tag describe some aspect of the machine it is booting on.
  */
-static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_size)
+static void
+setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
 {
-  struct tag *tag;
-
-  tag = (struct tag *)tagaddr;
+  struct tag *tag = (struct tag *)tagaddr;
 
   // Core tag
   tag->hdr.tag = ATAG_CORE;
@@ -82,7 +103,7 @@ static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_siz
   {
     tag->hdr.tag = ATAG_INITRD2;
     tag->hdr.size = tag_size (tag_initrd);
-    tag->u.initrd.start = initrd;
+    tag->u.initrd.start = phys_initrd_addr;
     tag->u.initrd.size = initrd_size;
     tag = tag_next (tag);
   }
@@ -92,355 +113,622 @@ static void setup_linux_params (uint8 *tagaddr, uint32 initrd, uint32 initrd_siz
   tag->hdr.size = 0;
 }
 
-/* Loading process:
- * function do_it is loaded onto address ADDR_KERNEL along with parameters
- * (offset=0x100) and kernel image (offset=0x8000). Afterwards DRAMloader
- * is called; it disables MMU and jumps onto ADDR_KERNE. Function do_it
- * then copies kernel image to its proper address (0xA0008000) and calls it.
- * Initrd is loaded onto address INITRD and the address is passed to kernel
- * via ATAG.
- */
 
+/****************************************************************
+ * Preloader
+ ****************************************************************/
 
-// Whew... a real Microsoft API function (by number of parameters :)
-static bool read_file (FILE *f, uint8 *buff, uint32 size, uint32 totsize,
-                       uint32 &totread, videoBitmap &thermored, int dx, int dy)
+// Mark a function that is used in the C preloader.  Note all
+// functions marked this way will be copied to physical ram for the
+// preloading and are run with the MMU disabled.  These functions must
+// be careful to not call functions that aren't also marked this way.
+// They must also not use any global variables.
+#define __preload __attribute__ ((__section__ (".text.preload")))
+
+// Data Shared between normal haret code and C preload code.
+struct preloadData {
+    uint32 machtype;
+    uint32 videoRam;
+    uint32 startRam;
+
+    char *tags;
+    uint32 kernelSize;
+    const char **kernelPages;
+    uint32 initrdSize;
+    const char **initrdPages;
+};
+
+// Copy memory (need a memcpy with __preload tag).
+static void __preload
+do_copy(char *dest, const char *src, int count)
 {
-  uint8 *cur = buff;
-  uint32 th = thermored.GetHeight ();
-  uint sy1 = (totread * th) / totsize;
-  while (size)
-  {
-    int c = size;
-    if (c > 16 * 1024)
-      c = 16 * 1024;
-    c = fread (cur, 1, c, f);
-    if (c <= 0)
-      return false;
-
-    size -= c;
-    cur += c;
-
-    totread += c;
-    uint sy2 = (totread * th) / totsize;
-
-    while (sy1 < sy2)
-    {
-      thermored.DrawLine (dx + THERMOMETER_X, dy + THERMOMETER_Y +
-                          th - 1 - sy1, sy1);
-      sy1++;
-      Sleep (bootSpeed);
-    }
-  }
-
-  return true;
+    uint32 *d = (uint32*)dest, *s = (uint32*)src, *e = (uint32*)&src[count];
+    while (s < e)
+        *d++ = *s++;
 }
 
-/* LINUX BOOT PROCESS
- *
- * Since we need to load Linux at the beginning of physical RAM, it will
- * overwrite the MMU L1 table which is located in WinCE somewhere around
- * there. Thus we have either to copy the kernel and initrd twice (once
- * to some well-known location and second time to the actual destination
- * address (0xa0008000 for XScale), or to use a clever algorithm (which
- * is used here):
- *
- * A "kernel bundle" is prepared. It consists of the following things:
- * - Several values to be further passed to kernel (such as machine type).
- * - The tag list to be passed to kernel.
- * - The kernel
- * - The initrd
- *
- * Then we proceed as follows: create a one-to-one virtual:physical mapping,
- * then copy to the very end of physical RAM (where there's little chance of
- * overwriting something important) a little pre-loader along with a large
- * table containing a list of physical addresses for every 4k page of the
- * kernel bundle.
- *
- * Now when the pre-loader gets control, it disables MMU and starts copying
- * kernel bundle to desired location (since it knows the physical location).
- * Finally, it passes control to kernel.
- */
-static void bootLinux ()
+// Copy a list of pages to a linear area of memory
+static void __preload
+do_copyPages(char *dest, const char **pages, int bytes)
 {
-  char fn [200];
-  videoBitmap logo;
-  videoBitmap thermored;
-  videoBitmap thermoblue;
-  videoBitmap eyes;
-
-  fnprepare (bootKernel, fn, sizeof (fn));
-  FILE *fk = fopen (fn, "rb");
-  if (!fk)
-  {
-    Complain (C_ERROR ("Failed to load kernel %hs"), fn);
-    return;
-  }
-
-  uint32 i, ksize, isize = 0;
-
-  // Find out kernel image size
-  fseek (fk, 0, SEEK_END);
-  ksize = ftell (fk);
-  fseek (fk, 0, SEEK_SET);
-
-  FILE *fi = NULL;
-  if (bootInitrd && *bootInitrd)
-  {
-    fnprepare (bootInitrd, fn, sizeof (fn));
-    fi = fopen (fn, "rb");
-    if (fi)
-    {
-      fseek (fi, 0, SEEK_END);
-      isize = ftell (fi);
-      fseek (fi, 0, SEEK_SET);
+    while (bytes > 0) {
+        do_copy(dest, *pages, PAGE_SIZE);
+        pages++;
+        dest += PAGE_SIZE;
+        bytes -= PAGE_SIZE;
     }
-  }
-
-  videoBeginDraw ();
-  
-  /* Load the bitmaps used to display load progress */
-  if (videoW == 480 && videoH == 640)
-  {
-    /* VGA */
-    logo.load (IDB_LOGO_VGA);
-    thermored.load (IDB_THERMORED_VGA);
-    thermoblue.load (IDB_THERMOBLUE_VGA);
-    eyes.load (IDB_EYES_VGA);
-  }
-  else
-  {
-    logo.load (IDB_LOGO);
-    thermored.load (IDB_THERMORED);
-    thermoblue.load (IDB_THERMOBLUE);
-    eyes.load (IDB_EYES);
-  }
-
-  int dx = (videoW - logo.GetWidth ()) / 2;
-  int dy = (videoH - logo.GetHeight ()) / 2;
-	
-  logo.Draw (dx, dy);
-  thermoblue.Draw (dx + THERMOMETER_X, dy + THERMOMETER_Y);
-
-  // Align kernel and initrd sizes to nearest 4k boundary.
-  uint totsize = ksize + isize;
-  uint aksize = (ksize + 4095) & ~4095;
-  uint aisize = (isize + 4095) & ~4095;
-
-  // Construct kernel bundle (tags + kernel + initrd)
-  uint8 *kernel_bundle;
-  uint kbsize = 4096 + aksize + aisize;
-
-  // We have to ensure that physical memory allocated kernel is not
-  // located too low. If we won't do this it could happen that we'll overlap
-  // memory locations when copying from the allocated buffer to destination
-  // physical address.
-  uint alloc_tries = 10;
-  uint kernel_addr = memPhysAddr + 0x8000;
-  Output("Physical kernel address: %08x", kernel_addr);
-
-  GarbageCollector gc;
-
-  for (;;)
-  {
-    uint mem = (uint)malloc (kbsize + 4095);
-    if (!mem)
-    {
-      Output("FATAL: Not enough memory for kernel bundle!");
-      gc.FreeAll ();
-      return;
-    }
-
-    // Kernel bundle should start at the beginning of page
-    kernel_bundle = (uint8 *)((mem + 4095) & ~0xfff);
-    // Since we copy the kernel to the beginning of physical memory page
-    // by page it will be enough if we ensure that every allocated page has
-    // physical address larger than its final physical address.
-    bool ok = true;
-    for (i = 0; i <= (kbsize >> 12); i++)
-      if (memVirtToPhys ((uint32)kernel_bundle + (i << 12)) < kernel_addr + (i << 12))
-      {
-        ok = false;
-        break;
-      }
-
-    if (ok)
-      break;
-
-    gc.Collect ((void *)mem);
-    Output("WARNING: page %d has addr %08x, target addr %08x, retrying",
-            i, memVirtToPhys ((uint32)kernel_bundle + (i << 12)),
-            kernel_addr + (i << 12));
-
-    if (!--alloc_tries)
-    {
-      Output("FATAL: Cannot allocate kernel bundle in high memory!");
-      gc.FreeAll ();
-      return;
-    }
-  }
-
-  gc.FreeAll ();
-
-  uint8 *taglist = kernel_bundle;
-  uint8 *kernel = taglist + 4096;
-  uint8 *initrd = kernel + aksize;
-
-  // Now read the kernel and initrd
-  uint totread = 0;
-
-  if (!read_file (fk, kernel, ksize, totsize, totread, thermored, dx, dy))
-  {
-    Complain (C_ERROR ("Error reading kernel `%hs'"), bootKernel);
-errexit:
-    free (kernel);
-    return;
-  }
-  fclose (fk);
-
-  if (isize)
-  {
-    if (!read_file (fi, initrd, isize, totsize, totread, thermored, dx, dy))
-    {
-      Complain (C_ERROR ("Error reading initrd `%hs'"), bootInitrd);
-      goto errexit;
-    }
-    fclose (fi);
-  }
-
-  // Now construct our "page table" which will work in absense of MMU
-  uint npages = (4096 + aksize + aisize) >> 12;
-  uint preloader_size = (0x100 + npages * 4 + 0xfff) & ~0xfff;
-
-  uint8 *preloader;
-  uint32 preloaderPA;
-  uint32 *ptable;
-
-  // We need the preloader to be contiguous in physical memory.
-  // It's not so big (usually one or two 4K pages), however we may
-  // need to allocate it a couple of times till we get it as we need it...
-  // Also, naturally, preloader cannot be located in the memory where
-  // kernel will be copied.
-  alloc_tries = 10;
-  for (;;)
-  {
-    uint32 mem = (uint32)malloc (preloader_size + 4095);
-    if (!mem)
-    {
-      Output("FATAL: Not enough memory for preloader!");
-      gc.FreeAll ();
-      return;
-    }
-
-    preloader = (uint8 *)((mem + 0xfff) & ~0xfff);
-    preloaderPA = memVirtToPhys ((uint32)preloader);
-
-    bool ok = true;
-    uint32 minaddr = memPhysAddr + 0x7000 + kbsize;
-    for (i = 1; i < (preloader_size >> 12); i++)
-    {
-      uint32 pa = memVirtToPhys ((uint32)preloader + (i << 12));
-      if ((pa != (preloaderPA + (i << 12))) || (pa < minaddr))
-      {
-        ok = false;
-        break;
-      }
-    }
-
-    if (ok)
-      break;
-
-    gc.Collect ((void *)mem);
-
-    if (!--alloc_tries)
-    {
-      Output("FATAL: Cannot allocate a contiguous physical memory area!");
-      gc.FreeAll ();
-      return;
-    }
-  }
-
-  gc.FreeAll ();
-
-  Output("Preloader physical/virtual address: %08x", preloaderPA);
-
-  memcpy (preloader, (void *)&linux_preloader,
-          (uint)&linux_preloader_end - (uint)&linux_preloader);
-  ptable = (uint32 *)(preloader + 0x100);
-
-  for (i = 0; i < npages; i++)
-    ptable [i] = memVirtToPhys ((uint32)kernel_bundle + (i << 12));
-
-  // Recommended kernel placement = RAM start + 32K
-  // Initrd will be put at the address of kernel + 4Mb
-  // (let's hope uncompressed kernel never happens to be larger than that).
-  uint32 initrd_phys_addr = memPhysAddr + 0x8000 + 0x500000;
-  if (isize)
-    Output("Physical initrd address: %08x", initrd_phys_addr);
-
-  setup_linux_params (taglist, initrd_phys_addr, isize);
-
-  Output("Goodbye cruel world ...");
-  Sleep (500);
-
-  // Reset AC97
-  memPhysWrite (0x4050000C,0);
-
-  if (videoH == 640 && videoW == 480)
-    eyes.Draw ((dx + PENGUIN_EYES_X) * 2, (dy + PENGUIN_EYES_Y) * 2);
-  else
-    eyes.Draw (dx + PENGUIN_EYES_X, dy + PENGUIN_EYES_Y);
-
-
-  /* Set thread priority to maximum */
-  SetThreadPriority (GetCurrentThread (), THREAD_PRIORITY_TIME_CRITICAL);
-  /* Disable multitasking (heh) */
-  CeSetThreadQuantum (GetCurrentThread (), 0);
-  /* Allow current process to access any memory domains */
-  SetProcPermissions (0xffffffff);
-
-  uint32 *mmu = (uint32 *)memPhysMap (cpuGetMMU ());
-
-  // Call per-arch setup.
-  int ret = Mach->preHardwareShutdown();
-  if (ret)
-    return;
-
-  take_control();
-
-  // Call per-arch boot prep function.
-  Mach->hardwareShutdown();
-
-  try
-  {
-    //cpuSetDACR (0xffffffff);
-
-    // Create the virtual->physical 1:1 mapping entry in
-    // 1st level descriptor table. These addresses are hopefully
-    // unused by WindowsCE (or rather unimportant for us now).
-    cpuFlushCache ();
-    mmu [preloaderPA >> 20] = (preloaderPA & MMU_L1_SECTION_MASK) |
-        MMU_L1_SECTION | MMU_L1_AP_MASK;
-
-    // Penguinize!
-    linux_start (bootMachineType, npages, memPhysAddr, preloaderPA,
-                 1 + (aksize >> 12));
-  }
-  // We should never get here, but if we crash try to recover ...
-  catch (...)
-  {
-    // UnresetDevices???
-    return_control();
-    videoEndDraw ();
-    Output("Linux boot failed because of a exception!");
-  };
 }
+
+// Draw a line directly onto the frame buffer.
+static void __preload
+drawLine(uint32 *pvideoRam, uint16 color)
+{
+    enum { LINELENGTH = 2500 };
+    uint32 videoRam = *pvideoRam;
+    if (! videoRam)
+        return;
+    uint16 *pix = (uint16*)videoRam;
+    for (int i = 0; i < LINELENGTH; i++)
+        pix[32768+i] = color;
+    *pvideoRam += LINELENGTH * sizeof(uint16);
+}
+
+// Code to launch kernel.
+static void __preload
+preloader(struct preloadData *data)
+{
+    drawLine(&data->videoRam, COLOR_BLUE);
+
+    // Copy tags to beginning of ram.
+    char *destTags = (char *)data->startRam + PHYSOFFSET_TAGS;
+    do_copy(destTags, data->tags, PAGE_SIZE);
+
+    drawLine(&data->videoRam, COLOR_RED);
+
+    // Copy kernel image
+    uint32 destKernel = data->startRam + PHYSOFFSET_KERNEL;
+    do_copyPages((char *)destKernel, data->kernelPages, data->kernelSize);
+
+    drawLine(&data->videoRam, COLOR_CYAN);
+
+    // Copy initrd (if applicable)
+    if (data->initrdSize)
+        do_copyPages((char *)data->startRam + PHYSOFFSET_INITRD
+                     , data->initrdPages, data->initrdSize);
+
+    drawLine(&data->videoRam, COLOR_BLACK);
+
+    // Boot
+    typedef void (*lin_t)(uint32 zero, uint32 mach, char *tags);
+    lin_t startfunc = (lin_t)destKernel;
+    startfunc(0, data->machtype, destTags);
+}
+
+
+/****************************************************************
+ * Physical ram kernel allocation and setup
+ ****************************************************************/
+
+extern "C" {
+    // Asm code
+    extern struct stackJumper_s stackJumper;
+
+    // Symbols added by linker.
+    extern char preload_start;
+    extern char preload_end;
+}
+#define preload_size (&preload_end - &preload_start)
+#define preloadExecOffset ((char *)&preloader - &preload_start)
+#define stackJumperOffset ((char *)&stackJumper - &preload_start)
+#define stackJumperExecOffset (stackJumperOffset        \
+    + (uint32)&((stackJumper_s*)0)->asm_handler)
+
+// Layout of an assembler function that can setup a C stack and entry
+// point.  DO NOT CHANGE HERE without also upgrading the assembler
+// code.
+struct stackJumper_s {
+    uint32 stack;
+    uint32 data;
+    uint32 execCode;
+    char asm_handler[1];
+};
+
+static const int MaxImagePages = PAGE_SIZE / sizeof(uint32);
+
+struct pagedata {
+    uint32 physLoc;
+    char *virtLoc;
+};
+
+static int physPageComp(const void *e1, const void *e2) {
+    pagedata *i1 = (pagedata*)e1, *i2 = (pagedata*)e2;
+    return (i1->physLoc < i2->physLoc ? -1
+            : (i2->physLoc > i2->physLoc ? 1 : 0));
+}
+
+// Description of memory alocated by prepForKernel()
+struct bootmem {
+    char *kernelPages[MaxImagePages];
+    char *initrdPages[MaxImagePages];
+    uint32 physExec;
+    void *allocedRam;
+};
 
 static void
-cmd_bootlinux(const char *cmd, const char *args)
+cleanupBootMem(struct bootmem *bm)
 {
-    bootLinux();
+    if (!bm)
+        return;
+    free(bm->allocedRam);
+    free(bm);
 }
-REG_CMD(0, "BOOT|LINUX", cmd_bootlinux,
+
+// Allocate a continuous are of memory for a kernel (and possibly
+// initrd), and configure a preloader that can launch that kernel.
+// The resulting data is allocated in physically continuous ram that
+// the caller can jump to when the MMU is disabled.  Note the caller
+// needs to copy the kernel and initrd into this ram.
+static bootmem *
+prepForKernel(uint32 kernelSize, uint32 initrdSize)
+{
+    // Sanity test.
+    if (preload_size > PAGE_SIZE || sizeof(preloadData) > PAGE_SIZE) {
+        Output("Internal error.  Preloader too large");
+        return NULL;
+    }
+
+    // Determine machine type
+    uint32 machType = bootMachineType;
+    if (! machType)
+        machType = Mach->machType;
+    if (! machType) {
+        Complain(C_ERROR("undefined MTYPE"));
+        return NULL;
+    }
+    Output("boot MTYPE=%d CMDLINE='%s'", machType, bootCmdline);
+
+    // Allocate ram for kernel/initrd
+    int kernelPages = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
+    int initrdPages = PAGE_ALIGN(initrdSize) / PAGE_SIZE;
+    int totalPages = kernelPages + initrdPages + 6;
+    if (kernelPages > MaxImagePages || initrdPages > MaxImagePages) {
+        Output("Image too large - largest size is %d"
+               , MaxImagePages * PAGE_SIZE);
+        return NULL;
+    }
+    void *data = calloc(totalPages * PAGE_SIZE + PAGE_SIZE - 1, 1);
+    if (! data) {
+        Output("Failed to allocate %d pages", totalPages);
+        return NULL;
+    }
+
+    // Allocate data structure.
+    struct bootmem *bm = (bootmem*)calloc(sizeof(bootmem), 1);
+    if (!bm) {
+        Output("Failed to allocate bootmem struct");
+        free(data);
+        return NULL;
+    }
+    bm->allocedRam = data;
+
+    // Find all the physical locations of the pages.
+    data = (void*)PAGE_ALIGN((uint32)data);
+    struct pagedata pages[MaxImagePages * 2 + 6];
+    for (int i=0; i<totalPages; i++) {
+        struct pagedata *pd = &pages[i];
+        pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
+        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
+        if (pd->physLoc == (uint32)-1) {
+            Output("Page at %p not mapped", pd->virtLoc);
+            cleanupBootMem(bm);
+            return NULL;
+        }
+    }
+
+    // Sort the pages by physical location.
+    qsort(pages, totalPages, sizeof(pages[0]), physPageComp);
+
+    struct pagedata *pg_tag = &pages[0];
+    struct pagedata *pgs_kernel = &pages[1];
+    struct pagedata *pgs_initrd = &pages[kernelPages+1];
+    struct pagedata *pg_kernelIndex = &pages[totalPages-5];
+    struct pagedata *pg_initrdIndex = &pages[totalPages-4];
+    struct pagedata *pg_stack = &pages[totalPages-3];
+    struct pagedata *pg_data = &pages[totalPages-2];
+    struct pagedata *pg_preload = &pages[totalPages-1];
+
+    Output("Allocated %d pages (tags=%p/%08x kernel=%p/%08x initrd=%p/%08x)"
+           , totalPages
+           , pg_tag->virtLoc, pg_tag->physLoc
+           , pgs_kernel->virtLoc, pgs_kernel->physLoc
+           , pgs_initrd->virtLoc, pgs_initrd->physLoc);
+
+    if (pg_tag->physLoc < memPhysAddr + PHYSOFFSET_TAGS
+        || pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL
+        || (initrdSize
+            && pgs_initrd->physLoc < memPhysAddr + PHYSOFFSET_INITRD)) {
+        Output("Allocated memory will overwrite itself");
+        cleanupBootMem(bm);
+        return NULL;
+    }
+
+    // Setup linux tags.
+    setup_linux_params(pg_tag->virtLoc, memPhysAddr + PHYSOFFSET_INITRD
+                       , initrdSize);
+
+    // Setup kernel/initrd indexes
+    uint32 *index = (uint32*)pg_kernelIndex->virtLoc;
+    for (int i=0; i<kernelPages; i++) {
+        index[i] = pgs_kernel[i].physLoc;
+        bm->kernelPages[i] = pgs_kernel[i].virtLoc;
+    }
+    index = (uint32*)pg_initrdIndex->virtLoc;
+    for (int i=0; i<initrdPages; i++) {
+        index[i] = pgs_initrd[i].physLoc;
+        bm->initrdPages[i] = pgs_initrd[i].virtLoc;
+    }
+
+    // Setup preloader data.
+    struct preloadData *pd = (struct preloadData *)pg_data->virtLoc;
+    pd->machtype = machType;
+    pd->tags = (char *)pg_tag->physLoc;
+    pd->kernelSize = kernelSize;
+    pd->kernelPages = (const char **)pg_kernelIndex->physLoc;
+    pd->initrdSize = initrdSize;
+    pd->initrdPages = (const char **)pg_initrdIndex->physLoc;
+    pd->startRam = memPhysAddr;
+    pd->videoRam = 0;
+
+    if (Mach->fbDuringBoot) {
+        pd->videoRam = vidGetVRAM();
+        Output("Video buffer at phys=%08x", pd->videoRam);
+    }
+
+    // Setup preloader code.
+    memcpy(pg_preload->virtLoc, &preload_start, preload_size);
+
+    stackJumper_s *sj = (stackJumper_s*)&pg_preload->virtLoc[stackJumperOffset];
+    sj->stack = pg_stack->physLoc + PAGE_SIZE;
+    sj->data = pg_data->physLoc;
+    sj->execCode = pg_preload->physLoc + preloadExecOffset;
+
+    bm->physExec = pg_preload->physLoc + stackJumperExecOffset;
+
+    Output("preload=%d@%p/%08x sj=%p stack=%p/%08x data=%p/%08x exec=%08x"
+           , preload_size, pg_preload->virtLoc, pg_preload->physLoc
+           , sj, pg_stack->virtLoc, pg_stack->physLoc
+           , pg_data->virtLoc, pg_data->physLoc, sj->execCode);
+
+    return bm;
+}
+
+
+/****************************************************************
+ * Hardware shutdown and trampoline setup
+ ****************************************************************/
+
+extern "C" {
+    // Assembler code
+    void mmu_trampoline(uint32 phys, uint8 *mmu, uint32 code);
+    void mmu_trampoline_end();
+}
+
+// Verify the mmu-disabling trampoline.
+static uint32
+setupTrampoline()
+{
+    uint32 virtTram = MVAddr((uint32)mmu_trampoline);
+    uint32 virtTramEnd = MVAddr((uint32)mmu_trampoline_end);
+    if ((virtTram & 0xFFFFF000) != (virtTramEnd & 0xFFFFF000)) {
+        Output("Can't handle trampoline spanning page boundary"
+               " (%p %08x %08x)"
+               , mmu_trampoline, virtTram, virtTramEnd);
+        return 0;
+    }
+    uint32 physAddrTram = memVirtToPhys(virtTram);
+    if (physAddrTram == (uint32)-1) {
+        Output("Trampoline not in physical ram. (virt=%08x)"
+               , virtTram);
+        return 0;
+    }
+    uint32 physTramL1 = physAddrTram & 0xFFF00000;
+    if (virtTram > physTramL1 && virtTram < (physTramL1 + 0x100000)) {
+        Output("Trampoline physical/virtual addresses overlap.");
+        return 0;
+    }
+
+    Output("Trampoline setup (tram=%d@%p/%08x/%08x)"
+           , virtTramEnd - virtTram, mmu_trampoline, virtTram, physAddrTram);
+
+    return physAddrTram;
+}
+
+// Launch a kernel loaded in physical memory.
+static void
+launchKernel(uint32 physExec)
+{
+    // Make sure trampoline and "Mach->hardwareShutdown" functions are
+    // loaded into memory.
+    touchAppPages();
+
+    // Prep the trampoline.
+    uint32 physAddrTram = setupTrampoline();
+    if (! physAddrTram)
+        return;
+
+    // Cache an mmu pointer for the trampoline
+    uint8 *virtAddrMmu = memPhysMap(cpuGetMMU());
+    Output("MMU setup: mmu=%p/%08x", virtAddrMmu, cpuGetMMU());
+
+    // Lookup framebuffer address (if in use).
+    uint32 vidRam = 0;
+    if (Mach->fbDuringBoot) {
+        vidRam = (uint32)vidGetVirtVRAM();
+        Output("Video buffer at virt=%08x", vidRam);
+    }
+
+    // Call per-arch setup.
+    int ret = Mach->preHardwareShutdown();
+    if (ret)
+        return;
+
+    Screen("Go Go Go...");
+
+    // Disable interrupts
+    take_control();
+
+    drawLine(&vidRam, COLOR_GREEN);
+
+    // Call per-arch boot prep function.
+    Mach->hardwareShutdown();
+
+    drawLine(&vidRam, COLOR_MAGENTA);
+
+    // Disable MMU and launch linux.
+    mmu_trampoline(physAddrTram, virtAddrMmu, physExec);
+
+    // The above should not ever return, but we attempt recovery here.
+    return_control();
+}
+
+
+/****************************************************************
+ * File reading
+ ****************************************************************/
+
+// Open a file on disk.
+static FILE *
+file_open(const char *name)
+{
+    Output("Opening file %s", name);
+    char fn[200];
+    fnprepare(name, fn, sizeof(fn));
+    FILE *fk = fopen(fn, "rb");
+    if (!fk) {
+        Output("Failed to load file %s", fn);
+        return NULL;
+    }
+    return fk;
+}
+
+// Find out the size of an open file.
+static uint32
+get_file_size(FILE *fk)
+{
+    fseek(fk, 0, SEEK_END);
+    uint32 size = ftell(fk);
+    fseek(fk, 0, SEEK_SET);
+    return size;
+}
+
+// Copy data from a file into memory and check for success.
+static int
+file_read(FILE *f, char **pages, uint32 size)
+{
+    Output("Reading %d bytes...", size);
+    while (size) {
+        uint32 s = size < PAGE_SIZE ? size : PAGE_SIZE;
+        uint32 ret = fread(*pages, 1, s, f);
+        if (ret != s) {
+            Output("Error reading file.  Expected %d got %d", s, ret);
+            return -1;
+        }
+        pages++;
+        size -= s;
+        AddProgress(s);
+    }
+    Output("Read complete");
+    return 0;
+}
+
+// Load a kernel (and possibly initrd) from disk into physically
+// continous ram and prep it for kernel starting.
+static bootmem *
+loadDiskKernel()
+{
+    Output("boot KERNEL=%s INITRD=%s", bootKernel, bootInitrd);
+
+    // Open kernel file
+    FILE *kernelFile = file_open(bootKernel);
+    if (!kernelFile)
+        return NULL;
+    uint32 kernelSize = get_file_size(kernelFile);
+
+    // Open initrd file
+    FILE *initrdFile = NULL;
+    uint32 initrdSize = 0;
+    if (bootInitrd && *bootInitrd) {
+        initrdFile = file_open(bootInitrd);
+        if (initrdFile)
+            initrdSize = get_file_size(initrdFile);
+    }
+
+    // Obtain physically continous ram for the kernel
+    int ret;
+    struct bootmem *bm = NULL;
+    bm = prepForKernel(kernelSize, initrdSize);
+    if (!bm)
+        goto abort;
+
+    InitProgress(kernelSize + initrdSize);
+
+    // Load kernel
+    ret = file_read(kernelFile, bm->kernelPages, kernelSize);
+    if (ret)
+        goto abort;
+    // Load initrd
+    if (initrdFile) {
+        ret = file_read(initrdFile, bm->initrdPages, initrdSize);
+        if (ret)
+            goto abort;
+    }
+
+    fclose(kernelFile);
+    if (initrdFile)
+        fclose(initrdFile);
+
+    DoneProgress();
+
+    return bm;
+
+abort:
+    DoneProgress();
+
+    if (initrdFile)
+        fclose(initrdFile);
+    if (kernelFile)
+        fclose(kernelFile);
+    cleanupBootMem(bm);
+    return NULL;
+}
+
+
+/****************************************************************
+ * Resume vector hooking
+ ****************************************************************/
+
+static uint32 winceResumeAddr = 0xa0040000;
+
+// Setup a kernel in physical ram and hook the wince resume vector so
+// that it runs on resume.
+static void
+resumeIntoBoot(uint32 physExec)
+{
+    // Lookup wince resume address and verify it looks sane.
+    uint32 *resume = (uint32*)memPhysMap(winceResumeAddr);
+    if (!resume) {
+        Output("Could not map addr %08x", winceResumeAddr);
+        return;
+    }
+    // Check for "b 0x41000 ; 0x0" at the address.
+    uint32 old1 = resume[0], old2 = resume[1];
+    if (old1 != 0xea0003fe || old2 != 0x0) {
+        Output("Unexpected resume vector. (%08x %08x)", old1, old2);
+        return;
+    }
+
+    // Overwrite the resume vector.
+    take_control();
+    cpuFlushCache();
+    resume[0] = 0xe51ff004; // ldr pc, [pc, #-4]
+    resume[1] = physExec;
+    return_control();
+
+    // Wait for user to suspend/resume
+    Screen("Ready to boot.  Please suspend/resume");
+    Sleep(300 * 1000);
+
+    // Cleanup (if boot failed somehow).
+    Output("Timeout. Restoring original resume vector");
+    take_control();
+    cpuFlushCache();
+    resume[0] = old1;
+    resume[1] = old2;
+    return_control();
+}
+
+
+/****************************************************************
+ * Boot code
+ ****************************************************************/
+
+// Simple switch on booting mechanisms.
+static void
+tryLaunch(uint32 physExec, int bootViaResume)
+{
+    Output("Launching to physical address %08x", physExec);
+    if (bootViaResume)
+        resumeIntoBoot(physExec);
+    else
+        launchKernel(physExec);
+}
+
+// Load a kernel from disk, disable hardware, and jump into kernel.
+static void
+bootLinux(const char *cmd, const char *args)
+{
+    int bootViaResume = toupper(cmd[0]) == 'R';
+
+    // Load the kernel/initrd/tags/preloader into physical memory
+    struct bootmem *bm = loadDiskKernel();
+    if (!bm)
+        return;
+
+    // Luanch it.
+    tryLaunch(bm->physExec, bootViaResume);
+
+    // Cleanup (if boot failed somehow).
+    cleanupBootMem(bm);
+}
+REG_CMD(0, "BOOT|LINUX", bootLinux,
         "BOOTLINUX\n"
         "  Start booting linux kernel. See HELP VARS for variables affecting boot.")
+REG_CMD_ALT(0, "BOOT2", bootLinux, boot2, 0)
+REG_CMD_ALT(
+    0, "RESUMEINTOBOOT", bootLinux, resumeintoboot,
+    "RESUMEINTOBOOT\n"
+    "  Overwrite the wince resume vector so that the kernel boots\n"
+    "  after suspending/resuming the pda")
+
+
+/****************************************************************
+ * Boot from kernel already in ram
+ ****************************************************************/
+
+static void
+copy_pages(char **pages, const char *src, uint32 size)
+{
+    while (size) {
+        uint32 s = size < PAGE_SIZE ? size : PAGE_SIZE;
+        memcpy(*pages, src, s);
+        src += s;
+        pages++;
+        size -= s;
+        AddProgress(s);
+    }
+}
+
+// Load a kernel already in memory, disable hardware, and jump into
+// kernel.
+void
+bootRamLinux(const char *kernel, uint32 kernelSize
+             , const char *initrd, uint32 initrdSize
+             , int bootViaResume)
+{
+    // Obtain physically continous ram for the kernel
+    struct bootmem *bm = prepForKernel(kernelSize, initrdSize);
+    if (!bm)
+        return;
+
+    // Copy kernel / initrd.
+    InitProgress(kernelSize + initrdSize);
+    copy_pages(bm->kernelPages, kernel, kernelSize);
+    copy_pages(bm->initrdPages, initrd, initrdSize);
+    DoneProgress();
+
+    // Luanch it.
+    tryLaunch(bm->physExec, bootViaResume);
+
+    // Cleanup (if boot failed somehow).
+    cleanupBootMem(bm);
+}

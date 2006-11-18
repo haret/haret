@@ -36,6 +36,7 @@ IDI_APPICON             ICON                    "img/haret.ico"
 // Bitmap
 //
 
+#if 0
 IDB_LOGO                BITMAP                  "img/penguin.bmp"
 IDB_THERMORED           BITMAP                  "img/thermored.bmp"
 IDB_THERMOBLUE          BITMAP                  "img/thermoblue.bmp"
@@ -44,6 +45,7 @@ IDB_LOGO_VGA            BITMAP                  "img/penguin-vga.bmp"
 IDB_THERMORED_VGA       BITMAP                  "img/thermored-vga.bmp"
 IDB_THERMOBLUE_VGA      BITMAP                  "img/thermoblue-vga.bmp"
 IDB_EYES_VGA            BITMAP                  "img/eyes-vga.bmp"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //
