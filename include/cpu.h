@@ -35,10 +35,6 @@ static inline void Attr Name (uint32 val) {                     \
 #define DEF_SETCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
     DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2,)
 
-// Read one register of coprocessor
-extern uint32 cpuGetCP (uint cp, uint regno);
-// Set a coprocessor register
-extern bool cpuSetCP (uint cp, uint regno, uint32 val);
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
 // Flush all CPU data caches (must be in supervisor mode)
