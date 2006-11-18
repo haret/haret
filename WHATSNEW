@@ -1,5 +1,11 @@
 next release <kevin@koconnor.net>
 
+  * New linux bootloading code.  This new code now does most of the
+    actions from C code.  This allows more diagnostic utilities (eg,
+    now lines are written to the framebuffer from the preloader).
+    Note that the penguin logo was disabled in this release.  (A
+    simple progress bar was added in its place.)
+
   * Reenabled support for detection of framebuffer via gx.dll calls
     (eg, GXOpenDisplay).  This is done via the late library loading
     code.
