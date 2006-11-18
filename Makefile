@@ -25,6 +25,8 @@ vpath %.cpp src src/wince src/mach
 vpath %.S src src/wince
 vpath %.rc src/wince
 
+.PHONY : all FORCE
+
 all: $(OUT) $(OUT)haret.exe
 
 ################ cegcc settings
@@ -67,24 +69,43 @@ $(OUT)%.exe: out/%-debug
 	@echo "  Stripping $^ to make $@"
 	$(Q)$(STRIP) $^ -o $@
 
-################ Additional rules
+################ Haret exe rules
 
 MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
   mach-alpine.o mach-apache.o mach-beetles.o mach-blueangel.o \
   mach-himalya.o mach-magician.o mach-universal.o mach-h4000.o \
   mach-h4700.o mach-sable.o
 
-HARETOBJS := haret.o haret-res.o \
-  s-cpu.o memory.o gpio.o uart.o video.o wincmds.o \
-  asmstuff.o irqchain.o getsetcp.o irq.o lateload.o \
-  util.o output.o script.o network.o cpu.o terminal.o linboot.o \
-  com_port.o $(MACHOBJS) \
-  toolhelp.lib
+COREOBJS := $(MACHOBJS) haret-res.o \
+  memory.o video.o asmstuff.o lateload.o \
+  util.o output.o cpu.o linboot.o
+
+HARETOBJS := $(COREOBJS) haret.o \
+  s-cpu.o gpio.o uart.o wincmds.o irqchain.o getsetcp.o irq.o \
+  script.o network.o terminal.o com_port.o toolhelp.lib
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 	@echo "  Linking $@"
 	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
+####### Stripped down linux bootloading program.
+LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
+
+INITRD := /dev/null
+KERNEL := zImage
+CMDLINE :=
+
+$(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
+	@echo "  Building $@"
+	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_CMD='"$(CMDLINE)"' -o $@ $<
+
+$(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
+	@echo "  Linking $@"
+	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
+
+linload: $(OUT)linload.exe
+
+####### Generic rules
 clean:
 	rm -rf $(OUT)
 

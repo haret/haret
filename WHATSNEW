@@ -1,5 +1,14 @@
 next release <kevin@koconnor.net>
 
+  * Add ability to bind haret, kernel, and initrd into a single exe.
+    This is done by running:
+
+    make linload CMDLINE="xx" KERNEL=zImage INITRD=abc
+
+    A file out/linload.exe will be created.  Running this on a pda
+    will launch the specified kernel.  This feature may be useful for
+    building linux installation kits in an easy to run application.
+
   * New linux bootloading code.  This new code now does most of the
     actions from C code.  This allows more diagnostic utilities (eg,
     now lines are written to the framebuffer from the preloader).
