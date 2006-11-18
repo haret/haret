@@ -15,15 +15,13 @@
 #include "util.h"
 #include "resource.h"
 #include "script.h" // REG_CMD
+#include "haret.h" // hInst, MainWindow
 
 //#define USE_WAIT_CURSOR
 
 // This function can be assigned a value in order to redirect
 // message boxes elsewhere (such as to a socket)
 void (*output_fn)(const char *msg) = NULL;
-
-extern HINSTANCE hInst;
-extern HWND MainWindow;
 
 static void
 Log(const char *msg)

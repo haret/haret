@@ -11,5 +11,6 @@
 #include <windows.h>
 
 extern HINSTANCE hInst;
+extern HWND MainWindow;
 
 #endif /* _HARET_H */
