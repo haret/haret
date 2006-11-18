@@ -1,4 +1,4 @@
-next release <kevin@koconnor.net>
+20061118 0.4.4 <kevin@koconnor.net>
 
   * Add ability to bind haret, kernel, and initrd into a single exe.
     This is done by running:
