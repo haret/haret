@@ -10,25 +10,22 @@ compiling.
 
 The gcc toolset in use is from the cegcc project.  See
 http://cegcc.sourceforge.net/ for more info.  This project is
-currently still in active development (as of 20061111).  One may use
+currently still in active development (as of 20061119).  One may use
 the following steps to obtain the same toolkit the main HaRET
 developers are using:
 
 1 - Obtain cegcc source (svn co
     https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc)
 
-2 - Use revision 777 (svn up -r 777)
+2 - Use revision 819 (svn up -r 819)
 
-3 - Apply the patch from HaRET CVS (patch -p0 <
-    /path/to/haret/cegcc-20061111.patch)
-
-4 - Optionally alter the build destination by modifying
+3 - Optionally alter the build destination by modifying
     src/mingw32ce.sh.  If you do this, be sure to modify HaRET's
     makefile so that the BASE setting is the same.
 
-5 - Build the cegcc toolset (cd src; ./build-mingw32ce.sh)
+4 - Build the cegcc toolset (cd src; ./build-mingw32ce.sh)
 
-6 - Wait for toolchain to build.  The build may fail when trying to
+5 - Wait for toolchain to build.  The build may fail when trying to
     build gdb, but this isn't a problem.
 
-7 - Build HaRET (cd /path/to/haret; make)
+6 - Build HaRET (cd /path/to/haret; make)
