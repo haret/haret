@@ -25,20 +25,6 @@
 #  define so_close	closesocket
 #  define so_ioctl	ioctlsocket
 
-static struct __network_dummy
-{
-  __network_dummy ()
-  {
-    // Initialize sockets
-    WSADATA wsadata;
-    WSAStartup (MAKEWORD(2, 0), &wsadata);
-  }
-  ~__network_dummy ()
-  {
-    WSACleanup ();
-  }
-} __network_dummy_obj;
-
 static int sock;
 
 // Our private haretTerminal extension that reads/writes to socket
