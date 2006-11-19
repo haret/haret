@@ -30,8 +30,6 @@ void __output(int sendScreen, const char *fmt, ...)
 // Send output to screen, output_fn (if set), and/or log (if set)
 #define Screen(fmt, args...) __output(1, fmt , ##args )
 
-// Create a named log file to send all Output strings to
-int openLogFile(const char *vn);
 // Close any previously created log files.
 void closeLogFile();
 

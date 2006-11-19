@@ -175,7 +175,7 @@ REG_CMD_ALT(0, "P|RINT", cmd_print, print,
         "  directly to the network pipe.")
 
 // Request output to be copied to a local log file.
-int
+static int
 openLogFile(const char *vn)
 {
     char fn[200];
@@ -188,6 +188,22 @@ openLogFile(const char *vn)
     return 0;
 }
 
+static void
+cmd_log(const char *cmd, const char *args)
+{
+    char *vn = get_token(&args);
+    if (!vn) {
+        Complain(C_ERROR("line %d: file name expected"), ScriptLine);
+        return;
+    }
+    int ret = openLogFile(vn);
+    if (ret)
+        Output("line %d: Cannot open file `%s' for writing", ScriptLine, vn);
+}
+REG_CMD(0, "L|OG", cmd_log,
+        "LOG <filename>\n"
+        "  Log all output to specified file.")
+
 // Close a previously opened log file.
 void
 closeLogFile()
@@ -196,6 +212,15 @@ closeLogFile()
         fclose(outputLogfile);
     outputLogfile = NULL;
 }
+
+static void
+cmd_unlog(const char *cmd, const char *args)
+{
+    closeLogFile();
+}
+REG_CMD(0, "UNL|OG", cmd_unlog,
+        "UNLOG\n"
+        "  Stop logging output to file.")
 
 // Initialize the output settings.
 void

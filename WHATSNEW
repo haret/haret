@@ -1,3 +1,7 @@
+next version <kevin@koconnor.net>
+
+  * Add new commands: LOG UNLOG
+
 20061118 0.4.4 <kevin@koconnor.net>
 
   * Add ability to bind haret, kernel, and initrd into a single exe.
