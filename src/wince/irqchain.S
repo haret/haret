@@ -28,8 +28,8 @@ irq_chained_handler:
         mov     sp, r0
 
         @ Call C code
-        ldr     r3, [pc, #(cIrqCodeMVA - . - 8)]
-        blx     r3
+        mov     r14, pc
+        ldr     pc, [pc, #(cIrqCodeMVA - . - 8)]
 
         @ Restore registers from WinCE stack and call WinCE handler.
         mov     sp, r4
@@ -62,8 +62,8 @@ abort_chained_handler:
         sub     sp, r0, #4096
 
         @ Call C code
-        ldr     r3, [pc, #(cAbortCodeMVA - . - 8)]
-        blx     r3
+        mov     r14, pc
+        ldr     pc, [pc, #(cAbortCodeMVA - . - 8)]
 
         @ Return to user code
         mov     sp, r4
@@ -96,8 +96,8 @@ prefetch_chained_handler:
         sub     sp, r0, #(2 * 4096)
 
         @ Call C code
-        ldr     r3, [pc, #(cPrefetchCodeMVA - . - 8)]
-        blx     r3
+        mov     r14, pc
+        ldr     pc, [pc, #(cPrefetchCodeMVA - . - 8)]
 
         @ Return to user code
         mov     sp, r4

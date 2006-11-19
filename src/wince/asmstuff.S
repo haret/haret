@@ -98,7 +98,7 @@ mmu_trampoline:
         CPWAIT
 
         @ MMU is now disabled.  Call function.
-        bx      r6
+        mov     pc, r6
 
 mmu_trampoline_end:
 

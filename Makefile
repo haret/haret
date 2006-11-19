@@ -14,7 +14,7 @@ VERSION=0.4.4
 OUT=out/
 
 # Default compiler flags
-CXXFLAGS = -MD -Wall -MD -O -march=armv5te -g -Iinclude -DVERSION=\"$(VERSION)\"
+CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude -DVERSION=\"$(VERSION)\"
 LDFLAGS =
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
