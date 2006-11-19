@@ -10,6 +10,8 @@
 
 #include <stddef.h>
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
 typedef signed char int8;
 typedef unsigned char uint8;
 typedef signed short int16;

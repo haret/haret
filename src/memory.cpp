@@ -13,8 +13,7 @@
 #include "xtypes.h"
 #include "cpu.h" // cpuGetMMU
 #include "memory.h"
-#include "output.h" // Output, Complain
-#include "util.h" // fnprepare
+#include "output.h" // Output, Complain, fnprepare
 #include "script.h" // REG_VAR_INT
 
 // RAM start physical address
@@ -815,10 +814,10 @@ static bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
 }
 
 static void
-cmd_memtofile(const char *tok, const char *x)
+cmd_memtofile(const char *tok, const char *args)
 {
     bool virt = toupper (tok [0]) == 'V';
-    char *fn = strnew (get_token (&x));
+    char *fn = _strdup(get_token(&args));
     if (!fn)
     {
         Complain (C_ERROR ("line %d: file name expected"), ScriptLine);
@@ -826,11 +825,11 @@ cmd_memtofile(const char *tok, const char *x)
     }
 
     uint32 addr, size;
-    if (!get_expression (&x, &addr)
-        || !get_expression (&x, &size))
+    if (!get_expression(&args, &addr)
+        || !get_expression(&args, &size))
     {
-        delete [] fn;
         Complain (C_ERROR ("line %d: Expected <filename> <address> <size>"), ScriptLine);
+        free(fn);
         return;
     }
 
@@ -838,7 +837,7 @@ cmd_memtofile(const char *tok, const char *x)
         memVirtWriteFile (fn, addr, size);
     else
         memPhysWriteFile (fn, addr, size);
-    delete [] fn;
+    free(fn);
 }
 REG_CMD_ALT(0, "PWF", cmd_memtofile, pwf, 0)
 REG_CMD(0, "VWF", cmd_memtofile,

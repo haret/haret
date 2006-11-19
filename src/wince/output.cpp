@@ -6,16 +6,15 @@
 */
 
 #include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-#include <stdio.h>
+#include <windowsx.h> // Edit_SetSel
+#include <commctrl.h> // TBM_SETRANGEMAX
+#include <stdio.h> // vsnprintf
 #include <ctype.h> // toupper
 
-#include "output.h"
-#include "util.h"
-#include "resource.h"
+#include "resource.h" // ID_PROGRESSBAR
 #include "script.h" // REG_CMD
 #include "haret.h" // hInst, MainWindow
+#include "output.h"
 
 //#define USE_WAIT_CURSOR
 
@@ -32,7 +31,7 @@ Log(const char *msg)
   wchar_t buff [512];
   _snwprintf(buff, sizeof(buff) / sizeof(buff[0]), L"%hs", msg);
 
-  wchar_t *eol = wstrchr (buff, 0);
+  wchar_t *eol = buff + wcslen(buff);
   // Append a newline at the end
   *eol++ = L'\n'; *eol = 0;
   wchar_t *dst = buff + sizeof (buff) / sizeof (wchar_t);
@@ -147,7 +146,7 @@ static void
 cmd_print(const char *tok, const char *x)
 {
     bool msg = (toupper(tok[0]) == 'M');
-    char *arg = strnew(get_token(&x));
+    char *arg = _strdup(get_token(&x));
     uint32 args [4];
     for (int i = 0; i < 4; i++)
         if (!get_expression (&x, &args [i]))
@@ -162,7 +161,7 @@ cmd_print(const char *tok, const char *x)
         _snprintf(tmp, sizeof(tmp), "%s", arg);
         Screen(tmp, args [0], args [1], args [2], args [3]);
     }
-    delete [] arg;
+    free(arg);
 }
 REG_CMD(0, "M|ESSAGE", cmd_print,
         "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
@@ -222,10 +221,41 @@ REG_CMD(0, "UNL|OG", cmd_unlog,
         "UNLOG\n"
         "  Stop logging output to file.")
 
+static wchar_t SourcePath[200];
+
+static void
+preparePath()
+{
+    // Locate the directory containing the haret executable.
+    GetModuleFileName(hInst, SourcePath
+                      , sizeof(SourcePath) / sizeof(wchar_t));
+    wchar_t *x = SourcePath + wcslen(SourcePath);
+    while ((x > SourcePath) && (x [-1] != L'\\'))
+        x--;
+    *x = 0;
+}
+
+void
+fnprepare (const char *ifn, char *ofn, int ofn_max)
+{
+    char *out = ofn;
+
+    // Don't translate absolute file names
+    if (ifn[0] != '\\') {
+        BOOL flag;
+        out = ofn - 1 + WideCharToMultiByte(
+            CP_ACP, 0, SourcePath, -1, ofn, ofn_max, " ", &flag);
+    }
+
+    strncpy(out, ifn, ofn_max - (out - ofn));
+}
+
 // Initialize the output settings.
 void
 setupOutput()
 {
+    preparePath();
+
     char fn[100];
     fnprepare("earlyharetlog.txt", fn, sizeof(fn));
     FILE *logfd=fopen(fn, "r");

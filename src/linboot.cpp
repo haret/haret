@@ -16,9 +16,8 @@
 
 #include "xtypes.h"
 #include "script.h" // REG_CMD
-#include "util.h"  // fnprepare
 #include "memory.h" // memPhysMap, memPhysAddr, memPhysSize
-#include "output.h" // Output, Screen
+#include "output.h" // Output, Screen, fnprepare
 #include "cpu.h" // take_control, return_control, touchAppPages
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach

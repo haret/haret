@@ -14,7 +14,6 @@
 
 #include "xtypes.h"
 #include "cpu.h"
-#include "util.h"
 #include "output.h"
 #include "terminal.h"
 #include "script.h"

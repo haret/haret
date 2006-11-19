@@ -4,7 +4,7 @@
 
     For conditions of use see file COPYING
 
-    $Id: cpu-s3c24xx.cpp,v 1.7 2006/11/12 02:20:49 koconnor Exp $
+    $Id: cpu-s3c24xx.cpp,v 1.8 2006/11/19 23:37:14 koconnor Exp $
 */
 
 
@@ -13,7 +13,6 @@
 #define CONFIG_ACCEPT_GPL
 #include "setup.h"
 #include "memory.h"
-#include "util.h"
 #include "output.h"
 #include "gpio.h"
 #include "video.h"

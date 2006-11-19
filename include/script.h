@@ -8,6 +8,8 @@
 #ifndef _SCRIPT_H
 #define _SCRIPT_H
 
+#include "xtypes.h" // uint
+
 // Interpret one line of scripting language; returns false on QUIT
 bool scrInterpret (const char *str, uint lineno);
 // Execute the script from given file

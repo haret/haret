@@ -77,8 +77,7 @@ MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o \
   mach-h4700.o mach-sable.o
 
 COREOBJS := $(MACHOBJS) haret-res.o \
-  memory.o video.o asmstuff.o lateload.o \
-  util.o output.o cpu.o linboot.o
+  memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
 
 HARETOBJS := $(COREOBJS) haret.o \
   s-cpu.o gpio.o uart.o wincmds.o irqchain.o getsetcp.o irq.o \

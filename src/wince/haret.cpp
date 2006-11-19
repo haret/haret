@@ -21,7 +21,6 @@
 #include "output.h" // Output, setupOutput
 #include "memory.h" // memPhysReset
 #include "script.h" // scrExecute, setupCommands
-#include "util.h" // preparePath, wstrlen
 #include "machines.h" // setupMachineType
 #include "network.h" // scrListen
 
@@ -70,7 +69,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
 	    sizeof (wscrfn) / sizeof (wchar_t));
           char scrfn [100];
           BOOL flag;
-          WideCharToMultiByte (CP_ACP, 0, wscrfn, wstrlen (wscrfn) + 1,
+          WideCharToMultiByte (CP_ACP, 0, wscrfn, -1,
 	    scrfn, sizeof (scrfn), " ", &flag);
           MoveWindow (hWnd, 0, 0, GetSystemMetrics (SM_CXSCREEN),
             GetSystemMetrics (SM_CYSCREEN), FALSE);
@@ -98,9 +97,6 @@ WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
          LPTSTR lpCmdLine, int nCmdShow)
 {
     hInst = hInstance;
-
-    // Initialize the path so fnprepare() works.
-    preparePath(hInstance);
 
     // Prep for early output.
     setupOutput();

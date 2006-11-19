@@ -8,6 +8,8 @@
 #ifndef _MEMORY_H
 #define _MEMORY_H
 
+#include "xtypes.h" // uint32
+
 /* --------------------------------------------- MMU tables structures ----- */
 
 // Level 1 Descriptor

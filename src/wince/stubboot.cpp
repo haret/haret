@@ -7,7 +7,6 @@
  */
 
 #include "output.h" // setupOutput
-#include "util.h" // preparePath
 #include "machines.h" // setupMachineType
 #include "linboot.h" // bootRamLinux
 #include "memory.h" // memPhysReset
@@ -42,9 +41,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         LPTSTR lpCmdLine, int nCmdShow)
 {
     hInst = hInstance;
-
-    // Initialize the path so fnprepare() works.
-    preparePath(hInstance);
 
     // Prep for early output.
     setupOutput();

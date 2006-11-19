@@ -8,11 +8,12 @@
 #include <stdio.h> // fopen, FILE
 #include <ctype.h> // isspace, toupper
 #include <stdarg.h> // va_list
+#include <string.h> // strchr, memcpy, memset
+#include <stdlib.h> // free
 
 #include "xtypes.h"
 #include "cbitmap.h" // TEST/SET/CLEARBIT
-#include "output.h" // Output, Complain
-#include "util.h" // fnprepare
+#include "output.h" // Output, Complain, fnprepare
 #include "script.h"
 
 static const char *quotes = "\"'";
@@ -219,7 +220,7 @@ NewVar (char *vn, varType vt)
 
   varDescriptor *nv = UserVars + UserVarsCount;
   memset (nv, 0, sizeof (*nv));
-  nv->name = strnew (vn);
+  nv->name = _strdup(vn);
   nv->type = vt;
   // Since integer variables don't use their val_size field,
   // we'll use it for variable value itself
@@ -389,7 +390,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
   }
 
   // keyw gets destroyed in next call to get_expression
-  char *kw = strnew (keyw);
+  char *kw = _strdup(keyw);
 
   (*s)++;
   while (count--)
@@ -398,7 +399,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
     {
 error:
       Complain (C_ERROR ("line %d: not enough arguments to function %hs"), ScriptLine, kw);
-      delete [] kw;
+      free(kw);
       return false;
     }
 
@@ -412,7 +413,7 @@ error:
     args++;
   }
 
-  delete [] kw;
+  free(kw);
   return true;
 }
 
@@ -564,7 +565,7 @@ cmd_set(const char *cmd, const char *x)
         // If val_size is zero, it means a const char* in .text segment
         if (var->val_size)
             free(*var->sval);
-        *var->sval = strnew (get_token (&x));
+        *var->sval = _strdup(get_token(&x));
         var->val_size = 1;
         break;
     case varBitSet:

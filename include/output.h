@@ -20,6 +20,9 @@ extern void Complain (const wchar_t *format, ...);
 /* Display some text in status line */
 extern void Status (const wchar_t *format, ...);
 
+// Prepend executable source directory to file name if it does not
+// already contain a path.
+extern void fnprepare(const char *ifn, char *ofn, int ofn_max);
 // Initialize output logging code.
 void setupOutput();
 // Internal function for outputing to screen/logs/socket.

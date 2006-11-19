@@ -1,7 +1,6 @@
 #include "machines.h"
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
-#include "util.h" // ARRAY_SIZE
 #define CONFIG_PXA27x
 #include "pxa2xx.h" // pxaDMA
 

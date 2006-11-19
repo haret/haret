@@ -1,7 +1,5 @@
-#include <windows.h>
-#include <mmsystem.h>
+#include <windows.h> // SystemParametersInfo
 
-#include "util.h" // ARRAY_SIZE
 #include "memory.h" // mem_autodetect
 #include "lateload.h" // setup_LateLoading
 #include "output.h" // Output
