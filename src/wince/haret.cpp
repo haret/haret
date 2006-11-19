@@ -13,19 +13,15 @@
  */
 
 #include <windows.h>
-#include <winsock.h>
-#include <tlhelp32.h>
 #include <stdio.h> // _snwprintf
 #include <wctype.h> // iswspace
 
 #include "xtypes.h"
-#include "resource.h"
-#include "output.h"
-#include "memory.h"
-#include "script.h"
-#include "util.h"
-#include "cpu.h"
-#include "com_port.h"
+#include "resource.h" // DLG_HaRET
+#include "output.h" // Output, setupOutput
+#include "memory.h" // memPhysReset
+#include "script.h" // scrExecute, setupCommands
+#include "util.h" // preparePath, wstrlen
 #include "machines.h" // setupMachineType
 #include "network.h" // scrListen
 
@@ -97,106 +93,38 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   return FALSE;
 }
 
-/* avoid useless LCD calibration 950 times per session :) */
-void kill_welcome ()
+int WINAPI
+WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
+         LPTSTR lpCmdLine, int nCmdShow)
 {
-  HANDLE hts = INVALID_HANDLE_VALUE;
-  HANDLE hproc = INVALID_HANDLE_VALUE;
-  PROCESSENTRY32 pe;
-  pe.dwSize = sizeof (PROCESSENTRY32);
+    hInst = hInstance;
 
-  hts = CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+    // Initialize the path so fnprepare() works.
+    preparePath(hInstance);
 
-  if (Process32First (hts, &pe))
-  {
-    do
-    {
-      if (wcsicmp (L"welcome.exe", pe.szExeFile) == 0)
-      {
-        hproc = OpenProcess (0, 0, pe.th32ProcessID);
+    // Prep for early output.
+    setupOutput();
 
-        if (hproc != INVALID_HANDLE_VALUE && hproc != NULL)
-          break;
-      }
-    } while (Process32Next (hts, &pe));
-  }
+    // Detect some system settings
+    setupMachineType();
 
-  if (hproc != INVALID_HANDLE_VALUE && hproc != NULL )
-  {
-    TerminateProcess (hproc, 0);
-    CloseHandle (hproc);
-  }
+    // Setup variable/command lists.
+    setupCommands();
 
-  CloseToolhelp32Snapshot (hts);
-}
+    // Initialize sockets
+    Output("Running WSAStartup");
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(1, 1), &wsadata);
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
-  LPTSTR lpCmdLine, int nCmdShow)
-{
-  hInst = hInstance;
-
-  // Initialize the path so fnprepare() works.
-  preparePath(hInstance);
-
-  // Prep for early output.
-  setupOutput();
-
-  // Detect some system settings
-  setupMachineType();
-
-  // Setup variable/command lists.
-  setupCommands();
-
-  // Initialize sockets
-  Output("Running WSAStartup");
-  WSADATA wsadata;
-  WSAStartup (MAKEWORD(1, 1), &wsadata);
-
-  /* commandline parsing */
-  Output("Parsing command-line");
-  wchar_t *p;
-  int run = 0;
-  int kill = 0;
-
-  p = lpCmdLine;
-
-  while (*p)
-  {
-    while(*p && iswspace(*p))
-      p++;
-
-    if(!*p)
-      break;
-
-    if (p[0] == '-' && p[1] == 'r')
-      run = 1;
-    if (p[0] == '-' && p[1] == 'k')
-      kill = 1;
-
-    p++;
-  }
-
-  /* kill LCD calibration app */
-  if (kill == 1)
-    kill_welcome();
-
-  if (run != 1)
-  {
-    /* To avoid fiddling with message queues et al we just fire up a regular dialog window */
+    /* To avoid fiddling with message queues et al we just fire up a
+     * regular dialog window */
     Output("Starting gui");
-    DialogBox (hInstance, MAKEINTRESOURCE (DLG_HaRET), HWND_DESKTOP, DialogFunc);
-  }
-  else
-  {
-    /* allow immediate linux boot */
-    scrExecute ("startup.txt", false);
-    scrExecute ("default.txt");
-  }
+    DialogBox(hInstance, MAKEINTRESOURCE(DLG_HaRET), HWND_DESKTOP, DialogFunc);
 
-  Output("Shutting down");
-  memPhysReset ();
-  WSACleanup ();
-  closeLogFile();
+    Output("Shutting down");
+    memPhysReset();
+    WSACleanup();
+    closeLogFile();
 
-  return 0;
+    return 0;
 }

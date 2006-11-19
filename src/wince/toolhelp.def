@@ -1,9 +1,0 @@
-
-NAME	TOOLHELP.DLL
-EXPORTS
-      CloseToolhelp32Snapshot		@0
-      CreateToolhelp32Snapshot		@1
-      Module32First			@7
-      Module32Next			@8
-      Process32First			@9
-      Process32Next			@10
