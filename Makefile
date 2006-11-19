@@ -15,7 +15,7 @@ OUT=out/
 
 # Default compiler flags
 CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude -DVERSION=\"$(VERSION)\"
-LDFLAGS =
+LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=1
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
 
