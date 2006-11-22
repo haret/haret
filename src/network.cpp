@@ -135,8 +135,10 @@ static char *cpu_id()
   return buff;
 }
 
-static const char *cpu_mode (uint mode)
+static const char *cpu_mode()
 {
+  uint mode = cpuGetPSR() & 0x1f;
+
   switch (mode)
   {
     case 0x10:
@@ -236,7 +238,7 @@ conn_error:
          "CPU is %s running in %s mode\n"
          "Enter 'HELP' for a short command summary.\n",
          Mach->name, bufplat, bufoem,
-         cpu_id(), cpu_mode (cpuGetPSR () & 0x1f));
+         cpu_id(), cpu_mode());
 
   {
     haretNetworkTerminal t (sock);
