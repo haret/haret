@@ -16,7 +16,7 @@ cPrefetchCodeMVA:       .long 0
 winceIrqHandler:        .long 0
 winceAbortHandler:      .long 0
 wincePrefetchHandler:   .long 0
-        .globl irq_chained_handler
+        .global irq_chained_handler
 irq_chained_handler:
 	@ Store registers on WINCE stack.
         stmdb   sp!, {r0-r12, r14}
@@ -36,7 +36,7 @@ irq_chained_handler:
         ldmia   sp!, {r0-r12, r14}
         ldr     pc, [pc, #(winceIrqHandler - . - 8)]
 
-        .globl abort_chained_handler
+        .global abort_chained_handler
 abort_chained_handler:
         @ Store r14 on wince stack
         stmdb   sp!, {r14}
@@ -70,7 +70,7 @@ abort_chained_handler:
         ldmia   sp!, {r0-r12, r14}
         subs    pc, lr, #4
 
-        .globl prefetch_chained_handler
+        .global prefetch_chained_handler
 prefetch_chained_handler:
         @ Store r14 on wince stack
         stmdb   sp!, {r14}
@@ -104,5 +104,6 @@ prefetch_chained_handler:
         ldmia   sp!, {r0-r12, r14}
         subs    pc, lr, #4
 
-        .globl end_chained_handlers
+        .global end_chained_handlers
 end_chained_handlers:
+        .end

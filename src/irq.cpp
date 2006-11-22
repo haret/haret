@@ -266,23 +266,23 @@ getReg(struct irqregs *regs, struct extraregs *er, uint32 nr)
         return regs->regs[nr];
     if (nr >= 15)
         return regs->old_pc;
-    if (er->didfetch)
-        return er->regs[nr-13];
-    // In order to access the r13/r14 registers, it is necessary to
-    // switch contexts, copy the registers to low order registers, and
-    // then switch context back.
-    uint32 newContext = get_SPSR();
-    newContext &= 0x1f; // Extract mode bits.
-    newContext |= (1<<6)|(1<<7); // Disable interrupts
-    uint32 temp;
-    asm volatile("mrs %0, cpsr @ Get current cpsr\n"
-                 "msr cpsr, %3 @ Change processor mode\n"
-                 "mov %1, r13  @ Get r13\n"
-                 "mov %2, r14  @ Get r14\n"
-                 "msr cpsr, %0 @ Restore processor mode"
-                 : "=&r" (temp), "=r" (er->r13), "=r" (er->r14)
-                 : "r" (newContext));
-    er->didfetch = 1;
+    if (!er->didfetch) {
+        // In order to access the r13/r14 registers, it is necessary
+        // to switch contexts, copy the registers to low order
+        // registers, and then switch context back.
+        uint32 newContext = get_SPSR();
+        newContext &= 0x1f; // Extract mode bits.
+        newContext |= (1<<6)|(1<<7); // Disable interrupts
+        uint32 temp;
+        asm volatile("mrs %0, cpsr @ Get current cpsr\n"
+                     "msr cpsr, %3 @ Change processor mode\n"
+                     "mov %1, r13  @ Get r13\n"
+                     "mov %2, r14  @ Get r14\n"
+                     "msr cpsr, %0 @ Restore processor mode"
+                     : "=&r" (temp), "=r" (er->r13), "=r" (er->r14)
+                     : "r" (newContext));
+        er->didfetch = 1;
+    }
     return er->regs[nr-13];
 }
 
@@ -505,15 +505,13 @@ mainLoop(struct irqData *data, int seconds)
             // Processed a trace - try to process another without
             // sleeping.
             tmpcount++;
-            if (tmpcount > 100) {
-                // Hrmm.  Recheck the current time so that we don't
-                // run away reporting traces.
-                cur_time = time(NULL);
-                tmpcount = 0;
-            }
-            continue;
-        }
-        Sleep(1);
+            if (tmpcount < 100)
+                continue;
+            // Hrmm.  Recheck the current time so that we don't run
+            // away reporting traces.
+        } else
+            // Nothing to report; yield the cpu.
+            Sleep(1);
         cur_time = time(NULL);
         tmpcount = 0;
     }
@@ -619,8 +617,8 @@ struct irqChainCode {
 
 // Symbols added by linker.
 extern "C" {
-    extern void irq_start();
-    extern void irq_end();
+    extern char irq_start;
+    extern char irq_end;
 }
 
 // Assembler linkage.
@@ -633,10 +631,10 @@ extern "C" {
 #define size_asmHandlers() ((char *)end_chained_handlers - (char *)irq_chained_handler)
 #define offset_asmAbortHandler() ((char *)abort_chained_handler - (char *)irq_chained_handler)
 #define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - (char *)irq_chained_handler)
-#define offset_cIrqHandler() ((char*)irq_handler - (char*)irq_start)
-#define offset_cAbortHandler() ((char*)abort_handler - (char*)irq_start)
-#define offset_cPrefetchHandler() ((char *)prefetch_handler - (char *)irq_start)
-#define size_cHandlers() ((char *)irq_end - (char *)irq_start)
+#define offset_cIrqHandler() ((char*)irq_handler - &irq_start)
+#define offset_cAbortHandler() ((char*)abort_handler - &irq_start)
+#define offset_cPrefetchHandler() ((char *)prefetch_handler - &irq_start)
+#define size_cHandlers() (&irq_end - &irq_start)
 #define size_handlerCode() (uint)(&((irqChainCode*)0)->asm_handlers[size_asmHandlers() + size_cHandlers()])
 
 // The virtual address of the irq vector
@@ -702,7 +700,7 @@ irqWatch(uint seconds)
            , size_asmHandlers());
     // Copy the C handlers to alloc'd space.
     memcpy(&code->asm_handlers[size_asmHandlers()]
-           , (void *)irq_start, size_cHandlers());
+           , &irq_start, size_cHandlers());
 
     // Locate the code handlers in long-lived virtual addresses.
     code->cIrqCodeMVA = cachedMVA(
