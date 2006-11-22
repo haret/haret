@@ -63,6 +63,9 @@ findMachineType()
     wchar_t oeminfo[128], platform[128];
     SystemParametersInfo(SPI_GETOEMINFO, sizeof(oeminfo), oeminfo, 0);
     SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(platform), platform, 0);
+    Output("Trying to detect machine (Plat='%ls' OEM='%ls')"
+           , platform, oeminfo);
+
     Machine **p = mach_start;
     while (p < &mach_end) {
         Machine *m = *p;
