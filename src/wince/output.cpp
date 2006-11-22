@@ -221,33 +221,29 @@ REG_CMD(0, "UNL|OG", cmd_unlog,
         "UNLOG\n"
         "  Stop logging output to file.")
 
-static wchar_t SourcePath[200];
+static char SourcePath[200];
 
 static void
 preparePath()
 {
     // Locate the directory containing the haret executable.
-    GetModuleFileName(hInst, SourcePath
-                      , sizeof(SourcePath) / sizeof(wchar_t));
-    wchar_t *x = SourcePath + wcslen(SourcePath);
-    while ((x > SourcePath) && (x [-1] != L'\\'))
+    wchar_t sp[200];
+    GetModuleFileName(hInst, sp, ARRAY_SIZE(sp));
+    int len = wcstombs(SourcePath, sp, sizeof(SourcePath));
+    char *x = SourcePath + len;
+    while ((x > SourcePath) && (x[-1] != L'\\'))
         x--;
     *x = 0;
 }
 
 void
-fnprepare (const char *ifn, char *ofn, int ofn_max)
+fnprepare(const char *ifn, char *ofn, int ofn_max)
 {
-    char *out = ofn;
-
     // Don't translate absolute file names
-    if (ifn[0] != '\\') {
-        BOOL flag;
-        out = ofn - 1 + WideCharToMultiByte(
-            CP_ACP, 0, SourcePath, -1, ofn, ofn_max, " ", &flag);
-    }
-
-    strncpy(out, ifn, ofn_max - (out - ofn));
+    if (ifn[0] == '\\')
+        strncpy(ofn, ifn, ofn_max);
+    else
+        _snprintf(ofn, ofn_max, "%s%s", SourcePath, ifn);
 }
 
 // Initialize the output settings.

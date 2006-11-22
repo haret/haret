@@ -36,7 +36,7 @@ cmd_kill(const char *cmd, const char *args)
         return;
     }
     wchar_t wname[200];
-    MultiByteToWideChar(CP_ACP, 0, name, -1, wname, sizeof(wname));
+    mbstowcs(wname, name, ARRAY_SIZE(wname));
     Output("Looking to kill '%ls'", wname);
 
     HANDLE hts = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

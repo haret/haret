@@ -64,13 +64,11 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
           return TRUE;
         case BT_SCRIPT:
         {
-          wchar_t wscrfn [100];
-	  GetWindowText (GetDlgItem (hWnd, ID_SCRIPTNAME), wscrfn,
-	    sizeof (wscrfn) / sizeof (wchar_t));
-          char scrfn [100];
-          BOOL flag;
-          WideCharToMultiByte (CP_ACP, 0, wscrfn, -1,
-	    scrfn, sizeof (scrfn), " ", &flag);
+          wchar_t wscrfn[100];
+	  GetWindowText(GetDlgItem (hWnd, ID_SCRIPTNAME), wscrfn,
+                        ARRAY_SIZE(wscrfn));
+          char scrfn[100];
+          wcstombs(scrfn, wscrfn, sizeof(scrfn));
           MoveWindow (hWnd, 0, 0, GetSystemMetrics (SM_CXSCREEN),
             GetSystemMetrics (SM_CYSCREEN), FALSE);
           ShowWindow (hWnd, SW_SHOW);
