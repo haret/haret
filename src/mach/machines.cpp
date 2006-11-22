@@ -1,4 +1,5 @@
 #include <windows.h> // SystemParametersInfo
+#include "pkfuncs.h" // SetKMode
 
 #include "memory.h" // mem_autodetect
 #include "lateload.h" // setup_LateLoading
@@ -10,7 +11,7 @@
 class Machine *Mach;
 
 Machine::Machine()
-    : name(""), PlatformType(L"PocketPC")
+    : name("Default"), PlatformType(L"PocketPC")
     , machType(0), fbDuringBoot(1)
 {
     memset(OEMInfo, 0, sizeof(OEMInfo));
@@ -93,6 +94,10 @@ setupMachineType()
         Output("Error: machine already defined to '%s'", Mach->name);
         return;
     }
+
+    Output("Setting KMode to true.");
+    int kmode = SetKMode(TRUE);
+    Output("Old KMode was %d", kmode);
 
     // Bind to DLLs dynamically.
     setup_LateLoading();

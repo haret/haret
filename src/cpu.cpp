@@ -209,9 +209,6 @@ take_control()
         // Already in a critical section.
         return;
 
-    // Ask wince to do privilege escalation.
-    SetKMode(TRUE);
-
     // Map in pages to prevent page faults in critical section.
     touchAppPages();
 
@@ -238,6 +235,4 @@ return_control()
         "       bic    %0, %0, #0xc0\n"
         "       msr    cpsr_c, %0"
         : "=r" (temp) : : "memory");
-
-    SetKMode(FALSE);
 }
