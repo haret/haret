@@ -36,18 +36,10 @@ SECTIONS
   }
 
   .data : {
-    /* List of haret variables */
-    vars_start = .;
-    *(.data.vars)
-    vars_end = .;
-
     /* List of haret commands */
     commands_start = .;
     *(.data.cmds)
     commands_end = .;
-    dumpcommands_start = .;
-    *(.data.dumpcmds)
-    dumpcommands_end = .;
   }
 }
 

@@ -22,52 +22,18 @@ uint ScriptLine;
 
 // Symbols added by linker.
 extern "C" {
-    extern varDescriptor vars_start[];
-    extern varDescriptor vars_end;
     extern haret_cmd_s commands_start[];
     extern haret_cmd_s commands_end;
-    extern hwDumper dumpcommands_start[];
-    extern hwDumper dumpcommands_end;
 }
-#define vars_count (&vars_end - vars_start)
 #define commands_count (&commands_end - commands_start)
-#define dumpcommands_count (&dumpcommands_end - dumpcommands_start)
 
-static varDescriptor *UserVars = NULL;
+static haret_cmd_s *UserVars = NULL;
 static int UserVarsCount = 0;
 
+// Initialize builtin commands and variables.
 void
 setupCommands()
 {
-    // Variables
-    for (int i = 0; i < vars_count; i++) {
-        varDescriptor *x = &vars_start[i];
-        if (x->testAvail) {
-            Output("Testing for var %s", x->name);
-            int ret = x->testAvail();
-            if (!ret) {
-                Output("Not registering var %s", x->name);
-                continue;
-            }
-            Output("Registering var %s", x->name);
-        }
-        x->isAvail = 1;
-    }
-    // Dump commands
-    for (int i = 0; i < dumpcommands_count; i++) {
-        hwDumper *x = &dumpcommands_start[i];
-        if (x->testAvail) {
-            Output("Testing for dumpcommand %s", x->name);
-            int ret = x->testAvail();
-            if (!ret) {
-                Output("Not registering dumpcommand %s", x->name);
-                continue;
-            }
-            Output("Registering dumpcommand %s", x->name);
-        }
-        x->isAvail = 1;
-    }
-    // Commands
     for (int i = 0; i < commands_count; i++) {
         haret_cmd_s *x = &commands_start[i];
         if (x->testAvail) {
@@ -140,26 +106,31 @@ static char peek_char (const char **s)
 static bool get_args (const char **s, const char *keyw, uint32 *args,
                       uint count);
 
-static varDescriptor *
-FindVar(const char *vn, varDescriptor *Vars, int VarCount)
+static inline int isVar(haret_cmd_s *cmd) {
+    return cmd->type >= varInteger;
+}
+
+static haret_cmd_s *
+FindVar(const char *vn, haret_cmd_s *Vars, int VarCount)
 {
-    for (int i = 0; i < VarCount; i++) {
-        varDescriptor *var = &Vars[i];
-        if (var->isAvail && !strcasecmp(vn, var->name))
+    for (int i = 0; i < commands_count; i++) {
+        haret_cmd_s *var = &commands_start[i];
+        if (var->isAvail && isVar(var) && !strcasecmp(vn, var->name))
             return var;
     }
     return NULL;
 }
 
 static bool GetVar (const char *vn, const char **s, uint32 *v,
-                    varDescriptor *Vars, int VarCount)
+                    haret_cmd_s *Vars, int VarCount)
 {
-  varDescriptor *var = FindVar (vn, Vars, VarCount);
+  haret_cmd_s *var = FindVar (vn, Vars, VarCount);
   if (!var)
     return false;
 
   switch (var->type)
   {
+    default:
     case varInteger:
       *v = *var->ival;
       break;
@@ -204,12 +175,12 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
   return true;
 }
 
-static varDescriptor *
-NewVar (char *vn, varType vt)
+static haret_cmd_s *
+NewVar (char *vn, cmdType vt)
 {
-  varDescriptor *ouv = UserVars;
-  UserVars = (varDescriptor *)
-      realloc (UserVars, sizeof (varDescriptor) * (UserVarsCount + 1));
+  haret_cmd_s *ouv = UserVars;
+  UserVars = (haret_cmd_s *)
+      realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
   if (UserVars != ouv)
   {
     // Since we reallocated the stuff, we have to fix the ival pointers as well
@@ -218,7 +189,7 @@ NewVar (char *vn, varType vt)
         UserVars [i].ival = &UserVars [i].val_size;
   }
 
-  varDescriptor *nv = UserVars + UserVarsCount;
+  haret_cmd_s *nv = UserVars + UserVarsCount;
   memset (nv, 0, sizeof (*nv));
   nv->name = _strdup(vn);
   nv->type = vt;
@@ -301,7 +272,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       }
     }
     // Look through variables
-    else if (!GetVar (x, s, v, vars_start, vars_count)
+    else if (!GetVar (x, s, v, commands_start, commands_count)
           && !GetVar (x, s, v, UserVars, UserVarsCount))
     {
       Complain (C_ERROR ("line %d: Unknown variable '%hs' in expression"),
@@ -468,7 +439,7 @@ bool scrInterpret (const char *str, uint lineno)
     // Okay, now see what keyword is this :)
     for (int i = 0; i < commands_count; i++) {
         haret_cmd_s *hc = &commands_start[i];
-        if (hc->isAvail && IsToken(tok, hc->name)) {
+        if (hc->isAvail && hc->type == cmdFunc && IsToken(tok, hc->name)) {
             hc->func(tok, x);
             return true;
         }
@@ -491,10 +462,10 @@ cmd_dump(const char *cmd, const char *x)
         return;
     }
 
-    hwDumper *hwd = NULL;
-    for (int i = 0; i < dumpcommands_count; i++) {
-        hwDumper *hd = &dumpcommands_start[i];
-        if (hd->isAvail && !strcasecmp(vn, hd->name)) {
+    haret_cmd_s *hwd = NULL;
+    for (int i = 0; i < commands_count; i++) {
+        haret_cmd_s *hd = &commands_start[i];
+        if (hd->isAvail && hd->type == cmdDump && !strcasecmp(vn, hd->name)) {
             hwd = hd;
             break;
         }
@@ -546,7 +517,7 @@ cmd_set(const char *cmd, const char *x)
         return;
     }
 
-    varDescriptor *var = FindVar (vn, vars_start, vars_count);
+    haret_cmd_s *var = FindVar (vn, commands_start, commands_count);
     if (!var)
         var = FindVar (vn, UserVars, UserVarsCount);
     if (!var)
@@ -634,15 +605,16 @@ cmd_help(const char *cmd, const char *x)
 
         Output("Name\tType\tDescription");
         Output("-----------------------------------------------------------");
-        for (int i = 0; i < vars_count; i++) {
-            varDescriptor *var = &vars_start[i];
-            if (!var->isAvail)
+        for (int i = 0; i < commands_count; i++) {
+            haret_cmd_s *var = &commands_start[i];
+            if (!var->isAvail || !isVar(var))
                 continue;
 
             args [0] = 0;
             type [0] = 0;
             switch (var->type)
             {
+            default:
             case varInteger:
                 strcpy (type, "int");
                 break;
@@ -671,9 +643,9 @@ cmd_help(const char *cmd, const char *x)
     else if (!strcasecmp (vn, "DUMP"))
     {
         char args [10];
-        for (int i = 0; i < dumpcommands_count; i++) {
-            hwDumper *hd = &dumpcommands_start[i];
-            if (!hd->isAvail)
+        for (int i = 0; i < commands_count; i++) {
+            haret_cmd_s *hd = &commands_start[i];
+            if (!hd->isAvail || hd->type != cmdDump)
                 continue;
             if (hd->nargs)
                 sprintf (args, "(%d)", hd->nargs);
@@ -692,7 +664,7 @@ cmd_help(const char *cmd, const char *x)
         Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
         for (int i = 0; i < commands_count; i++) {
             haret_cmd_s *hc = &commands_start[i];
-            if (hc->isAvail && hc->desc)
+            if (hc->isAvail && hc->type == cmdFunc && hc->desc)
                 Output("%s", hc->desc);
         }
         Output("QUIT");

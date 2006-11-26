@@ -28,54 +28,49 @@ extern uint ScriptLine;
 
 // Registration of script commands
 #define REG_CMD(Pred, Name, Func, Desc)         \
-    __REG_CMD(Pred, Name, Func, Func, Desc)
+    REG_CMD_ALT(Pred, Name, Func, , Desc)
 
-#define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)        \
-    __REG_CMD(Pred, Name, Func, Func ##Alt, Desc)
+#define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)                        \
+    __REG_CMD(Func ##Alt, Pred, 0, Name, Desc, cmdFunc, {0}, 0, Func)
 
 // Registration of variables
 #define REG_VAR_STR(Pred, Name, Var, Desc)                      \
-    __REG_VAR(Var, Pred, Name, Desc, varString, { (uint32*)&Var } )
+    __REG_CMD(Var, Pred, 0, Name, Desc, varString, { (uint32*)&Var } )
 
 #define REG_VAR_INT(Pred, Name, Var, Desc)              \
-    __REG_VAR(Var, Pred, Name, Desc, varInteger, { &Var })
+    __REG_CMD(Var, Pred, 0, Name, Desc, varInteger, { &Var })
 
 #define REG_VAR_INTLIST(Pred, Name, Var, ArgCount, Desc)        \
-    __REG_VAR(Var, Pred, Name, Desc, varIntList, { Var }, ArgCount)
+    __REG_CMD(Var, Pred, 0, Name, Desc, varIntList, { Var }, ArgCount)
 
 #define REG_VAR_BITSET(Pred, Name, Var, ArgCount, Desc)         \
-    __REG_VAR(Var, Pred, Name, Desc, varBitSet, { Var }, ArgCount)
+    __REG_CMD(Var, Pred, 0, Name, Desc, varBitSet, { Var }, ArgCount)
 
 #define REG_VAR_ROFUNC(Pred, Name, Func, ArgCount, Desc)                \
-    __REG_VAR(Func, Pred, Name, Desc, varROFunc, { (uint32*)&Func }, ArgCount)
+    __REG_CMD(Func, Pred, 0, Name, Desc, varROFunc, { (uint32*)&Func }, ArgCount)
 
 #define REG_VAR_RWFUNC(Pred, Name, Func, ArgCount, Desc)                \
-    __REG_VAR(Func, Pred, Name, Desc, varRWFunc, { (uint32*)&Func }, ArgCount)
+    __REG_CMD(Func, Pred, 0, Name, Desc, varRWFunc, { (uint32*)&Func }, ArgCount)
 
 // Registration of script dump commands
 #define REG_DUMP(Pred, Name, Func, ArgCount, Desc)      \
-struct hwDumper Ref ##Func                              \
-    __attribute__ ((__section__ (".data.dumpcmds")))   \
-    = { Pred, Name, Desc, ArgCount, Func };
+    __REG_CMD(Func, Pred, 0, Name, Desc, cmdDump, {0}, 0, 0, ArgCount, Func)
 
 
 /****************************************************************
  * Internals to declaring commands
  ****************************************************************/
 
-#define __REG_CMD(Pred, Name, Func, Decl, Desc)         \
+#define __REG_CMD(Decl, Vals...)                        \
 struct haret_cmd_s Ref ##Decl                           \
-    __attribute__ ((__section__ (".data.cmds")))       \
-    = { Pred, Name, Desc, Func };
-
-#define __REG_VAR(Decl, Vals...)                        \
-struct varDescriptor Ref ##Decl                         \
-    __attribute__ ((__section__ (".data.vars")))        \
+    __attribute__ ((__section__ (".data.cmds")))        \
     = { Vals };
 
-// Variable types (HaRET scripting has very loose type checking anyway...)
-enum varType
+// Command types (HaRET scripting has very loose type checking anyway...)
+enum cmdType
 {
+  cmdDump,
+  cmdFunc,
   varInteger,
   varString,
   varBitSet,
@@ -84,17 +79,23 @@ enum varType
   varRWFunc
 };
 
-// The list of variables and their handlers
-struct varDescriptor
-{
+// Structure to hold commands
+struct haret_cmd_s {
   // Predicate function to determine if this command is available.
   int (*testAvail)();
+  // Is this command active.
+  int isAvail;
   // Variable name
   const char *name;
   // Variable description
   const char *desc;
-  // Variable type
-  varType type;
+  // Command type
+  cmdType type;
+
+  /*
+   * Fields for variables
+   */
+
   // The pointer to variable value
   union
   {
@@ -107,36 +108,19 @@ struct varDescriptor
   // for string whether free is necessary, for others no meaning)
   uint val_size;
 
-  // Is this command active.
-  int isAvail;
-};
+  /*
+   * Fields for normal commands
+   */
+  void (*func)(const char *cmd, const char *args);
 
-// The structure to describe a hardware dumper
-struct hwDumper
-{
-  // Predicate function to determine if this command is available.
-  int (*testAvail)();
-  // Hardware name
-  const char *name;
-  // Hardware description
-  const char *desc;
+  /*
+   * Fields for dump commands
+   */
   // Number of arguments
   int nargs;
   // The function that does the dump
   bool (*dump) (void (*out) (void *data, const char *, ...),
                 void *data, uint32 *args);
-  // Is this command active.
-  int isAvail;
-};
-
-// Structure to hold commands
-struct haret_cmd_s {
-    // Predicate function to determine if this command is available.
-    int (*testAvail)();
-    const char *name, *desc;
-    void (*func)(const char *cmd, const char *args);
-    // Is this command active.
-    int isAvail;
 };
 
 void setupCommands();
