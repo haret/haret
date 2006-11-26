@@ -1,6 +1,6 @@
 next version <kevin@koconnor.net>
 
-  * Add new commands: LOG, UNLOG, PS, KILL
+  * Add new commands: LOG, UNLOG, PS, KILL, LOADLIBRARYEX
 
   * Removed support for command-line options "-r" and "-k".  These
     options are superceded by the linload.exe program and the command
