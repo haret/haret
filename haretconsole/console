@@ -21,7 +21,7 @@ HARETPORT = 9999
 class Prompts(cmd.Cmd):
     def __init__(self, host, port):
         cmd.Cmd.__init__(self)
-        self.link = telnetlib.Telnet(host, HARETPORT)
+        self.link = telnetlib.Telnet(host, port)
         self.buf = ""
         self.m = re.compile(r"HaRET\(\d+\)# $")
         self.proc = None
@@ -100,13 +100,16 @@ def printUsage():
     sys.exit(1)
 
 def main():
+    port = HARETPORT
     if len(sys.argv) != 2:
-        return printUsage()
+        if len(sys.argv) != 3:
+            return printUsage()
+        port = int(sys.argv[2])
     host = sys.argv[1]
 
     # Connect to remote server and dump info on MMU
     print "========  Connecting to haret  ========"
-    cmd = Prompts(host, HARETPORT)
+    cmd = Prompts(host, port)
     cmd.cmdloop()
 
 if __name__ == '__main__':

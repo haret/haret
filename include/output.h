@@ -41,8 +41,14 @@ extern bool SetProgress (uint Value);
 extern bool AddProgress(int add);
 extern void DoneProgress ();
 
-// This function can be assigned a value in order to redirect
-// message boxes elsewhere (such as to a socket)
-extern void (*output_fn) (const char *msg);
+// Class used to direct output to listeners.
+class outputfn {
+public:
+    virtual ~outputfn() {}
+    virtual void sendMessage(const char *msg) = 0;
+};
+
+// Setup the output function for this thread.
+outputfn *setOutputFn(outputfn *ofn);
 
 #endif /* _MSGBOX_H */

@@ -1,3 +1,2 @@
-
-// Listen for a connection on given port and execute commands
-void scrListen(int port);
+// Start a thread that will listen for a connection on given port.
+void startListen(int port);

@@ -79,8 +79,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
         case BT_LISTEN:
         {
           // Call scrListen (9999) in a new thread
-          CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)scrListen,
-            (LPVOID)9999, 0, NULL);
+          startListen(9999);
           return TRUE;
         }
       }

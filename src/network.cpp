@@ -24,16 +24,15 @@
 #  define so_close	closesocket
 #  define so_ioctl	ioctlsocket
 
-static int sock;
-
 // Our private haretTerminal extension that reads/writes to socket
-class haretNetworkTerminal : public haretTerminal
+class haretNetworkTerminal : public haretTerminal, public outputfn
 {
   int socket;
 
 private:
   virtual int Read (uchar *indata, size_t max_len);
   virtual int Write (const uchar *outdata, size_t len);
+  void sendMessage(const char *msg);
 
 public:
   haretNetworkTerminal (int iSocket) : haretTerminal ()
@@ -55,8 +54,8 @@ int haretNetworkTerminal::Write (const uchar *outdata, size_t len)
   return send (socket, (char *)outdata, len, 0);
 }
 
-static void
-sock_output(const char *msg)
+void
+haretNetworkTerminal::sendMessage(const char *msg)
 {
     uint len = strlen(msg);
     char sbcs[300];
@@ -81,7 +80,7 @@ sock_output(const char *msg)
 
     dst++;
     len = sbcs + sizeof (sbcs) - dst;
-    send (sock, dst, len, 0);
+    send(socket, dst, len, 0);
 }
 
 DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
@@ -160,112 +159,137 @@ static const char *cpu_mode()
   }
 }
 
-void scrListen (int port)
+static void
+mainnetloop(int sock)
 {
-  int lsock = socket (AF_INET, SOCK_STREAM, 0);
-  if (lsock < 0)
-  {
-    Complain (C_ERROR ("Failed to create socket"));
-    return;
-  }
+    haretNetworkTerminal t(sock);
+    setOutputFn(&t);
 
-  struct sockaddr_in addr;
-  memset (&addr, 0, sizeof (addr));
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons (port);
-  addr.sin_addr.s_addr = inet_addr ("0.0.0.0");
+    // Display some welcome message
+    SYSTEM_INFO si;
+    GetSystemInfo (&si);
+    OSVERSIONINFOW vi;
+    vi.dwOSVersionInfoSize = sizeof(vi);
+    GetVersionEx(&vi);
 
-  if (bind (lsock, (struct sockaddr *)&addr, sizeof (addr)) < 0)
-  {
-    Complain (C_ERROR ("Failed to bind socket"));
-    goto finish;
-  }
+    WCHAR bufplat[128], bufoem[128];
+    SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
+    SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
 
-  Status (L"Waiting for connection ...");
+    Output("Welcome, this is HaRET running on WindowsCE v%ld.%ld\n"
+           "Minimal virtual address: %p, maximal virtual address: %p",
+           vi.dwMajorVersion, vi.dwMinorVersion,
+           si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
+    Output("Detected machine '%s' (Plat='%ls' OEM='%ls')\n"
+           "CPU is %s running in %s mode\n"
+           "Enter 'HELP' for a short command summary.\n",
+           Mach->name, bufplat, bufoem,
+           cpu_id(), cpu_mode());
 
-  if (listen (lsock, 1) < 0)
-    goto conn_error;
+    if (t.Initialize())
+        for (int line = 1; ; line++) {
+            // Some kind of prompt
+            char prompt[16];
+            _snprintf(prompt, sizeof(prompt), "HaRET(%d)# ", line);
 
-  ShowCursor (TRUE);
-  HCURSOR OldCursor;
-  OldCursor = GetCursor ();
-  SetCursor (LoadCursor (NULL, IDC_WAIT));
+            if (!t.Readline(prompt))
+                break;
 
-  int addrlen;
-  addrlen = sizeof (addr);
-  sock = accept (lsock, (struct sockaddr *)&addr, &addrlen);
+            if (!scrInterpret((char *)t.GetStr (), line))
+                break;
+        }
 
-  if (OldCursor != (HCURSOR)-1)
-  {
-    SetCursor (OldCursor);
-    OldCursor = (HCURSOR)-1;
-  }
+    setOutputFn(NULL);
+}
 
-  if (sock < 0)
-  {
-conn_error:
-    Complain (C_ERROR ("Connection failed"));
-    goto finish;
-  }
+// Listen for a connection on given port and execute commands
+static void
+scrListen(int port)
+{
+    setOutputFn(0);
+    int lsock = socket(AF_INET, SOCK_STREAM, 0);
+    if (lsock < 0) {
+        Complain(C_ERROR("Failed to create socket"));
+        return;
+    }
 
-  Status (L"Connect from %hs:%d", inet_ntoa (addr.sin_addr),
-          htons (addr.sin_port));
-  Screen("Incoming connection from %s:%d", inet_ntoa (addr.sin_addr),
-       htons (addr.sin_port));
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr("0.0.0.0");
 
-  // Close the gate
-  so_close (lsock);
-  lsock = -1;
+    int sock;
 
-  output_fn = sock_output;
+    if (bind(lsock, (struct sockaddr *)&addr, sizeof (addr)) < 0) {
+        Complain(C_ERROR("Failed to bind socket"));
+        goto finish;
+    }
 
-  // Display some welcome message
-  SYSTEM_INFO si;
-  GetSystemInfo (&si);
-  OSVERSIONINFOW vi;
-  vi.dwOSVersionInfoSize = sizeof (vi);
-  GetVersionEx (&vi);
+    Status(L"Waiting for connection ...");
 
-  WCHAR bufplat[128], bufoem[128];
-  SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
-  SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
+    if (listen(lsock, 1) < 0) {
+        Complain(C_ERROR("Error on listen"));
+        goto finish;
+    }
 
-  Output("Welcome, this is HaRET running on WindowsCE v%ld.%ld\n"
-         "Minimal virtual address: %p, maximal virtual address: %p",
-         vi.dwMajorVersion, vi.dwMinorVersion,
-         si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-  Output("Detected machine '%s' (Plat='%ls' OEM='%ls')\n"
-         "CPU is %s running in %s mode\n"
-         "Enter 'HELP' for a short command summary.\n",
-         Mach->name, bufplat, bufoem,
-         cpu_id(), cpu_mode());
+    ShowCursor(TRUE);
+    HCURSOR OldCursor;
+    OldCursor = GetCursor();
+    SetCursor(LoadCursor(NULL, IDC_WAIT));
 
-  {
-    haretNetworkTerminal t (sock);
-    if (t.Initialize ())
-      for (int line = 1; ; line++)
-      {
-        // Some kind of prompt
-        char prompt[16];
-        _snprintf(prompt, sizeof(prompt), "HaRET(%d)# ", line);
+    int addrlen;
+    addrlen = sizeof(addr);
+    sock = accept(lsock, (struct sockaddr *)&addr, &addrlen);
 
-        if (!t.Readline(prompt))
-          break;
+    if (sock < 0) {
+        Complain(C_ERROR("Connection failed"));
+        goto finish;
+    }
 
-        if (!scrInterpret ((char *)t.GetStr (), line))
-          break;
-      }
-  }
+    if (OldCursor != (HCURSOR)-1) {
+        SetCursor(OldCursor);
+        OldCursor = (HCURSOR)-1;
+    }
 
-  output_fn = NULL;
-  so_close (sock);
+    Status(L"Connect from %hs:%d", inet_ntoa (addr.sin_addr),
+           htons (addr.sin_port));
+    Screen("Incoming connection from %s:%d", inet_ntoa (addr.sin_addr),
+           htons (addr.sin_port));
 
-  Screen("Connection from %s:%d terminated", inet_ntoa (addr.sin_addr),
-       htons (addr.sin_port));
+    // Close the gate
+    so_close(lsock);
+    lsock = -1;
+
+    mainnetloop(sock);
+
+    so_close(sock);
+
+    Screen("Connection from %s:%d terminated", inet_ntoa(addr.sin_addr),
+           htons(addr.sin_port));
 
 finish:
-  if (lsock != -1)
-    so_close (lsock);
+    if (lsock != -1)
+        so_close(lsock);
 
-  Status (L"");
+    Status(L"");
 }
+
+void
+startListen(int port)
+{
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)scrListen,
+                 (LPVOID)port, 0, NULL);
+}
+
+static void
+cmd_listen(const char *cmd, const char *args)
+{
+    uint32 port;
+    if (!get_expression(&args, &port))
+        port = 9999;
+    startListen(port);
+}
+REG_CMD(0, "LISTEN", cmd_listen,
+        "LISTEN [<port>]\n"
+        "  Open a socket and wait for a connection on <port> (default 9999)")
