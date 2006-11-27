@@ -1,9 +1,16 @@
 next version <kevin@koconnor.net>
 
+  * Support multiple simultaneous network connections to haret.  This
+    can be invoked by calling the new "network <port>" haret command.
+    Having multiple telnet windows can be useful when using haret to
+    invoke a wince action while simultaneously tracing the results.
+    Warning - most of haret is not thread-safe, so care should be
+    taken to not run intricate commands simultaneously.
+
   * Add new commands: LOG, UNLOG, PS, KILL, LOADLIBRARYEX, NLEDSET
 
   * Removed support for command-line options "-r" and "-k".  These
-    options are superceded by the linload.exe program and the command
+    options are superseded by the linload.exe program and the command
     "KILL".  This was done, in part, because the "-k" option required
     toolhelp.dll which may not be present on old PDAs.
 
