@@ -6,6 +6,7 @@
  */
 
 #include <windows.h> // Sleep
+#include <time.h> // time
 #include "pwinuser.h" // NLedSetDevice
 #include "nled.h" // NLED_SETTINGS_INFO
 
@@ -73,3 +74,61 @@ REG_CMD(0, "NLEDSET", LedSet,
         "  Call NLedSetDevice to alter an LED setting.\n"
         "  <id> is the LED id.\n"
         "  <value> may be 0 for off, 1 for on, or 2 for blink.")
+
+LATE_LOAD(GetSystemPowerStatusEx2, "coredll")
+
+static int GSPSEavail() {
+    return !!late_GetSystemPowerStatusEx2;
+}
+
+static void
+powerMon(const char *cmd, const char *args)
+{
+    uint32 seconds;
+    if (!get_expression(&args, &seconds))
+        seconds = 0;
+
+    int cur_time = time(NULL);
+    int fin_time = cur_time + seconds;
+
+    for (;;) {
+        SYSTEM_POWER_STATUS_EX2 stat2;
+        int ret = GetSystemPowerStatusEx2(&stat2, sizeof(stat2), false);
+        if (!ret) {
+            Complain(L"GetSystemPowerStatusEx2");
+            return;
+        }
+
+        Output("%5ld %5d %5d %% %5ld %5ld %5ld %5ld %5d %5d %5ld %5ld %5d %5d"
+               "  %5d %5d %5ld %5ld %5ld %5ld %5ld %5d",
+               GetTickCount(),                         //
+               stat2.BatteryFlag,                      //
+               stat2.BatteryLifePercent,               //
+               stat2.BatteryVoltage,                   //  
+               stat2.BatteryCurrent,                   //  
+               stat2.BatteryAverageCurrent,            //  
+               stat2.BatteryTemperature,               //  
+               stat2.ACLineStatus,                     //  0x00
+               stat2.Reserved1,                        //  0x00
+               stat2.BatteryLifeTime,                  //  -1
+               stat2.BatteryFullLifeTime,              //  -1
+               stat2.Reserved2,                        //  0x00
+               stat2.BackupBatteryFlag,                //  0x01
+               stat2.BackupBatteryLifePercent,         //  255
+               stat2.Reserved3,                        //  0x00
+               stat2.BackupBatteryLifeTime,            //  -1
+               stat2.BackupBatteryFullLifeTime,        //  -1
+               stat2.BatteryAverageInterval,           //  0
+               stat2.BatterymAHourConsumed,            //  0
+               stat2.BackupBatteryVoltage,             //  0
+               stat2.BatteryChemistry);                 //  5
+
+        cur_time = time(NULL);
+        if (cur_time >= fin_time)
+            break;
+        Sleep(1000);
+    }
+}
+REG_CMD(GSPSEavail, "POWERMON", powerMon,
+        "POWERMON [<seconds>]\n"
+        "  Watch power status")

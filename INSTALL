@@ -10,14 +10,15 @@ compiling.
 
 The gcc toolset in use is from the cegcc project.  See
 http://cegcc.sourceforge.net/ for more info.  This project is
-currently still in active development (as of 20061119).  One may use
+currently still in active development (as of 20061130).  One may use
 the following steps to obtain the same toolkit the main HaRET
 developers are using:
 
 1 - Obtain cegcc source (svn co
     https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc)
 
-2 - Use revision 819 (svn up -r 819)
+2 - Use revision 835 (svn up -r 835).  This is an optional step, newer
+    releases of cegcc will likely also work.
 
 3 - Optionally alter the build destination by modifying
     src/mingw32ce.sh.  If you do this, be sure to modify HaRET's

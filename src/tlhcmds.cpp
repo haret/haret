@@ -17,13 +17,17 @@
 LATE_LOAD(CreateToolhelp32Snapshot, "toolhelp")
 LATE_LOAD(Process32First, "toolhelp")
 LATE_LOAD(Process32Next, "toolhelp")
+LATE_LOAD(Module32First, "toolhelp")
+LATE_LOAD(Module32Next, "toolhelp")
 LATE_LOAD(CloseToolhelp32Snapshot, "toolhelp")
 
 static int
 tlhAvail(void)
 {
-    return (late_CreateToolhelp32Snapshot && late_Process32First
-            && late_Process32Next && late_CloseToolhelp32Snapshot);
+    return (late_CreateToolhelp32Snapshot
+            && late_Process32First && late_Process32Next
+            && late_Module32First && late_Module32Next
+            && late_CloseToolhelp32Snapshot);
 }
 
 // Find a process by name and terminate it.
@@ -75,11 +79,13 @@ psDump(const char *cmd, const char *args)
 {
     HANDLE hTH = late_CreateToolhelp32Snapshot(
         TH32CS_SNAPPROCESS|TH32CS_SNAPHEAPLIST, 0);
-    if (hTH == INVALID_HANDLE_VALUE)
+    if (hTH == INVALID_HANDLE_VALUE) {
+        Output("Unable to create tool help snapshot");
         return;
+    }
 
     PROCESSENTRY32 pe;
-    pe.dwSize= sizeof(PROCESSENTRY32);
+    pe.dwSize = sizeof(pe);
 
     if (late_Process32First(hTH, &pe)) {
         do {
@@ -95,3 +101,33 @@ psDump(const char *cmd, const char *args)
 REG_CMD(tlhAvail, "PS", psDump,
         "PS\n"
         "  List wince process information.")
+
+static void
+modDump(const char *cmd, const char *args)
+{
+    HANDLE hTH = late_CreateToolhelp32Snapshot(
+        TH32CS_SNAPMODULE|TH32CS_GETALLMODS, 0);
+    if (hTH == INVALID_HANDLE_VALUE) {
+        Output("Unable to create tool help snapshot");
+        return;
+    }
+
+    MODULEENTRY32 me;
+    me.dwSize = sizeof(me);
+
+    if (late_Module32First(hTH, &me)) {
+        do {
+            Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%3ld pusg=%08lx"
+                   " base=%p size=%08lx hmod=%p mod=%ls exe=%ls",
+                   me.dwSize, me.dwFlags, me.th32ModuleID, me.th32ProcessID,
+                   me.GlblcntUsage, me.ProccntUsage,
+                   me.modBaseAddr, me.modBaseSize,
+                   me.hModule, me.szModule, me.szExePath);
+        } while (late_Module32Next(hTH, &me));
+    }
+
+    late_CloseToolhelp32Snapshot(hTH);
+}
+REG_CMD(tlhAvail, "LSMOD", modDump,
+        "LSMOD\n"
+        "  List wince modules.")
