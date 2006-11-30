@@ -7,6 +7,8 @@ next version <kevin@koconnor.net>
     Warning - most of haret is not thread-safe, so care should be
     taken to not run intricate commands simultaneously.
 
+  * Add new machine: jornada820
+
   * Add new commands: LOG, UNLOG, PS, KILL, LOADLIBRARYEX, NLEDSET,
     LSMOD, POWERMON
 

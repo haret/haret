@@ -5,6 +5,7 @@
 #include "lateload.h" // setup_LateLoading
 #include "output.h" // Output
 #include "script.h" // setupCommands
+#include "arch-sa.h" // MachineSA
 #include "machines.h"
 
 // Global current machine setting.
@@ -46,9 +47,10 @@ Machine::getIrqName(uint)
 }
 
 // Some defaults.
-static Machine RefMachine;
-static MachinePXA RefMachinePXA;
 static MachinePXA27x RefMachinePXA27x;
+static MachinePXA RefMachinePXA;
+static MachineSA RefMachineSA;
+static Machine RefMachine;
 
 // Symbols added by linker.
 extern "C" {
@@ -86,6 +88,8 @@ findMachineType()
         return &RefMachinePXA27x;
     if (RefMachinePXA.detect())
         return &RefMachinePXA;
+    if (RefMachineSA.detect())
+        return &RefMachineSA;
     return &RefMachine;
 }
 
