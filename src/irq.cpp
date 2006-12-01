@@ -19,8 +19,6 @@
 #include "machines.h" // getIrqNames
 #include "lateload.h" // LATE_LOAD
 
-LATE_LOAD(AllocPhysMem, "coredll")
-
 static const uint32 MAX_IRQ = 32 + 2 + 120;
 static const uint32 MAX_IGNOREADDR = 64;
 
@@ -367,10 +365,10 @@ stop_traps(void)
  * Code to report feedback from exception handlers
  ****************************************************************/
 
-// Commands and variables are only applicable if AllocPhysMem is
-// available and if this is a PXA based pda.
+// Commands and variables are only applicable if this is a PXA based
+// pda.
 static int testAvail() {
-    return late_AllocPhysMem && dynamic_cast<MachinePXA*>(Mach);
+    return dynamic_cast<MachinePXA*>(Mach) != NULL;
 }
 
 // Mask of ignored interrupts (set in script.cpp)
@@ -683,11 +681,8 @@ irqWatch(uint seconds)
     uint32 newIrqHandler, newAbortHandler, newPrefetchHandler;
 
     // Allocate space for the irq handlers in physically continuous ram.
-    void *rawCode = 0;
-    ulong dummy;
-    rawCode = late_AllocPhysMem(size_handlerCode()
-                                , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
-    irqChainCode *code = (irqChainCode *)rawCode;
+    void *rawCode = calloc(size_handlerCode(), 1);
+    irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
     struct irqData *data;
     if (!rawCode) {
         Complain(L"Can't allocate memory for irq code");
@@ -703,18 +698,17 @@ irqWatch(uint seconds)
            , &irq_start, size_cHandlers());
 
     // Locate the code handlers in long-lived virtual addresses.
-    code->cIrqCodeMVA = cachedMVA(
-        (void*)&code->asm_handlers[size_asmHandlers() + offset_cIrqHandler()]);
-    code->cAbortCodeMVA = cachedMVA(
-        (void*)&code->asm_handlers[size_asmHandlers() + offset_cAbortHandler()]);
-    code->cPrefetchCodeMVA = cachedMVA(
-        (void*)&code->asm_handlers[size_asmHandlers() + offset_cPrefetchHandler()]);
-    code->dataMVA = cachedMVA((void*)&code->data);
-    newIrqHandler = cachedMVA((void*)&code->asm_handlers[0]);
-    newAbortHandler = cachedMVA(
-        (void*)&code->asm_handlers[offset_asmAbortHandler()]);
-    newPrefetchHandler = cachedMVA(
-        (void*)&code->asm_handlers[offset_asmPrefetchHandler()]);
+    code->cIrqCodeMVA = (uint32)&code->asm_handlers[size_asmHandlers()
+                                                    + offset_cIrqHandler()];
+    code->cAbortCodeMVA = (uint32)&code->asm_handlers[
+        size_asmHandlers() + offset_cAbortHandler()];
+    code->cPrefetchCodeMVA = (uint32)&code->asm_handlers[
+        size_asmHandlers() + offset_cPrefetchHandler()];
+    code->dataMVA = (uint32)&code->data;
+    newIrqHandler = (uint32)&code->asm_handlers[0];
+    newAbortHandler = (uint32)&code->asm_handlers[offset_asmAbortHandler()];
+    newPrefetchHandler = (uint32)&code->asm_handlers[
+        offset_asmPrefetchHandler()];
     if (!code->cIrqCodeMVA || !code->cAbortCodeMVA || !code->cPrefetchCodeMVA
         || !code->dataMVA
         || !newIrqHandler || !newAbortHandler || !newPrefetchHandler) {
