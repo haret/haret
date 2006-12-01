@@ -44,7 +44,7 @@ public:
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
 
-    uint32 *icmr, *dma, *udc;
+    uint32 *dma, *udc;
 };
 
 // PXA 27x

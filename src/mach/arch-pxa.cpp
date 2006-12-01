@@ -81,8 +81,6 @@ static void pxaResetUDC (pxaUDC *udc)
 void
 MachinePXA::hardwareShutdown()
 {
-    *icmr = 0;
-
     pxaResetDMA((pxaDMA *)dma);
     pxaResetUDC((pxaUDC *)udc);
 }
