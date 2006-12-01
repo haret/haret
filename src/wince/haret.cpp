@@ -52,9 +52,6 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
       scrExecute ("startup.txt", false);
       return TRUE;
     }
-    case WM_CANCELMODE:
-          EndDialog (hWnd, LOWORD (wParam));
-          return TRUE;
     case WM_COMMAND:
       switch (LOWORD (wParam))
       {
