@@ -6,6 +6,7 @@
 */
 
 #include <windows.h>
+#include "pkfuncs.h" // SetKMode
 #include <windowsx.h> // Edit_SetSel
 #include <commctrl.h> // TBM_SETRANGEMAX
 #include <stdio.h> // vsnprintf
@@ -186,6 +187,22 @@ preparePath()
     *x = 0;
 }
 
+// Prepare thread for general availability.
+void
+prepThread()
+{
+    // Set per-thread output function to NULL (for CE 2.1 machines
+    // where this isn't the default.)
+    TlsSetValue(outTls, 0);
+
+    // All wince 3.0 and later machines are automatically in "kernel
+    // mode".  We enable kernel mode by default to make older PDAs
+    // (ce2.x) work.
+    Output("Setting KMode to true.");
+    int kmode = SetKMode(TRUE);
+    Output("Old KMode was %d", kmode);
+}
+
 // Initialize the output settings.
 void
 setupOutput()
@@ -204,7 +221,7 @@ setupOutput()
 
     // Prep for per-thread output function.
     outTls = TlsAlloc();
-    TlsSetValue(outTls, 0);
+    prepThread();
 
     Output("Finished initializing output");
 }

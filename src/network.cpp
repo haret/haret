@@ -6,17 +6,15 @@
     For conditions of use see file COPYING
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <stdio.h> // sprintf
 #include <windows.h>
+#include "pkfuncs.h" // SetKMode
 
 #include "xtypes.h"
-#include "cpu.h"
-#include "output.h"
-#include "terminal.h"
-#include "script.h"
+#include "cpu.h" // cpuGetPSR
+#include "output.h" // Output, setOuptutFn
+#include "terminal.h" // haretNetworkTerminal
+#include "script.h" // scrInterpret
 #include "machines.h" // Mach
 #include "network.h"
 
@@ -206,7 +204,8 @@ mainnetloop(int sock)
 static void
 scrListen(int port)
 {
-    setOutputFn(0);
+    prepThread();
+
     int lsock = socket(AF_INET, SOCK_STREAM, 0);
     if (lsock < 0) {
         Complain(C_ERROR("Failed to create socket"));

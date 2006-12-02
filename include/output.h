@@ -25,6 +25,7 @@ extern void Status (const wchar_t *format, ...);
 extern void fnprepare(const char *ifn, char *ofn, int ofn_max);
 // Initialize output logging code.
 void setupOutput();
+void prepThread();
 // Internal function for outputing to screen/logs/socket.
 void __output(int sendScreen, const char *fmt, ...)
     __attribute__ ((format (printf, 2, 3)));

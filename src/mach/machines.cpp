@@ -1,5 +1,4 @@
 #include <windows.h> // SystemParametersInfo
-#include "pkfuncs.h" // SetKMode
 
 #include "memory.h" // mem_autodetect
 #include "lateload.h" // setup_LateLoading
@@ -101,10 +100,6 @@ setupMachineType()
         Output("Error: machine already defined to '%s'", Mach->name);
         return;
     }
-
-    Output("Setting KMode to true.");
-    int kmode = SetKMode(TRUE);
-    Output("Old KMode was %d", kmode);
 
     // Bind to DLLs dynamically.
     setup_LateLoading();
