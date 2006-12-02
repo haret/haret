@@ -29,16 +29,12 @@ static char *bootKernel = "zimage";
 static char *bootInitrd = "initrd";
 // Kernel command line
 static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
-// Milliseconds to sleep for nicer animation :-)
-static uint32 bootSpeed = 5;
 // ARM machine type (see linux/arch/arm/tools/mach-types)
 static uint32 bootMachineType = 0;
 
 REG_VAR_STR(0, "KERNEL", bootKernel, "Linux kernel file name")
 REG_VAR_STR(0, "INITRD", bootInitrd, "Initial Ram Disk file name")
 REG_VAR_STR(0, "CMDLINE", bootCmdline, "Kernel command line")
-REG_VAR_INT(0, "BOOTSPD", bootSpeed
-            , "Boot animation speed, usec/scanline (0-no delay)")
 REG_VAR_INT(0, "MTYPE", bootMachineType
             , "ARM machine type (see linux/arch/arm/tools/mach-types)")
 

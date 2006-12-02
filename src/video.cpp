@@ -86,6 +86,11 @@ void videoEndDraw ()
     vram = NULL;
 }
 
+// Milliseconds to sleep for nicer animation :-)
+static uint32 bootSpeed = 5;
+REG_VAR_INT(0, "BOOTSPD", bootSpeed
+            , "Boot animation speed, usec/scanline (0-no delay)")
+
 void videoBitmap::load (uint ResourceID)
 {
   rh = (HRSRC)LoadResource (hInst, FindResource (hInst,
