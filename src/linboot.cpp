@@ -125,6 +125,10 @@ setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
 // They must also not use any global variables.
 #define __preload __attribute__ ((__section__ (".text.preload")))
 
+// Maximum number of index pages.
+#define MAX_INDEX 4
+#define PAGES_PER_INDEX (PAGE_SIZE / sizeof(uint32))
+
 // Data Shared between normal haret code and C preload code.
 struct preloadData {
     uint32 machtype;
@@ -132,10 +136,9 @@ struct preloadData {
     uint32 startRam;
 
     char *tags;
-    uint32 kernelSize;
-    const char **kernelPages;
-    uint32 initrdSize;
-    const char **initrdPages;
+    uint32 kernelCount;
+    uint32 initrdCount;
+    const char **indexPages[MAX_INDEX];
 };
 
 // Copy memory (need a memcpy with __preload tag).
@@ -149,13 +152,11 @@ do_copy(char *dest, const char *src, int count)
 
 // Copy a list of pages to a linear area of memory
 static void __preload
-do_copyPages(char *dest, const char **pages, int bytes)
+do_copyPages(char *dest, const char ***pages, int start, int pagecount)
 {
-    while (bytes > 0) {
-        do_copy(dest, *pages, PAGE_SIZE);
-        pages++;
+    for (int i=start; i<start+pagecount; i++) {
+        do_copy(dest, pages[i/PAGES_PER_INDEX][i%PAGES_PER_INDEX], PAGE_SIZE);
         dest += PAGE_SIZE;
-        bytes -= PAGE_SIZE;
     }
 }
 
@@ -181,20 +182,19 @@ preloader(struct preloadData *data)
 
     // Copy tags to beginning of ram.
     char *destTags = (char *)data->startRam + PHYSOFFSET_TAGS;
-    do_copy(destTags, data->tags, PAGE_SIZE);
+    do_copy(destTags, data->tags, TAGSIZE);
 
     drawLine(&data->videoRam, COLOR_RED);
 
     // Copy kernel image
     uint32 destKernel = data->startRam + PHYSOFFSET_KERNEL;
-    do_copyPages((char *)destKernel, data->kernelPages, data->kernelSize);
+    do_copyPages((char *)destKernel, data->indexPages, 0, data->kernelCount);
 
     drawLine(&data->videoRam, COLOR_CYAN);
 
     // Copy initrd (if applicable)
-    if (data->initrdSize)
-        do_copyPages((char *)data->startRam + PHYSOFFSET_INITRD
-                     , data->initrdPages, data->initrdSize);
+    do_copyPages((char *)data->startRam + PHYSOFFSET_INITRD, data->indexPages
+                 , data->kernelCount, data->initrdCount);
 
     drawLine(&data->videoRam, COLOR_BLACK);
 
@@ -233,8 +233,6 @@ struct stackJumper_s {
     char asm_handler[1];
 };
 
-static const int MaxImagePages = PAGE_SIZE / sizeof(uint32);
-
 struct pagedata {
     uint32 physLoc;
     char *virtLoc;
@@ -243,13 +241,13 @@ struct pagedata {
 static int physPageComp(const void *e1, const void *e2) {
     pagedata *i1 = (pagedata*)e1, *i2 = (pagedata*)e2;
     return (i1->physLoc < i2->physLoc ? -1
-            : (i2->physLoc > i2->physLoc ? 1 : 0));
+            : (i1->physLoc > i2->physLoc ? 1 : 0));
 }
 
 // Description of memory alocated by prepForKernel()
 struct bootmem {
-    char *kernelPages[MaxImagePages];
-    char *initrdPages[MaxImagePages];
+    char *imagePages[PAGES_PER_INDEX];
+    char **kernelPages, **initrdPages;
     uint32 physExec;
     void *allocedRam;
 };
@@ -288,17 +286,20 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     Output("boot MTYPE=%d CMDLINE='%s'", machType, bootCmdline);
 
     // Allocate ram for kernel/initrd
-    int kernelPages = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
-    int initrdPages = PAGE_ALIGN(initrdSize) / PAGE_SIZE;
-    int totalPages = kernelPages + initrdPages + 6;
-    if (kernelPages > MaxImagePages || initrdPages > MaxImagePages) {
-        Output("Image too large - largest size is %d"
-               , MaxImagePages * PAGE_SIZE);
+    uint32 kernelCount = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
+    int initrdCount = PAGE_ALIGN(initrdSize) / PAGE_SIZE;
+    int indexCount = PAGE_ALIGN((initrdCount + kernelCount)
+                                * sizeof(char*)) / PAGE_SIZE;
+    int totalCount = kernelCount + initrdCount + indexCount + 4;
+    if (indexCount > MAX_INDEX) {
+        Output("Image too large (%d/%d) - largest size is %d"
+               , kernelSize, initrdSize
+               , MAX_INDEX * PAGES_PER_INDEX * PAGE_SIZE);
         return NULL;
     }
-    void *data = calloc(totalPages * PAGE_SIZE + PAGE_SIZE - 1, 1);
+    void *data = calloc(totalCount * PAGE_SIZE + PAGE_SIZE - 1, 1);
     if (! data) {
-        Output("Failed to allocate %d pages", totalPages);
+        Output("Failed to allocate %d pages", totalCount);
         return NULL;
     }
 
@@ -313,8 +314,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 
     // Find all the physical locations of the pages.
     data = (void*)PAGE_ALIGN((uint32)data);
-    struct pagedata pages[MaxImagePages * 2 + 6];
-    for (int i=0; i<totalPages; i++) {
+    struct pagedata pages[PAGES_PER_INDEX * MAX_INDEX + 4];
+    for (int i=0; i<totalCount; i++) {
         struct pagedata *pd = &pages[i];
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
         pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
@@ -326,22 +327,23 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     }
 
     // Sort the pages by physical location.
-    qsort(pages, totalPages, sizeof(pages[0]), physPageComp);
+    qsort(pages, totalCount, sizeof(pages[0]), physPageComp);
 
     struct pagedata *pg_tag = &pages[0];
     struct pagedata *pgs_kernel = &pages[1];
-    struct pagedata *pgs_initrd = &pages[kernelPages+1];
-    struct pagedata *pg_kernelIndex = &pages[totalPages-5];
-    struct pagedata *pg_initrdIndex = &pages[totalPages-4];
-    struct pagedata *pg_stack = &pages[totalPages-3];
-    struct pagedata *pg_data = &pages[totalPages-2];
-    struct pagedata *pg_preload = &pages[totalPages-1];
+    struct pagedata *pgs_initrd = &pages[kernelCount+1];
+    struct pagedata *pgs_index = &pages[initrdCount+kernelCount+1];
+    struct pagedata *pg_stack = &pages[totalCount-3];
+    struct pagedata *pg_data = &pages[totalCount-2];
+    struct pagedata *pg_preload = &pages[totalCount-1];
 
-    Output("Allocated %d pages (tags=%p/%08x kernel=%p/%08x initrd=%p/%08x)"
-           , totalPages
+    Output("Allocated %d pages (tags=%p/%08x kernel=%p/%08x initrd=%p/%08x"
+           " index=%p/%08x)"
+           , totalCount
            , pg_tag->virtLoc, pg_tag->physLoc
            , pgs_kernel->virtLoc, pgs_kernel->physLoc
-           , pgs_initrd->virtLoc, pgs_initrd->physLoc);
+           , pgs_initrd->virtLoc, pgs_initrd->physLoc
+           , pgs_index->virtLoc, pgs_index->physLoc);
 
     if (pg_tag->physLoc < memPhysAddr + PHYSOFFSET_TAGS
         || pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL
@@ -357,25 +359,22 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
                        , initrdSize);
 
     // Setup kernel/initrd indexes
-    uint32 *index = (uint32*)pg_kernelIndex->virtLoc;
-    for (int i=0; i<kernelPages; i++) {
+    for (uint32 i=0; i<kernelCount+initrdCount; i++) {
+        uint32 *index = (uint32*)pgs_index[i/PAGES_PER_INDEX].virtLoc;
         index[i] = pgs_kernel[i].physLoc;
-        bm->kernelPages[i] = pgs_kernel[i].virtLoc;
+        bm->imagePages[i] = pgs_kernel[i].virtLoc;
     }
-    index = (uint32*)pg_initrdIndex->virtLoc;
-    for (int i=0; i<initrdPages; i++) {
-        index[i] = pgs_initrd[i].physLoc;
-        bm->initrdPages[i] = pgs_initrd[i].virtLoc;
-    }
+    bm->kernelPages = &bm->imagePages[0];
+    bm->initrdPages = &bm->imagePages[kernelCount];
 
     // Setup preloader data.
     struct preloadData *pd = (struct preloadData *)pg_data->virtLoc;
     pd->machtype = machType;
     pd->tags = (char *)pg_tag->physLoc;
-    pd->kernelSize = kernelSize;
-    pd->kernelPages = (const char **)pg_kernelIndex->physLoc;
-    pd->initrdSize = initrdSize;
-    pd->initrdPages = (const char **)pg_initrdIndex->physLoc;
+    pd->kernelCount = kernelCount;
+    pd->initrdCount = initrdCount;
+    for (int i=0; i<indexCount; i++)
+        pd->indexPages[i] = (const char **)pgs_index[i].physLoc;
     pd->startRam = memPhysAddr;
     pd->videoRam = 0;
 
