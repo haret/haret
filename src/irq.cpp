@@ -6,7 +6,6 @@
  */
 
 #include <windows.h> // Sleep
-#include "pkfuncs.h" // AllocPhysMem
 #include <time.h> // time
 #include <string.h> // memcpy
 
@@ -663,8 +662,14 @@ findWinCEirq(uint8 *irq_table, uint32 offset)
 }
 
 static void
-irqWatch(uint seconds)
+cmd_wirq(const char *cmd, const char *args)
 {
+    uint32 seconds;
+    if (!get_expression(&args, &seconds)) {
+        Complain(C_ERROR ("line %d: Expected <seconds>"), ScriptLine);
+        return;
+    }
+
     // Map in the IRQ vector tables in a place that we can be sure
     // there is full read/write access to it.
     uint8 *irq_table = memPhysMap(memVirtToPhys(VADDR_IRQTABLE));
@@ -681,12 +686,16 @@ irqWatch(uint seconds)
         return;
     uint32 newIrqHandler, newAbortHandler, newPrefetchHandler;
 
-    // Allocate space for the irq handlers in physically continuous ram.
+    // Allocate space for the irq handlers.
     void *rawCode = calloc(size_handlerCode(), 1);
     irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
     struct irqData *data;
     if (!rawCode) {
         Complain(L"Can't allocate memory for irq code");
+        goto abort;
+    }
+    if (!code) {
+        Complain(L"Can't find vm addr of alloc'd physical ram.");
         goto abort;
     }
     memset(code, 0, size_handlerCode());
@@ -710,12 +719,6 @@ irqWatch(uint seconds)
     newAbortHandler = (uint32)&code->asm_handlers[offset_asmAbortHandler()];
     newPrefetchHandler = (uint32)&code->asm_handlers[
         offset_asmPrefetchHandler()];
-    if (!code->cIrqCodeMVA || !code->cAbortCodeMVA || !code->cPrefetchCodeMVA
-        || !code->dataMVA
-        || !newIrqHandler || !newAbortHandler || !newPrefetchHandler) {
-        Complain(L"Can't find vm addr of alloc'd physical ram.");
-        goto abort;
-    }
 
     // Check for software debug data watch points.
     data = (irqData *)code->dataMVA;
@@ -803,19 +806,7 @@ irqWatch(uint seconds)
 
     postLoop(data);
 abort:
-    if (rawCode)
-        FreePhysMem(rawCode);
-}
-
-static void
-cmd_wirq(const char *cmd, const char *args)
-{
-    uint32 sec;
-    if (!get_expression(&args, &sec)) {
-        Complain(C_ERROR ("line %d: Expected <seconds>"), ScriptLine);
-        return;
-    }
-    irqWatch(sec);
+    free(rawCode);
 }
 REG_CMD(testAvail, "WI|RQ", cmd_wirq,
         "WIRQ <seconds>\n"
