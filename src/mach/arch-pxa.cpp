@@ -1,6 +1,6 @@
-#include "machines.h"
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
+#include "arch-pxa.h"
 #define CONFIG_PXA25x
 #include "pxa2xx.h"
 
@@ -9,6 +9,7 @@ DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
 MachinePXA::MachinePXA()
 {
     name = "Generic PXA";
+    dcsr_count = 16;
 }
 
 int
@@ -31,56 +32,28 @@ MachinePXA::preHardwareShutdown()
     return 0;
 }
 
-static void pxaResetDMA (pxaDMA *dma)
+static void
+pxaResetDMA(volatile pxaDMA *dma, int chancount)
 {
-  int i;
-  // Disable DMA interrupts
-  dma->_DINT = 0;
-  // Clear DDADRx
-  for (i = 0; i < 16; i++)
-  {
-    dma->Desc [i].DDADR = DDADR_STOP;
-    dma->Desc [i].DCMD = 0;
-  }
-  // Set DMAs to Stop state
-  for (i = 0; i < 16; i++)
-    dma->DCSR [i] = DCSR_NODESC | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERR;
-  // Clear DMA requests to channel map registers (just in case)
-  for(i = 0; i < 40; i ++)
-    dma->DRCMR [i] = 0;
+    // Set DMAs to Stop state
+    for (int i = 0; i < chancount; i++)
+        dma->DCSR[i] = DCSR_NODESC | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERR;
+
+    // Wait for DMAs to complete
+    for (int i = 0; i < chancount; i++)
+        while ((dma->DCSR[i] & DCSR_STOPSTATE) == 0)
+            ;
 }
 
-static void pxaResetUDC (pxaUDC *udc)
+static void
+pxaResetUDC(volatile pxaUDC *udc)
 {
-  udc->_UDCCS [ 2] = UDCCS_BO_RPC | UDCCS_BO_SST;
-  udc->_UDCCS [ 7] = UDCCS_BO_RPC | UDCCS_BO_SST;
-  udc->_UDCCS [12] = UDCCS_BO_RPC | UDCCS_BO_SST;
-  udc->_UDCCS [ 1] = UDCCS_BI_TPC | UDCCS_BI_FTF |
-    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
-  udc->_UDCCS [ 6] = UDCCS_BI_TPC | UDCCS_BI_FTF |
-    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
-  udc->_UDCCS [11] = UDCCS_BI_TPC | UDCCS_BI_FTF |
-    UDCCS_BI_TUR | UDCCS_BI_SST | UDCCS_BI_TSP;
-  udc->_UDCCS [ 3] = UDCCS_II_TPC | UDCCS_II_FTF |
-    UDCCS_II_TUR | UDCCS_II_TSP;
-  udc->_UDCCS [ 8] = UDCCS_II_TPC | UDCCS_II_FTF |
-    UDCCS_II_TUR | UDCCS_II_TSP;
-  udc->_UDCCS [13] = UDCCS_II_TPC | UDCCS_II_FTF |
-    UDCCS_II_TUR | UDCCS_II_TSP;
-  udc->_UDCCS [ 4] = UDCCS_IO_RPC | UDCCS_IO_ROF;
-  udc->_UDCCS [ 9] = UDCCS_IO_RPC | UDCCS_IO_ROF;
-  udc->_UDCCS [11] = UDCCS_IO_RPC | UDCCS_IO_ROF;
-  udc->_UDCCS [ 5] = UDCCS_INT_TPC | UDCCS_INT_FTF |
-    UDCCS_INT_TUR | UDCCS_INT_SST;
-  udc->_UDCCS [10] = UDCCS_INT_TPC | UDCCS_INT_FTF |
-    UDCCS_INT_TUR | UDCCS_INT_SST;
-  udc->_UDCCS [15] = UDCCS_INT_TPC | UDCCS_INT_FTF |
-    UDCCS_INT_TUR | UDCCS_INT_SST;
+    udc->_UDCCR = 0;
 }
 
 void
 MachinePXA::hardwareShutdown()
 {
-    pxaResetDMA((pxaDMA *)dma);
-    pxaResetUDC((pxaUDC *)udc);
+    pxaResetDMA((pxaDMA*)dma, dcsr_count);
+    pxaResetUDC((pxaUDC*)udc);
 }

@@ -5,6 +5,7 @@
 #include "output.h" // Output
 #include "script.h" // setupCommands
 #include "arch-sa.h" // MachineSA
+#include "arch-pxa.h" // MachinePXA, MachinePXA27x
 #include "machines.h"
 
 // Global current machine setting.

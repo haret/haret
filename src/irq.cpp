@@ -17,6 +17,7 @@
 #include "script.h" // REG_CMD
 #include "cbitmap.h" // BITMAPSIZE
 #include "machines.h" // getIrqNames
+#include "arch-pxa.h" // MachinePXA
 #include "lateload.h" // LATE_LOAD
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;

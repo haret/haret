@@ -1,4 +1,4 @@
-#include "machines.h"
+#include "arch-pxa.h" // MachinePXA27x
 #include "mach-types.h"
 
 class MachMagician : public MachinePXA27x {

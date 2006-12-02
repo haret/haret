@@ -1,6 +1,6 @@
-#include "machines.h"
+#include "arch-pxa.h" // MachinePXA27x
 #include "mach-types.h"
-#include "memory.h"
+#include "memory.h" // memPhysSize
 
 class MachApache : public MachinePXA27x {
 public:

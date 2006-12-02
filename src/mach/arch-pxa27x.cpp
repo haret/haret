@@ -1,6 +1,6 @@
-#include "machines.h"
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
+#include "arch-pxa.h"
 #define CONFIG_PXA27x
 #include "pxa2xx.h" // pxaDMA
 
@@ -9,6 +9,7 @@ DEF_GETCPR(get_p15r0, 15, 0, c0, c0, 0)
 MachinePXA27x::MachinePXA27x()
 {
     name = "Generic PXA27x";
+    dcsr_count = 32;
 }
 
 int
@@ -29,22 +30,6 @@ MachinePXA27x::preHardwareShutdown()
     return 0;
 }
 
-#define DCSR_REG_COUNT27x    32
-
-void
-Reset27xDMA(pxaDMA *dma)
-{
-    // Set DMAs to Stop state
-    for (int i = 0; i < DCSR_REG_COUNT27x; i++)
-        dma->DCSR [i] = DCSR_NODESC | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERR;
-}
-
-void
-Reset27xUDC(pxaUDC *udc)
-{
-    udc->_UDCCR = 0;
-}
-
 // disable USB host.
 void
 Reset27xUHC(volatile uint32 *uhccoms)
@@ -56,8 +41,7 @@ Reset27xUHC(volatile uint32 *uhccoms)
 void
 MachinePXA27x::hardwareShutdown()
 {
-    Reset27xDMA((pxaDMA*)dma);
-    Reset27xUDC((pxaUDC*)udc);
+    MachinePXA::hardwareShutdown();
     Reset27xUHC(uhccoms);
 
     *cken=(*cken)&(~(

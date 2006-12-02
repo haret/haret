@@ -32,33 +32,6 @@ public:
     virtual const char *getIrqName(uint);
 };
 
-//
-// Common architecture classes
-//
-
-// PXA
-class MachinePXA : public Machine {
-public:
-    MachinePXA();
-    int detect();
-    virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
-
-    uint32 *dma, *udc;
-};
-
-// PXA 27x
-class MachinePXA27x : public MachinePXA {
-public:
-    MachinePXA27x();
-    int detect();
-    virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
-    virtual const char *getIrqName(uint);
-
-    uint32 *cken, *uhccoms;
-};
-
 // Register a machine class to be scanned during haret start.
 #define REGMACHINE(Mach)                                                \
 static Mach Ref ##Mach;                                                 \
