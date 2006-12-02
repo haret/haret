@@ -8,6 +8,8 @@
 #ifndef _CPU_H
 #define _CPU_H
 
+#include "xtypes.h" // uint32
+
 // Size of pages used in wince
 #define PAGE_SIZE 4096
 // Set a variable to be aligned on a page boundary.
