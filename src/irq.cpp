@@ -6,6 +6,7 @@
  */
 
 #include <windows.h> // Sleep
+#include "pkfuncs.h" // AllocPhysMem
 #include <time.h> // time
 #include <string.h> // memcpy
 
@@ -18,6 +19,8 @@
 #include "machines.h" // getIrqNames
 #include "arch-pxa.h" // MachinePXA
 #include "lateload.h" // LATE_LOAD
+
+LATE_LOAD(AllocPhysMem, "coredll")
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;
 static const uint32 MAX_IGNOREADDR = 64;
@@ -365,10 +368,10 @@ stop_traps(void)
  * Code to report feedback from exception handlers
  ****************************************************************/
 
-// Commands and variables are only applicable if this is a PXA based
-// pda.
+// Commands and variables are only applicable if AllocPhysMem is
+// available and if this is a PXA based pda.
 static int testAvail() {
-    return dynamic_cast<MachinePXA*>(Mach) != NULL;
+    return late_AllocPhysMem && dynamic_cast<MachinePXA*>(Mach);
 }
 
 // Mask of ignored interrupts (set in script.cpp)
@@ -686,8 +689,11 @@ cmd_wirq(const char *cmd, const char *args)
         return;
     uint32 newIrqHandler, newAbortHandler, newPrefetchHandler;
 
-    // Allocate space for the irq handlers.
-    void *rawCode = calloc(size_handlerCode(), 1);
+    // Allocate space for the irq handlers in physically continuous ram.
+    void *rawCode = 0;
+    ulong dummy;
+    rawCode = late_AllocPhysMem(size_handlerCode()
+                                , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
     irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
     struct irqData *data;
     if (!rawCode) {
@@ -806,7 +812,8 @@ cmd_wirq(const char *cmd, const char *args)
 
     postLoop(data);
 abort:
-    free(rawCode);
+    if (rawCode)
+        FreePhysMem(rawCode);
 }
 REG_CMD(testAvail, "WI|RQ", cmd_wirq,
         "WIRQ <seconds>\n"
