@@ -32,7 +32,7 @@ def appendBuffer(mtime, cmdtype, val):
     Buffer = Buffer + chr(val)
 
 def encodeBuf(buf):
-    """Show 'buf' in hex.  Note only used with -x option"""
+    """Show 'buf' in hex"""
     out = ""
     for c in buf:
         o = ord(c)
