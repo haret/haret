@@ -12,6 +12,7 @@ import struct
 import dis
 
 CLOCKRATE=dis.CLOCKRATE
+HEXALL=0
 
 redebug = dis.redebug
 reirq = dis.reirq
@@ -30,11 +31,22 @@ def appendBuffer(mtime, cmdtype, val):
     BufferType = cmdtype
     Buffer = Buffer + chr(val)
 
+def encodeBuf(buf):
+    """Show 'buf' in hex.  Note only used with -x option"""
+    out = ""
+    for c in buf:
+        o = ord(c)
+        if HEXALL or ((o < 32 or o > 127) and o not in [10, 13]):
+            out += "<%02x>" % o
+        else:
+            out += c
+    return repr(out)
+
 def flushBuffer():
     global Buffer, BufferType, BufferStart, BufferEnd
     if Buffer:
         print "%010.6f-%010.6f %5s: %s" % (
-            BufferStart, BufferEnd, BufferType, repr(Buffer))
+            BufferStart, BufferEnd, BufferType, encodeBuf(Buffer))
     Buffer = ""
     BufferStart = BufferEnd = BufferType = None
 
