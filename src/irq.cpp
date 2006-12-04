@@ -5,12 +5,13 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
-#include <windows.h> // Sleep
+#include <windows.h> // for pkfuncs.h
 #include "pkfuncs.h" // AllocPhysMem
 #include <time.h> // time
 #include <string.h> // memcpy
 
 #include "xtypes.h"
+#include "watch.h" // memcheck
 #include "output.h" // Output
 #include "memory.h" // memPhysMap
 #include "cpu.h" // cpuFlushCache
@@ -24,6 +25,9 @@ LATE_LOAD(AllocPhysMem, "coredll")
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;
 static const uint32 MAX_IGNOREADDR = 64;
+
+// Maximum number of irq/trace level memory polls available.
+#define MAX_MEMCHECK 32
 
 // Number of items to place in the trace buffer.  MUST be a power of
 // 2.
@@ -81,6 +85,7 @@ enum {
     FI_IRQ    = 0xffffffff,
     FI_INSN   = 0xfffffffe,
     FI_RESUME = 0xfffffffd,
+    FI_MEMPOLL= 0xfffffffc,
 };
 
 // Persistent data accessible by both exception handlers and regular
@@ -95,6 +100,8 @@ struct irqData {
     uint8 *irq_ctrl, *gpio_ctrl;
     uint32 ignoredIrqs[BITMAPSIZE(MAX_IRQ)];
     uint32 demuxGPIOirq;
+    uint32 irqpollcount;
+    memcheck irqpolls[MAX_MEMCHECK];
 
     // Debug information.
     uint32 ignoreAddr[MAX_IGNOREADDR];
@@ -102,6 +109,8 @@ struct irqData {
     // Instruction trace information.
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];
     uint32 dbr0, dbr1, dbcon;
+    uint32 tracepollcount;
+    memcheck tracepolls[MAX_MEMCHECK];
 
     // Summary counters.
     uint32 irqCount, abortCount, prefetchCount;
@@ -120,8 +129,6 @@ struct irqregs {
     };
     uint32 old_pc;
 };
-
-#define __irq __attribute__ ((__section__ (".text.irq")))
 
 // Create a set of CPU coprocessor accessor functions for irq handlers
 #define DEF_GETIRQCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
@@ -156,7 +163,7 @@ DEF_SETIRQCPR(set_DBR1, p15, 0, c14, c3, 0)
 DEF_SETIRQCPR(set_DCSR, p14, 0, c10, c0, 0)
 
 // Add an item to the trace buffer.
-static inline void __irq
+static inline int __irq
 add_trace(struct irqData *data
           , uint32 clock, uint32 loc, uint32 insn
           , uint32 val, uint32 addr)
@@ -164,7 +171,7 @@ add_trace(struct irqData *data
     if (data->writePos - data->readPos >= NR_TRACE) {
         // No more space in trace buffer.
         data->overflows++;
-        return;
+        return -1;
     }
     struct traceitem *pos = &data->traces[data->writePos % NR_TRACE];
     pos->clock = clock;
@@ -173,6 +180,24 @@ add_trace(struct irqData *data
     pos->value = val;
     pos->addr = addr;
     data->writePos++;
+    return 0;
+}
+
+// Perform a set of memory polls and add to trace buffer.
+static void __irq
+checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
+{
+    for (uint i=0; i<count; i++) {
+        memcheck *mc = &list[i];
+        uint32 val;
+        int ret = testMem(mc, &val);
+        if (!ret)
+            continue;
+        ret = add_trace(data, clock, 0, FI_MEMPOLL, val, (uint32)mc);
+        if (ret)
+            // Couldn't add trace - reset compare function.
+            mc->trySuppress = 0;
+    }
 }
 
 // Enable CPU registers to catch insns and memory accesses
@@ -226,6 +251,9 @@ irq_handler(struct irqData *data, struct irqregs *regs)
                                                   , START_GPIO_IRQS+i))
                 add_trace(data, clock, 0, FI_IRQ, START_GPIO_IRQS+i, 0);
     }
+
+    // Irq time memory polling.
+    checkPolls(data, clock, data->irqpolls, data->irqpollcount);
 
     if (get_DBCON() != data->dbcon) {
         // Performance counter not running - reenable.
@@ -311,6 +339,9 @@ abort_handler(struct irqData *data, struct irqregs *regs)
     add_trace(data, clock, old_pc, insn
               , getReg(regs, &er, mask_Rd(insn))
               , getReg(regs, &er, mask_Rn(insn)));
+
+    // Trace time memory polling.
+    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
 }
 
 // Code that handles instruction breakpoint events.
@@ -348,6 +379,9 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
     add_trace(data, clock, old_pc, FI_INSN
               , getReg(regs, &er, idata->reg1)
               , getReg(regs, &er, idata->reg2));
+
+    // Trace time memory polling.
+    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
 }
 
 // Reset CPU registers that conrol software debug / performance monitoring
@@ -480,6 +514,10 @@ printTrace(struct irqData *data)
     } else if (insn == FI_RESUME) {
         // WinCE CPU resume event
         Output("%08x: cpu resumed", cur->clock);
+    } else if (insn == FI_MEMPOLL) {
+        // Memory trace event
+        memcheck *mc = (memcheck*)cur->addr;
+        mc->reporter(cur->clock, mc, value);
     } else {
         // Software debug event
         Output("%08x: debug %08x: %08x(%s) %08x %08x"
@@ -512,7 +550,7 @@ mainLoop(struct irqData *data, int seconds)
             // away reporting traces.
         } else
             // Nothing to report; yield the cpu.
-            Sleep(1);
+            yieldCPU();
         cur_time = time(NULL);
         tmpcount = 0;
     }
@@ -533,6 +571,43 @@ postLoop(struct irqData *data)
            , data->irqCount, data->abortCount, data->prefetchCount
            , data->overflows, data->errors);
 }
+
+
+/****************************************************************
+ * Additional memory tracing commands
+ ****************************************************************/
+
+static uint32 watchirqcount;
+static memcheck watchirqpolls[16];
+
+static void
+cmd_addirqwatch(const char *cmd, const char *args)
+{
+    watchCmdHelper(watchirqpolls, ARRAY_SIZE(watchirqpolls), &watchirqcount
+                   , cmd, args);
+}
+REG_CMD(0, "ADDIRQWATCH", cmd_addirqwatch,
+        "ADDIRQWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
+        "  Setup an address to be polled when an irq hits\n"
+        "  See ADDWATCH for syntax.  <CLEAR|LS>IRQWATCH is also available.")
+REG_CMD_ALT(0, "CLEARIRQWATCH", cmd_addirqwatch, clear, 0)
+REG_CMD_ALT(0, "LSIRQWATCH", cmd_addirqwatch, list, 0)
+
+static uint32 watchtracecount;
+static memcheck watchtracepolls[16];
+
+static void
+cmd_addtracewatch(const char *cmd, const char *args)
+{
+    watchCmdHelper(watchtracepolls, ARRAY_SIZE(watchtracepolls), &watchtracecount
+                   , cmd, args);
+}
+REG_CMD(0, "ADDTRACEWATCH", cmd_addtracewatch,
+        "ADDTRACEWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
+        "  Setup an address to be polled when an irq hits\n"
+        "  See ADDWATCH for syntax.  <CLEAR|LS>TRACEWATCH is also available.")
+REG_CMD_ALT(0, "CLEARTRACEWATCH", cmd_addtracewatch, clear, 0)
+REG_CMD_ALT(0, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
 
 
 /****************************************************************
@@ -761,7 +836,11 @@ cmd_wirq(const char *cmd, const char *args)
     code->winceAbortHandler = *abort_loc;
     code->wincePrefetchHandler = *prefetch_loc;
 
-    preLoop(data);
+    // Setup memory tracing.
+    memcpy(data->irqpolls, watchirqpolls, sizeof(data->irqpolls));
+    data->irqpollcount = watchirqcount;
+    memcpy(data->tracepolls, watchtracepolls, sizeof(data->tracepolls));
+    data->tracepollcount = watchtracecount;
 
     if (insnTrace != 0xFFFFFFFF || irqTrace != 0xFFFFFFFF) {
         Output("Will set memory tracing to:%08x %08x %08x %08x %08x"
@@ -784,6 +863,8 @@ cmd_wirq(const char *cmd, const char *args)
            , code->cPrefetchCodeMVA
            , size_asmHandlers(), size_cHandlers(), size_handlerCode());
 #endif
+
+    preLoop(data);
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
