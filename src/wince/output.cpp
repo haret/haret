@@ -111,6 +111,14 @@ openLogFile(const char *vn)
     return 0;
 }
 
+// Ask wince to write log fully to disk (like an fsync).
+void
+flushLogFile()
+{
+    if (outputLogfile)
+        FlushFileBuffers(outputLogfile);
+}
+
 // Close a previously opened log file.
 void
 closeLogFile()

@@ -209,6 +209,9 @@ take_control()
         // Already in a critical section.
         return;
 
+    // Flush log to disk (in case we don't survive)
+    flushLogFile();
+
     // Map in pages to prevent page faults in critical section.
     touchAppPages();
 

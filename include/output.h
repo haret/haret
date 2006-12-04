@@ -36,6 +36,8 @@ void __output(int sendScreen, const char *fmt, ...)
 
 // Close any previously created log files.
 void closeLogFile();
+// Flush log file writes to disk.
+void flushLogFile();
 
 extern bool InitProgress (uint Max);
 extern bool SetProgress (uint Value);
