@@ -10,16 +10,16 @@
 extern "C" {
 #endif
 
+LPVOID AllocPhysMem(DWORD,DWORD,DWORD,DWORD,PULONG);
 VOID ForcePageout(void);
-LPVOID AllocPhysMem(DWORD cbSize, DWORD fdwProtect, DWORD dwAlignmentMask,
-                    DWORD dwFlags, PULONG pPhysicalAddress);
-BOOL FreePhysMem(LPVOID lpvAddress);
-DWORD SetProcPermissions(DWORD newperms );
+BOOL FreePhysMem(LPVOID);
 DWORD GetCurrentPermissions(void);
-BOOL SetKMode(BOOL fMode);
-BOOL VirtualCopy(LPVOID lpvDest, LPVOID lpvSrc, DWORD cbSize, DWORD fdwProtect);
-BOOL LockPages(LPVOID lpvAddress, DWORD cbSize, PDWORD pPFNs, int fOptions);
-BOOL UnlockPages(LPVOID lpvAddress, DWORD cbSize);
+BOOL LockPages(LPVOID,DWORD,PDWORD,int);
+BOOL SetKMode(BOOL);
+DWORD SetProcPermissions(DWORD);
+void SleepTillTick();
+BOOL UnlockPages(LPVOID,DWORD);
+BOOL VirtualCopy(LPVOID,LPVOID,DWORD,DWORD);
 #define LOCKFLAG_READ       0x004
 
 #ifdef __cplusplus
