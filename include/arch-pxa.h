@@ -23,3 +23,5 @@ public:
 
     uint32 *cken, *uhccoms;
 };
+
+int testPXA();

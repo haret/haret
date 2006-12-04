@@ -57,3 +57,10 @@ MachinePXA::hardwareShutdown()
     pxaResetDMA((pxaDMA*)dma, dcsr_count);
     pxaResetUDC((pxaUDC*)udc);
 }
+
+// Returns true if the current machine was found to be PXA based.
+int
+testPXA()
+{
+    return dynamic_cast<MachinePXA*>(Mach) != NULL;
+}
