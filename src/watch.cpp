@@ -17,7 +17,7 @@
 
 LATE_LOAD(SleepTillTick, "coredll")
 
-static void
+void
 yieldCPU()
 {
     if (late_SleepTillTick)
@@ -33,7 +33,7 @@ enum MemOps {
     MO_READ32 = 3,
 };
 
-static int
+int __irq
 testMem(struct memcheck *mc, uint32 *pnewval)
 {
     uint32 curval;
@@ -110,7 +110,7 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
         hasComp = 1;
     switch (size) {
     case 32: size=MO_READ32; break;
-    case 18: size=MO_READ16; break;
+    case 16: size=MO_READ16; break;
     case 8: size=MO_READ8; break;
     default:
         Complain(C_ERROR("line %d: Expected <32|16|8>"), ScriptLine);
