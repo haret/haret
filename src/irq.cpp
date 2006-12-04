@@ -22,6 +22,7 @@
 #include "lateload.h" // LATE_LOAD
 
 LATE_LOAD(AllocPhysMem, "coredll")
+LATE_LOAD(FreePhysMem, "coredll")
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;
 static const uint32 MAX_IGNOREADDR = 64;
@@ -405,7 +406,8 @@ stop_traps(void)
 // Commands and variables are only applicable if AllocPhysMem is
 // available and if this is a PXA based pda.
 static int testAvail() {
-    return late_AllocPhysMem && dynamic_cast<MachinePXA*>(Mach);
+    return (late_AllocPhysMem && late_FreePhysMem
+            && dynamic_cast<MachinePXA*>(Mach));
 }
 
 // Mask of ignored interrupts (set in script.cpp)
@@ -894,7 +896,7 @@ cmd_wirq(const char *cmd, const char *args)
     postLoop(data);
 abort:
     if (rawCode)
-        FreePhysMem(rawCode);
+        late_FreePhysMem(rawCode);
 }
 REG_CMD(testAvail, "WI|RQ", cmd_wirq,
         "WIRQ <seconds>\n"
