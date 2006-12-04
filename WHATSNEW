@@ -1,5 +1,11 @@
 next version <kevin@koconnor.net>
 
+  * Support memory polling commands (WATCH/ADDWATCH).  This will allow
+    one to poll an area of memory and check for changes.  The "wi"
+    command has also been extended to support memory polling during
+    interrupt and trace/breakpoint events (see ADDIRQWATCH /
+    ADDTRACEWATCH).
+
   * Support multiple simultaneous network connections to haret.  This
     can be invoked by calling the new "network <port>" haret command.
     Having multiple telnet windows can be useful when using haret to
