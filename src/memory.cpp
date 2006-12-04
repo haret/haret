@@ -431,8 +431,6 @@ memPhysMap(uint32 paddr)
 
     return memPhysMap_wm(paddr);
 }
-REG_VAR_ROFUNC(0, "P2V", memPhysMap, 1
-               , "Physical To Virtual address translation")
 
 uint32 memPhysRead (uint32 paddr)
 {
@@ -520,8 +518,6 @@ uint32 memVirtToPhys (uint32 vaddr)
 
   return paddr;
 }
-REG_VAR_ROFUNC(0, "V2P", memVirtToPhys, 1
-               , "Virtual To Physical address translation")
 
 static uchar dump_char (uchar c)
 {
@@ -1060,3 +1056,18 @@ static uint32 memScrPMW (bool setval, uint32 *args, uint32 val)
   return *mem;
 }
 REG_VAR_RWFUNC(0, "PMW", memScrPMW, 1, "Physical Memory Word access")
+
+static uint32
+var_p2v(bool setval, uint32 *args, uint32 val)
+{
+    return (uint32)memPhysMap(args[0]);
+}
+REG_VAR_ROFUNC(0, "P2V", var_p2v, 1
+               , "Physical To Virtual address translation")
+static uint32
+var_v2p(bool setval, uint32 *args, uint32 val)
+{
+    return (uint32)memVirtToPhys(args[0]);
+}
+REG_VAR_ROFUNC(0, "V2P", var_v2p, 1
+               , "Virtual To Physical address translation")
