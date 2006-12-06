@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>
+20061205 0.4.5 <kevin@koconnor.net>
 
   * Support memory polling commands (WATCH/ADDWATCH).  This will allow
     one to poll an area of memory and check for changes.  The "wi"
