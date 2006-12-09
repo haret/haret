@@ -48,7 +48,7 @@ extern void DoneProgress ();
 class outputfn {
 public:
     virtual ~outputfn() {}
-    virtual void sendMessage(const char *msg) = 0;
+    virtual void sendMessage(const char *msg, int len) = 0;
 };
 
 // Setup the output function for this thread.

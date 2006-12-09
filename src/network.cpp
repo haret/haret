@@ -30,7 +30,7 @@ class haretNetworkTerminal : public haretTerminal, public outputfn
 private:
   virtual int Read (uchar *indata, size_t max_len);
   virtual int Write (const uchar *outdata, size_t len);
-  void sendMessage(const char *msg);
+  void sendMessage(const char *msg, int len);
 
 public:
   haretNetworkTerminal (int iSocket) : haretTerminal ()
@@ -53,32 +53,9 @@ int haretNetworkTerminal::Write (const uchar *outdata, size_t len)
 }
 
 void
-haretNetworkTerminal::sendMessage(const char *msg)
+haretNetworkTerminal::sendMessage(const char *msg, int len)
 {
-    uint len = strlen(msg);
-    char sbcs[300];
-    if (len > sizeof(sbcs)-10)
-        len = sizeof(sbcs)-10;
-    memcpy(sbcs, msg, len);
-
-    if (sbcs [len - 1] == '\t')
-        len--;
-    else
-        sbcs [len++] = '\n';
-
-    // Convert CR to CR/LF since telnet requires this
-    char *dst = sbcs + sizeof (sbcs) - 1;
-    char *eol = sbcs + len - 1;
-    while (eol >= sbcs)
-    {
-        if ((*dst-- = *eol) == '\n')
-            *dst-- = '\r';
-        eol--;
-    }
-
-    dst++;
-    len = sbcs + sizeof (sbcs) - dst;
-    send(socket, dst, len, 0);
+    send(socket, msg, len, 0);
 }
 
 DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)

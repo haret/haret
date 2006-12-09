@@ -19,48 +19,29 @@
 
 //#define USE_WAIT_CURSOR
 
+static const int MAXOUTBUF = 2*1024;
+static const int PADOUTBUF = 32;
+
 
 /****************************************************************
  * Append a message to main screen log
  ****************************************************************/
 
 static void
-writeScreen(const char *msg)
+writeScreen(const char *msg, int len)
 {
   if (MainWindow == 0)
     return;
 
-  wchar_t buff [512];
-  _snwprintf(buff, sizeof(buff) / sizeof(buff[0]), L"%hs", msg);
-
-  wchar_t *eol = buff + wcslen(buff);
-  // Append a newline at the end
-  *eol++ = L'\n'; *eol = 0;
-  wchar_t *dst = buff + sizeof (buff) / sizeof (wchar_t);
-
-  // Convert \n to \r\n
-  while (eol >= buff)
-  {
-    if (dst <= eol)
-      break;
-
-    dst--;
-    if (*eol == L'\n')
-    {
-      *dst-- = L'\n';
-      *dst = L'\r';
-    }
-    else
-      *dst = *eol;
-    eol--;
-  }
+  wchar_t buff[MAXOUTBUF];
+  mbstowcs(buff, msg, ARRAY_SIZE(buff));
 
   HWND hConsole = GetDlgItem (MainWindow, ID_LOG);
   uint maxlen = SendMessage (hConsole, EM_GETLIMITTEXT, 0, 0);
 
-  uint tl, sl = buff + (sizeof (buff) / sizeof (wchar_t)) - dst;
+  uint tl;
 
-  while ((tl = GetWindowTextLength (hConsole)) + sl >= maxlen)
+  while ((tl = GetWindowTextLength (hConsole)) + len >= maxlen)
   {
     uint linelen = SendMessage (hConsole, EM_LINELENGTH, 0, 0) + 2;
     Edit_SetSel (hConsole, 0, linelen);
@@ -68,7 +49,7 @@ writeScreen(const char *msg)
   }
 
   Edit_SetSel (hConsole, tl, tl);
-  Edit_ReplaceSel (hConsole, dst);
+  Edit_ReplaceSel (hConsole, buff);
 }
 
 
@@ -83,15 +64,8 @@ writeLog(const char *msg, uint32 len)
 {
     if (!outputLogfile)
         return;
-    char buf[1024];
-    if (len > sizeof(buf)-2)
-        len = sizeof(buf)-2;
-    memcpy(buf, msg, len);
-    buf[len] = '\r';
-    buf[len+1] = '\n';
-    len += 2;
     DWORD nw;
-    WriteFile(outputLogfile, buf, len, &nw, 0);
+    WriteFile(outputLogfile, msg, len, &nw, 0);
 }
 
 // Request output to be copied to a local log file.
@@ -133,7 +107,7 @@ closeLogFile()
  * Main Output() code
  ****************************************************************/
 
-DWORD outTls;
+static DWORD outTls;
 
 static inline outputfn *getOutputFn(void) {
     return (outputfn*)TlsGetValue(outTls);
@@ -147,22 +121,52 @@ setOutputFn(outputfn *ofn)
     return old;
 }
 
+static int
+convertNL(char *outbuf, int maxlen, const char *inbuf, int len)
+{
+    // Convert CR to CR/LF since telnet requires this
+    const char *s = inbuf, *s_end = &inbuf[len];
+    char *d = outbuf;
+    char *d_end = &outbuf[maxlen - 3];
+    while (s < s_end && d < d_end) {
+        if (*s == '\n')
+            *d++ = '\r';
+        *d++ = *s++;
+    }
+
+    // A trailing tab character is an indicator to not add in a
+    // trailing newline - in all other cases add the newline.
+    if (d > outbuf && d[-1] == '\t') {
+        d--;
+    } else {
+        *d++ = '\r';
+        *d++ = '\n';
+    }
+
+    *d = '\0';
+    return d - outbuf;
+}
+
 void
 __output(int sendScreen, const char *format, ...)
 {
-    char buf[512];
+    char rawbuf[MAXOUTBUF];
 
     va_list args;
     va_start(args, format);
-    int len = vsnprintf(buf, sizeof(buf), format, args);
+    int len = vsnprintf(rawbuf, sizeof(rawbuf) - PADOUTBUF, format, args);
     va_end(args);
+
+    // Convert newline characters
+    char buf[MAXOUTBUF];
+    len = convertNL(buf, sizeof(buf), rawbuf, len);
 
     writeLog(buf, len);
     if (sendScreen)
-        writeScreen(buf);
+        writeScreen(buf, len);
     outputfn *ofn = getOutputFn();
     if (ofn)
-        ofn->sendMessage(buf);
+        ofn->sendMessage(buf, len);
 }
 
 
@@ -266,14 +270,17 @@ void Complain (const wchar_t *format, ...)
   wchar_t buffer [512];
   va_list args;
   va_start (args, format);
-  _vsnwprintf (buffer, sizeof (buffer) / sizeof (wchar_t), format, args);
+  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
   va_end (args);
 
   outputfn *ofn = getOutputFn();
   if (ofn) {
-    char buf[1024];
-    _snprintf(buf, sizeof(buf), "%ls: %ls", title, buffer);
-    ofn->sendMessage(buf);
+    char rawbuf[MAXOUTBUF];
+    int len = _snprintf(rawbuf, sizeof(rawbuf) - PADOUTBUF
+                        , "%ls: %ls", title, buffer);
+    char buf[MAXOUTBUF];
+    len = convertNL(buf, sizeof(buf), rawbuf, len);
+    ofn->sendMessage(buf, len);
   } else
     MessageBox (0, buffer, title, MB_OK | MB_APPLMODAL | severity);
 }
@@ -283,7 +290,7 @@ void Status (const wchar_t *format, ...)
   wchar_t buffer [512];
   va_list args;
   va_start (args, format);
-  _vsnwprintf (buffer, sizeof (buffer) / sizeof (wchar_t), format, args);
+  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
   va_end (args);
 
   HWND sb = GetDlgItem (MainWindow, ID_STATUSTEXT);

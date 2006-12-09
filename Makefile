@@ -8,7 +8,7 @@
 #
 
 # Program version
-VERSION=0.4.5
+VERSION=pre-0.4.6
 
 # Output directory
 OUT=out/
