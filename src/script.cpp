@@ -411,19 +411,6 @@ static bool IsToken (const char *tok, const char *mask)
   return true;
 }
 
-/* fprintf-like function for dumpers */
-static void conwrite (void *data, const char *format, ...)
-{
-  char buff [512];
-
-  va_list args;
-  va_start (args, format);
-  _vsnprintf (buff, sizeof (buff), format, args);
-  va_end (args);
-
-  Output("%s\t", buff);
-}
-
 bool scrInterpret (const char *str, uint lineno)
 {
     ScriptLine = lineno;
@@ -451,6 +438,14 @@ bool scrInterpret (const char *str, uint lineno)
     Complain(C_ERROR("Unknown keyword: `%hs'"), tok);
     return true;
 }
+
+class fileredir : public outputfn {
+public:
+    FILE *f;
+    void sendMessage(const char *msg, int len) {
+        fwrite(msg, len, 1, f);
+    }
+};
 
 static void
 cmd_dump(const char *cmd, const char *x)
@@ -484,23 +479,26 @@ cmd_dump(const char *cmd, const char *x)
     if (vn && !*vn)
         vn = NULL;
 
-    FILE *f = NULL;
     if (vn)
     {
         char fn [200];
         fnprepare (vn, fn, sizeof (fn));
 
-        f = fopen (fn, "wb");
+        FILE *f = fopen(fn, "wb");
         if (!f)
         {
             Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
             return;
         }
+        fileredir redir;
+        redir.f = f;
+        outputfn *old = setOutputFn(&redir);
+        hwd->dump(args);
+        setOutputFn(old);
+        fclose (f);
+    } else {
+        hwd->dump(args);
     }
-
-    hwd->dump (f ? (void (*) (void *, const char *, ...))fprintf : conwrite,
-               f, args);
-    fclose (f);
 }
 REG_CMD(0, "D|UMP", cmd_dump,
         "DUMP <hardware>[(args...)] [filename]\n"

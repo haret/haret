@@ -53,8 +53,7 @@ bool cpuSetCP (uint cp, uint regno, uint32 val)
 }
 
 static bool
-cpuDumpCP(void (*out) (void *data, const char *, ...),
-          void *data, uint32 *args)
+cpuDumpCP(uint32 *args)
 {
   uint cp = args [0];
 
@@ -65,7 +64,7 @@ cpuDumpCP(void (*out) (void *data, const char *, ...),
   }
 
   for (int i = 0; i < 8; i++)
-    out (data, "c%02d: %08x | c%02d: %08x\n",
+    Output("c%02d: %08x | c%02d: %08x",
          i, cpuGetCP (cp, i), i + 8, cpuGetCP (cp, i + 8));
   return true;
 }

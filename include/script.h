@@ -119,8 +119,7 @@ struct haret_cmd_s {
   // Number of arguments
   int nargs;
   // The function that does the dump
-  bool (*dump) (void (*out) (void *data, const char *, ...),
-                void *data, uint32 *args);
+  bool (*dump)(uint32 *args);
 };
 
 void setupCommands();

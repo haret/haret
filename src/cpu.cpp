@@ -26,8 +26,7 @@ cpuGetFamily(bool setval, uint32 *args, uint32 val)
 REG_VAR_ROFUNC(0, "CPU", cpuGetFamily, 0, "Autodetected CPU family")
 
 static bool
-cpuDumpAC97(void (*out) (void *data, const char *, ...),
-            void *data, uint32 *args)
+cpuDumpAC97(uint32 *args)
 {
   uint unit = args [0];
 
@@ -80,7 +79,7 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
     if (!to)
     {
       return_control();
-      out (data, "Register %x: codec is busy\n", i * 2);
+      Output("Register %x: codec is busy", i * 2);
       continue;
     }
 
@@ -96,7 +95,7 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
     if (!to || (ac97->_GSR & GSR_RDCS))
     {
       return_control();
-      out (data, "Register %x: access timed out\n", i * 2);
+      Output("Register %x: access timed out", i * 2);
       continue;
     }
 
@@ -105,9 +104,9 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
     return_control();
 
     // Shit, if we remove this it won't work correctly :-(
-    out (data, ".\b");
+    Output(".\b");
   }
-  out (data, "\n");
+  Output("\n");
 
   ac97->_POCR = old_pocr;
   ac97->_PICR = old_picr;
@@ -116,12 +115,12 @@ cpuDumpAC97(void (*out) (void *data, const char *, ...),
   ac97->_MICR = old_micr;
   ac97->_GCR = old_gcr;
 
-  out (data, "GCR:  %08x  MCCR: %08x\n", old_gcr,  old_mccr);
-  out (data, "POCR: %08x  PICR: %08x\n", old_pocr, old_picr);
-  out (data, "MOCR: %08x  MICR: %08x\n", old_mocr, old_micr);
+  Output("GCR:  %08x  MCCR: %08x", old_gcr,  old_mccr);
+  Output("POCR: %08x  PICR: %08x", old_pocr, old_picr);
+  Output("MOCR: %08x  MICR: %08x", old_mocr, old_micr);
 
   for (i = 0; i < 16; i++)
-    out (data, "r%02x: %04x | r%02x: %04x | r%02x: %04x | r%02x: %04x\n",
+    Output("r%02x: %04x | r%02x: %04x | r%02x: %04x | r%02x: %04x",
           i       * 2, regs [i     ], (i + 16) * 2, regs [i + 16],
          (i + 32) * 2, regs [i + 32], (i + 48) * 2, regs [i + 48]);
   return true;

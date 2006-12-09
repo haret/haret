@@ -871,25 +871,24 @@ static char *__flags_l2 (uint32 d)
   return x;
 }
 
-static bool memDumpMMU (void (*out) (void *data, const char *, ...),
-                 void *data, uint32 *args)
+static bool memDumpMMU(uint32 *args)
 {
-  out (data, "----- Virtual address map -----\n\n");
-  out (data, "Descriptor flags legend:\n"
+  Output("----- Virtual address map -----\n");
+  Output("Descriptor flags legend:\n"
              " C: Cacheable\n"
              " B: Bufferable\n"
              " 0..3: Access Permissions (for up to 4 slices):\n"
              "       0: Supervisor mode Read\n"
              "       1: Supervisor mode Read/Write\n"
              "       2: User mode Read\n"
-             "       3: User mode Read/Write\n\n");
+             "       3: User mode Read/Write\n");
 
   uint32 mmu = cpuGetMMU ();
-  out (data, " MMU 1st level descriptor table is at %p\n", mmu);
+  Output(" MMU 1st level descriptor table is at %08x", mmu);
 
-  out (data, "  Virtual | Physical |  Descr  | Description\n");
-  out (data, "  address | address  |  flags  |\n");
-  out (data, "----------+----------+---------+-----------------------------\n");
+  Output("  Virtual | Physical |  Descr  | Description");
+  Output("  address | address  |  flags  |");
+  Output("----------+----------+---------+-----------------------------");
 
   // Previous 1st and 2nd level descriptors
   uint32 pL1 = 0xffffffff;
@@ -914,11 +913,11 @@ static bool memDumpMMU (void (*out) (void *data, const char *, ...),
       {
         case MMU_L1_UNMAPPED:
           if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
-            out (data, " %08x |          |         | UNMAPPED\n", mb << 20);
+            Output(" %08x |          |         | UNMAPPED", mb << 20);
           break;
         case MMU_L1_SECTION:
           paddr = (l1d & MMU_L1_SECTION_MASK);
-          out (data, " %08x | %08x | %s      | 1MB section\n", mb << 20, paddr,
+          Output(" %08x | %08x | %s      | 1MB section", mb << 20, paddr,
                   __flags_l1 (l1d));
           break;
         case MMU_L1_COARSE_L2:
@@ -946,22 +945,22 @@ static bool memDumpMMU (void (*out) (void *data, const char *, ...),
           {
             case MMU_L2_UNMAPPED:
               if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                out (data, " %08x |          |         | UNMAPPED\n",
+                Output(" %08x |          |         | UNMAPPED",
                      (mb << 20) + (d << pss));
               break;
             case MMU_L2_LARGEPAGE:
               l2paddr = (l2d & MMU_L2_LARGE_MASK);
-              out (data, " %08x | %08x | %s | Large page (64K)\n",
+              Output(" %08x | %08x | %s | Large page (64K)",
                    (mb << 20) + (d << pss), l2paddr, __flags_l2 (l2d));
               break;
             case MMU_L2_SMALLPAGE:
               l2paddr = (l2d & MMU_L2_SMALL_MASK);
-              out (data, " %08x | %08x | %s | Small page (4K)\n",
+              Output(" %08x | %08x | %s | Small page (4K)",
                    (mb << 20) + (d << pss), l2paddr, __flags_l2 (l2d));
               break;
             case MMU_L2_TINYPAGE:
               l2paddr = (l2d & MMU_L2_TINY_MASK);
-              out (data, " %08x | %08x | %s | Tiny page (1K)\n",
+              Output(" %08x | %08x | %s | Tiny page (1K)",
                    (mb << 20) + (d << pss), l2paddr, __flags_l2 (l2d));
               break;
           }
@@ -978,7 +977,7 @@ static bool memDumpMMU (void (*out) (void *data, const char *, ...),
     Complain (C_ERROR ("EXCEPTION CAUGHT AT MEGABYTE %d!"), mb);
   }
 
-  out (data, " ffffffff |          |         | End of virtual address space\n");
+  Output(" ffffffff |          |         | End of virtual address space");
   DoneProgress ();
   return true;
 }

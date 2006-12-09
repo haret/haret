@@ -265,15 +265,14 @@ REG_VAR_RWFUNC(0, "GAFR", gpioScrGAFR, 1
                , "General Purpose I/O Alternate Function Select Register")
 
 // Dump the overall GPIO state
-static bool gpioDump (void (*out) (void *data, const char *, ...),
-               void *data, uint32 *args)
+static bool gpioDump(uint32 *args)
 {
   const uint rows = 84/4;
   uint32 *grer = (uint32 *)memPhysMap (GRER0);
   uint32 *gfer = (uint32 *)memPhysMap (GFER0);
 
-  out (data, "GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER\n");
-  out (data, "------------------+-------------------+-------------------+------------------\n");
+  Output("GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER | GPIO# D S A INTER");
+  Output("------------------+-------------------+-------------------+------------------");
   for (uint i = 0; i < rows; i++)
   {
     for (uint j = 0; j < 4; j++)
@@ -282,10 +281,10 @@ static bool gpioDump (void (*out) (void *data, const char *, ...),
       bool re = (grer [gpio >> 5] & (1 << (gpio & 31))) != 0;
       bool fe = (gfer [gpio >> 5] & (1 << (gpio & 31))) != 0;
 
-      out (data, "%3d   %c %d %d %s%s%s", gpio, gpioGetDir (gpio) ? 'O' : 'I',
+      Output("%3d   %c %d %d %s%s%s", gpio, gpioGetDir (gpio) ? 'O' : 'I',
            gpioGetState (gpio), gpioGetAlt (gpio),
            re ? "RE " : "   ", fe ? "FE" : "  ",
-           j < 3 ? " | " : "\n");
+           j < 3 ? " | " : "");
     }
   }
   return true;
@@ -294,25 +293,24 @@ REG_DUMP(0, "GPIO", gpioDump, 0,
          "GPIO machinery state in a human-readable format.")
 
 // Dump GPIO state in a linux-specific format
-static bool gpioDumpState (void (*out) (void *data, const char *, ...),
-                    void *data, uint32 *args)
+static bool gpioDumpState(uint32 *args)
 {
   int i;
-  out (data, "/* GPIO pin direction setup */\n");
+  Output("/* GPIO pin direction setup */");
   for (i = 0; i < 81; i++)
-    out (data, "#define GPIO%02d_Dir\t%d\n",
+    Output("#define GPIO%02d_Dir\t%d",
          i, gpioGetDir (i));
-  out (data, "\n/* GPIO Alternate Function (Select Function 0 ~ 3) */\n");
+  Output("\n/* GPIO Alternate Function (Select Function 0 ~ 3) */");
   for (i = 0; i < 81; i++)
-    out (data, "#define GPIO%02d_AltFunc\t%d\n",
+    Output("#define GPIO%02d_AltFunc\t%d",
          i, gpioGetAlt (i));
-  out (data, "\n/* GPIO Pin Init State */\n");
+  Output("\n/* GPIO Pin Init State */");
   for (i = 0; i < 81; i++)
-    out (data, "#define GPIO%02d_Level\t%d\n",
+    Output("#define GPIO%02d_Level\t%d",
          i, gpioGetDir (i) ? gpioGetState (i) : 0);
-  out (data, "\n/* GPIO Pin Sleep Level */\n");
+  Output("\n/* GPIO Pin Sleep Level */");
   for (i = 0; i < 81; i++)
-    out (data, "#define GPIO%02d_Sleep_Level\t%d\n",
+    Output("#define GPIO%02d_Sleep_Level\t%d",
          i, gpioGetSleepState (i));
   return true;
 }
