@@ -733,7 +733,7 @@ findWinCEirq(uint8 *irq_table, uint32 offset)
     uint32 irq_ins = *(uint32*)&irq_table[offset];
     if ((irq_ins & 0xfffff000) != 0xe59ff000) {
         // We only know how to handle LDR PC, #XXX instructions.
-        Complain(L"Unknown irq instruction %08x", irq_ins);
+        Output(C_INFO "Unknown irq instruction %08x", irq_ins);
         return NULL;
     }
     uint32 ins_offset = (irq_ins & 0xFFF) + 8;
@@ -746,7 +746,7 @@ cmd_wirq(const char *cmd, const char *args)
 {
     uint32 seconds;
     if (!get_expression(&args, &seconds)) {
-        Complain(C_ERROR ("line %d: Expected <seconds>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <seconds>", ScriptLine);
         return;
     }
 
@@ -774,11 +774,11 @@ cmd_wirq(const char *cmd, const char *args)
     irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
     struct irqData *data;
     if (!rawCode) {
-        Complain(L"Can't allocate memory for irq code");
+        Output(C_INFO "Can't allocate memory for irq code");
         goto abort;
     }
     if (!code) {
-        Complain(L"Can't find vm addr of alloc'd physical ram.");
+        Output(C_INFO "Can't find vm addr of alloc'd physical ram.");
         goto abort;
     }
     memset(code, 0, size_handlerCode());

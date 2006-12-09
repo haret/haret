@@ -185,7 +185,7 @@ scrListen(int port)
 
     int lsock = socket(AF_INET, SOCK_STREAM, 0);
     if (lsock < 0) {
-        Complain(C_ERROR("Failed to create socket"));
+        Output(C_ERROR "Failed to create socket");
         return;
     }
 
@@ -198,14 +198,14 @@ scrListen(int port)
     int sock;
 
     if (bind(lsock, (struct sockaddr *)&addr, sizeof (addr)) < 0) {
-        Complain(C_ERROR("Failed to bind socket"));
+        Output(C_ERROR "Failed to bind socket");
         goto finish;
     }
 
     Status(L"Waiting for connection ...");
 
     if (listen(lsock, 1) < 0) {
-        Complain(C_ERROR("Error on listen"));
+        Output(C_ERROR "Error on listen");
         goto finish;
     }
 
@@ -219,7 +219,7 @@ scrListen(int port)
     sock = accept(lsock, (struct sockaddr *)&addr, &addrlen);
 
     if (sock < 0) {
-        Complain(C_ERROR("Connection failed"));
+        Output(C_ERROR "Connection failed");
         goto finish;
     }
 

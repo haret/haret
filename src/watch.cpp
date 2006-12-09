@@ -10,7 +10,7 @@
 #include <ctype.h> // toupper
 #include <time.h> // time
 
-#include "output.h" // Output, Complain
+#include "output.h" // Output
 #include "lateload.h" // LATE_LOAD
 #include "script.h" // REG_CMD
 #include "watch.h"
@@ -101,7 +101,7 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
     // Parse args
     uint32 addr;
     if (!get_expression(&args, &addr)) {
-        Complain(C_ERROR("line %d: Expected <addr>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <addr>", ScriptLine);
         return;
     }
     uint32 mask = 0, size = 32, hasComp=0, cmpVal=0;
@@ -113,7 +113,7 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
     case 16: size=MO_READ16; break;
     case 8: size=MO_READ8; break;
     default:
-        Complain(C_ERROR("line %d: Expected <32|16|8>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <32|16|8>", ScriptLine);
         return;
     }
 

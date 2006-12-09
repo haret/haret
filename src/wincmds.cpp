@@ -11,7 +11,7 @@
 #include "nled.h" // NLED_SETTINGS_INFO
 
 #include "xtypes.h" // uint32
-#include "output.h" // Complain
+#include "output.h" // Output
 #include "script.h" // REG_CMD
 #include "lateload.h" // LATE_LOAD
 
@@ -20,7 +20,7 @@ cmd_sleep(const char *cmd, const char *args)
 {
     uint32 msec;
     if (!get_expression(&args, &msec)) {
-        Complain(C_ERROR("line %d: Expected <milliseconds>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <milliseconds>", ScriptLine);
         return;
     }
     Sleep(msec);
@@ -40,7 +40,7 @@ cmd_LoadLibraryEx(const char *cmd, const char *args)
 {
     char *name = get_token(&args);
     if (!name) {
-        Complain(C_ERROR("line %d: Expected <file name>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <file name>", ScriptLine);
         return;
     }
     wchar_t wname[200];
@@ -59,7 +59,7 @@ LedSet(const char *cmd, const char *args)
 {
     uint32 id, value;
     if (!get_expression(&args, &id) || !get_expression(&args, &value)) {
-        Complain(C_ERROR("line %d: Expected <id> <value>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <id> <value>", ScriptLine);
         return;
     }
     NLED_SETTINGS_INFO settings;
@@ -92,7 +92,7 @@ powerMon(const char *cmd, const char *args)
             SYSTEM_POWER_STATUS_EX2 stat2;
             int ret = late_GetSystemPowerStatusEx2(&stat2, sizeof(stat2), false);
             if (!ret) {
-                Complain(L"GetSystemPowerStatusEx2");
+                Output(C_INFO "GetSystemPowerStatusEx2");
                 return;
             }
 
@@ -125,7 +125,7 @@ powerMon(const char *cmd, const char *args)
             SYSTEM_POWER_STATUS_EX stat;
             int ret = GetSystemPowerStatusEx(&stat, false);
             if (!ret) {
-                Complain(L"GetSystemPowerStatusEx");
+                Output(C_INFO "GetSystemPowerStatusEx");
                 return;
             }
 

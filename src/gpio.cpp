@@ -113,7 +113,7 @@ static void gpioWatch (uint seconds)
 {
   if (seconds > 60)
   {
-    Complain (L"Number of seconds trimmed to 60");
+    Output(C_INFO "Number of seconds trimmed to 60");
     seconds = 60;
   }
 
@@ -199,7 +199,7 @@ cmd_wgpio(const char *cmd, const char *x)
     uint32 sec;
     if (!get_expression (&x, &sec))
     {
-        Complain (C_ERROR ("line %d: Expected <seconds>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <seconds>", ScriptLine);
         return;
     }
     gpioWatch (sec);

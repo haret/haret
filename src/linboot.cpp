@@ -318,7 +318,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     if (! machType)
         machType = Mach->machType;
     if (! machType) {
-        Complain(C_ERROR("undefined MTYPE"));
+        Output(C_ERROR "undefined MTYPE");
         return NULL;
     }
     Output("boot MTYPE=%d CMDLINE='%s'", machType, bootCmdline);

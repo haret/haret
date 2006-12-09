@@ -10,13 +10,12 @@
 
 #include "xtypes.h" // uint
 
-#define C_INFO(s)	L"<6>" L##s
-#define C_WARN(s)	L"<3>" L##s
-#define C_ERROR(s)	L"<0>" L##s
+// Prepend one of the following strings to the format of an Output
+// call to force a messagebox to popup.
+#define C_INFO  "<6>"
+#define C_WARN  "<3>"
+#define C_ERROR "<0>"
 
-/* Complain about something. You can prepend one of the C_XXX macros
-  (see below) to format to denote different severity levels. */
-extern void Complain (const wchar_t *format, ...);
 /* Display some text in status line */
 extern void Status (const wchar_t *format, ...);
 

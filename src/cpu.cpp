@@ -9,7 +9,7 @@
 #include "pkfuncs.h" // LockPages, SetKMode
 
 #include "xtypes.h"
-#include "output.h" // Complain
+#include "output.h" // Output
 #include "memory.h" // memPhysMap
 #include "pxa2xx.h" // pxaAC97
 #include "machines.h" // Mach
@@ -32,14 +32,14 @@ cpuDumpAC97(uint32 *args)
 
   if (unit > 3)
   {
-    Complain (C_ERROR ("AC97 unit number must be between 0 or 3"));
+    Output(C_ERROR "AC97 unit number must be between 0 or 3");
     return false;
   }
 
   pxaAC97 volatile *ac97 = (pxaAC97 *)memPhysMap (AC97_BASE);
   if (!ac97)
   {
-    Complain (C_ERROR ("Cannot map AC97 controller's physical memory"));
+    Output(C_ERROR "Cannot map AC97 controller's physical memory");
     return false;
   }
 

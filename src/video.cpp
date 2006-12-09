@@ -11,7 +11,7 @@
 #include "xtypes.h"
 #include "haret.h" // hInst
 #include "memory.h" // memVirtToPhys
-#include "output.h" // Complain
+#include "output.h" // Output
 #include "script.h" // REG_VAR_ROFUNC
 #include "lateload.h" // LATE_LOAD
 #include "video.h"
@@ -106,7 +106,7 @@ void videoBitmap::load (uint ResourceID)
     data = NULL;
 
   if (!data)
-    Complain (C_ERROR ("Failed to load bitmap resource #%d"), ResourceID);
+    Output(C_ERROR "Failed to load bitmap resource #%d", ResourceID);
 }
 
 void videoBitmap::DrawLine (uint x, uint y, uint lineno)

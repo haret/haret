@@ -13,7 +13,7 @@
 
 #include "xtypes.h"
 #include "cbitmap.h" // TEST/SET/CLEARBIT
-#include "output.h" // Output, Complain, fnprepare
+#include "output.h" // Output, fnprepare
 #include "script.h"
 
 static const char *quotes = "\"'";
@@ -142,7 +142,7 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
         return false;
       if (*v > var->val_size)
       {
-        Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
+        Output(C_ERROR "line %d: Index out of range (0..%d)",
                   ScriptLine, var->val_size);
         return false;
       }
@@ -153,7 +153,7 @@ static bool GetVar (const char *vn, const char **s, uint32 *v,
         return false;
       if (*v > var->val_size || *v >= var->bsval[0])
       {
-        Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
+        Output(C_ERROR "line %d: Index out of range (0..%d)",
                   ScriptLine, var->bsval[0]);
         return false;
       }
@@ -254,7 +254,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
         return false;
 
       default:
-        Complain (C_ERROR ("line %d: Unexpected input '%hs'"), ScriptLine, *s);
+        Output(C_ERROR "line %d: Unexpected input '%s'", ScriptLine, *s);
         return false;
     }
   }
@@ -267,7 +267,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       *v = strtoul (x, &err, 0);
       if (*err)
       {
-        Complain (C_ERROR ("line %d: Expected a number, got %hs"), ScriptLine, x);
+        Output(C_ERROR "line %d: Expected a number, got %s", ScriptLine, x);
         return false;
       }
     }
@@ -275,7 +275,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
     else if (!GetVar (x, s, v, commands_start, commands_count)
           && !GetVar (x, s, v, UserVars, UserVarsCount))
     {
-      Complain (C_ERROR ("line %d: Unknown variable '%hs' in expression"),
+      Output(C_ERROR "line %d: Unknown variable '%s' in expression",
                 ScriptLine, x);
       return false;
     }
@@ -327,7 +327,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       case ')':
         if (!(flags & PAREN_EXPECT))
         {
-          Complain (C_ERROR ("line %d: Unexpected ')'"), ScriptLine);
+          Output(C_ERROR "line %d: Unexpected ')'", ScriptLine);
           return false;
         }
         if (flags & PAREN_EAT)
@@ -342,7 +342,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
 
   if (flags & PAREN_EXPECT)
   {
-    Complain (C_ERROR ("line %d: No closing ')'"), ScriptLine);
+    Output(C_ERROR "line %d: No closing ')'", ScriptLine);
     return false;
   }
 
@@ -356,7 +356,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
 
   if (peek_char (s) != '(')
   {
-    Complain (C_ERROR ("line %d: %hs(%d args) expected"), ScriptLine, keyw, count);
+    Output(C_ERROR "line %d: %s(%d args) expected", ScriptLine, keyw, count);
     return false;
   }
 
@@ -369,7 +369,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
     if (!get_expression (s, args, 0, count ? 0 : PAREN_EXPECT | PAREN_EAT))
     {
 error:
-      Complain (C_ERROR ("line %d: not enough arguments to function %hs"), ScriptLine, kw);
+      Output(C_ERROR "line %d: not enough arguments to function %s", ScriptLine, kw);
       free(kw);
       return false;
     }
@@ -435,7 +435,7 @@ bool scrInterpret (const char *str, uint lineno)
     if (IsToken(tok, "Q|UIT"))
         return false;
 
-    Complain(C_ERROR("Unknown keyword: `%hs'"), tok);
+    Output(C_ERROR "Unknown keyword: `%s'", tok);
     return true;
 }
 
@@ -511,7 +511,7 @@ cmd_set(const char *cmd, const char *x)
     char *vn = get_token (&x);
     if (!*vn)
     {
-        Complain (C_ERROR ("line %d: Expected either <varname> or `LIST'"), ScriptLine);
+        Output(C_ERROR "line %d: Expected either <varname> or `LIST'", ScriptLine);
         return;
     }
 
@@ -526,7 +526,7 @@ cmd_set(const char *cmd, const char *x)
     case varInteger:
         if (!get_expression (&x, var->ival))
         {
-            Complain (C_ERROR ("line %d: Expected numeric <value>"), ScriptLine);
+            Output(C_ERROR "line %d: Expected numeric <value>", ScriptLine);
             return;
         }
         break;
@@ -543,12 +543,12 @@ cmd_set(const char *cmd, const char *x)
         if (!get_expression (&x, &idx)
             || !get_expression (&x, &val))
         {
-            Complain (C_ERROR ("line %d: Expected <index> <value>"), ScriptLine);
+            Output(C_ERROR "line %d: Expected <index> <value>", ScriptLine);
             return;
         }
         if (idx > var->val_size)
         {
-            Complain (C_ERROR ("line %d: Index out of range (0..%d)"),
+            Output(C_ERROR "line %d: Index out of range (0..%d)",
                       ScriptLine, var->val_size);
             return;
         }
@@ -575,14 +575,14 @@ cmd_set(const char *cmd, const char *x)
             return;
         if (!get_expression (&x, &val))
         {
-            Complain (C_ERROR ("line %d: Expected <value>"), ScriptLine);
+            Output(C_ERROR "line %d: Expected <value>", ScriptLine);
             return;
         }
         var->fval (true, args, val);
         break;
     }
     default:
-        Complain (C_ERROR ("line %d: `%hs' is a read-only variable"), ScriptLine,
+        Output(C_ERROR "line %d: `%s' is a read-only variable", ScriptLine,
                   var->name);
         return;
     }
@@ -684,7 +684,7 @@ void scrExecute (const char *scrfn, bool complain)
   if (!f)
   {
     if (complain)
-      Complain (C_ERROR ("Cannot open script file\n%hs"), fn);
+      Output(C_ERROR "Cannot open script file\n%s", fn);
     return;
   }
 

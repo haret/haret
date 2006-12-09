@@ -24,7 +24,7 @@ static const int PADOUTBUF = 32;
 
 
 /****************************************************************
- * Append a message to main screen log
+ * Functions for sending messages to screen.
  ****************************************************************/
 
 static void
@@ -50,6 +50,41 @@ writeScreen(const char *msg, int len)
 
   Edit_SetSel (hConsole, tl, tl);
   Edit_ReplaceSel (hConsole, buff);
+}
+
+void Status (const wchar_t *format, ...)
+{
+  wchar_t buffer [512];
+  va_list args;
+  va_start (args, format);
+  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
+  va_end (args);
+
+  HWND sb = GetDlgItem (MainWindow, ID_STATUSTEXT);
+  if (sb)
+    SetWindowText (sb, buffer);
+}
+
+static void
+Complain(const char *msg, int len, int code)
+{
+    unsigned severity = MB_ICONEXCLAMATION;
+    wchar_t *title = L"Warning";
+
+    if (code >= 6) {
+        severity = MB_ICONASTERISK;
+        title = L"Information";
+    } else if (code >= 3) {
+        /* default value */
+    } else {
+        severity = MB_ICONHAND;
+        title = L"Error";
+    }
+
+    wchar_t buffer[512];
+    mbstowcs(buffer, msg, ARRAY_SIZE(buffer));
+
+    MessageBox(0, buffer, title, MB_OK | MB_APPLMODAL | severity);
 }
 
 
@@ -150,23 +185,35 @@ convertNL(char *outbuf, int maxlen, const char *inbuf, int len)
 void
 __output(int sendScreen, const char *format, ...)
 {
-    char rawbuf[MAXOUTBUF];
+    // Check for error indicator (eg, format starting with "<0>")
+    int code = 0;
+    if (format[0] == '<'
+        && format[1] >= '0' && format[1] <= '9'
+        && format[2] == '>') {
+        code = format[1] - '0' + 1;
+        format += 3;
+    }
 
+    // Format output string.
+    char rawbuf[MAXOUTBUF];
     va_list args;
     va_start(args, format);
-    int len = vsnprintf(rawbuf, sizeof(rawbuf) - PADOUTBUF, format, args);
+    int rawlen = vsnprintf(rawbuf, sizeof(rawbuf) - PADOUTBUF, format, args);
     va_end(args);
 
     // Convert newline characters
     char buf[MAXOUTBUF];
-    len = convertNL(buf, sizeof(buf), rawbuf, len);
+    int len = convertNL(buf, sizeof(buf), rawbuf, rawlen);
 
     writeLog(buf, len);
     if (sendScreen)
         writeScreen(buf, len);
     outputfn *ofn = getOutputFn();
-    if (ofn)
+    if (ofn) {
         ofn->sendMessage(buf, len);
+    } else if (code) {
+        Complain(rawbuf, rawlen, code-1);
+    }
 }
 
 
@@ -236,66 +283,6 @@ setupOutput()
     prepThread();
 
     Output("Finished initializing output");
-}
-
-
-/****************************************************************
- * Functions for sending messages to screen.
- ****************************************************************/
-
-/* Handy printf-like functions for displaying messages.
- * Message severity can be specified by concatenating a
- * C_XXX macro before the format string (same as KERN_WARN
- * and so on).
- */
-void Complain (const wchar_t *format, ...)
-{
-  unsigned severity = MB_ICONEXCLAMATION;
-  wchar_t *title = L"Warning";
-
-  if (format [0] == L'<'
-   && format [1] >= L'0'
-   && format [1] <= L'9'
-   && format [2] == L'>')
-  {
-    if (format [1] >= L'6')
-      severity = MB_ICONASTERISK, title = L"Information";
-    else if (format [1] >= L'3')
-      /* default value */;
-    else
-      severity = MB_ICONHAND, title = L"Error";
-    format += 3;
-  }
-
-  wchar_t buffer [512];
-  va_list args;
-  va_start (args, format);
-  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
-  va_end (args);
-
-  outputfn *ofn = getOutputFn();
-  if (ofn) {
-    char rawbuf[MAXOUTBUF];
-    int len = _snprintf(rawbuf, sizeof(rawbuf) - PADOUTBUF
-                        , "%ls: %ls", title, buffer);
-    char buf[MAXOUTBUF];
-    len = convertNL(buf, sizeof(buf), rawbuf, len);
-    ofn->sendMessage(buf, len);
-  } else
-    MessageBox (0, buffer, title, MB_OK | MB_APPLMODAL | severity);
-}
-
-void Status (const wchar_t *format, ...)
-{
-  wchar_t buffer [512];
-  va_list args;
-  va_start (args, format);
-  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
-  va_end (args);
-
-  HWND sb = GetDlgItem (MainWindow, ID_STATUSTEXT);
-  if (sb)
-    SetWindowText (sb, buffer);
 }
 
 
@@ -408,27 +395,26 @@ cmd_print(const char *tok, const char *x)
 {
     bool msg = (toupper(tok[0]) == 'M');
     char *arg = _strdup(get_token(&x));
-    uint32 args [4];
+    uint32 args[4];
     for (int i = 0; i < 4; i++)
-        if (!get_expression (&x, &args [i]))
+        if (!get_expression(&x, &args[i]))
             break;
 
+    const char *fmt = arg;
+    char tmp[200];
     if (msg) {
-        wchar_t tmp[200];
-        _snwprintf(tmp, sizeof(tmp), C_INFO ("%hs"), arg);
-        Complain(tmp, args [0], args [1], args [2], args [3]);
-    } else {
-        char tmp[200];
-        _snprintf(tmp, sizeof(tmp), "%s", arg);
-        Screen(tmp, args [0], args [1], args [2], args [3]);
+        _snprintf(tmp, sizeof(tmp), C_INFO "%s", arg);
+        fmt = tmp;
     }
+
+    __output(!msg, fmt, args[0], args[1], args[2], args[3]);
+
     free(arg);
 }
 REG_CMD(0, "M|ESSAGE", cmd_print,
         "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
         "  Display a message (if run from a script, displays a message box).\n"
-        "  <strformat> is a standard C format string (like in printf).\n"
-        "  Note that to type a string you will have to use '%%hs'.")
+        "  <strformat> is a standard C format string (like in printf).")
 REG_CMD_ALT(0, "P|RINT", cmd_print, print,
         "PRINT <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
         "  Same as MESSAGE except that it outputs the text without decorations\n"
@@ -439,7 +425,7 @@ cmd_log(const char *cmd, const char *args)
 {
     char *vn = get_token(&args);
     if (!vn) {
-        Complain(C_ERROR("line %d: file name expected"), ScriptLine);
+        Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
     int ret = openLogFile(vn);

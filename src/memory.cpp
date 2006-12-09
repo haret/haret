@@ -13,7 +13,7 @@
 #include "xtypes.h"
 #include "cpu.h" // cpuGetMMU
 #include "memory.h"
-#include "output.h" // Output, Complain, fnprepare
+#include "output.h" // Output, fnprepare
 #include "script.h" // REG_VAR_INT
 
 // RAM start physical address
@@ -179,7 +179,7 @@ uint8 *memPhysMap_bruteforce(uint32 paddr)
     if (!VirtualCopy (pmWindow, (void *)0, (PHYS_CACHE_COUNT + 1) * 64 * 1024,
                       PAGE_READWRITE | PAGE_PHYSICAL | PAGE_NOCACHE))
     {
-      Complain (C_ERROR ("Failed (%d) to map a dummy memory area to virtual address window"),
+      Output(C_ERROR "Failed (%d) to map a dummy memory area to virtual address window",
                 GetLastError ());
 err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
       return NULL;
@@ -197,7 +197,7 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
     if (!VirtualCopy (l1desc, (void *)(cpuGetMMU () >> 8), 4 * 4096,
                       PAGE_READONLY | PAGE_PHYSICAL | PAGE_NOCACHE))
     {
-      Complain (C_ERROR ("VirtualCopy() failed (%d) when accessing MMU L1 table"),
+      Output(C_ERROR "VirtualCopy() failed (%d) when accessing MMU L1 table",
                 GetLastError ());
       VirtualFree (l1desc, 0, MEM_RELEASE);
       goto err;
@@ -239,7 +239,7 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
 
     if ((l2pt & MMU_L1_TYPE_MASK) != MMU_L1_COARSE_L2)
     {
-      Complain (C_ERROR ("Ooops... 2nd level table is not coarse. This is not implemented so far"));
+      Output(C_ERROR "Ooops... 2nd level table is not coarse. This is not implemented so far");
       goto err;
     }
 
@@ -254,7 +254,7 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
     if (!VirtualCopy (pmL2PT, (void *)(l2pt >> 8), 8192,
                       PAGE_READWRITE | PAGE_PHYSICAL))
     {
-      Complain (C_ERROR ("VirtualCopy() failed (%d) when accessing MMU L2 table"),
+      Output(C_ERROR "VirtualCopy() failed (%d) when accessing MMU L2 table",
                 GetLastError ());
       VirtualFree (pmL2PT, 0, MEM_RELEASE);
       goto err;
@@ -540,7 +540,7 @@ memDump(const char *fn, uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
     f = fopen (fnbuff, "a+");
     if (!f)
     {
-      Complain (C_ERROR ("Cannot open output file\n%hs"), fnbuff);
+      Output(C_ERROR "Cannot open output file\n%s", fnbuff);
       return;
     }
   }
@@ -604,7 +604,7 @@ memDump(const char *fn, uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
   }
   catch (...)
   {
-    Complain (C_ERROR ("EXCEPTION while reading from address %08x"),
+    Output(C_ERROR "EXCEPTION while reading from address %p",
       vaddr + offs);
   }
 }
@@ -636,7 +636,7 @@ cmd_memaccess(const char *tok, const char *x)
     if (!get_expression(&x, &addr)
         || !get_expression(&x, &size))
     {
-        Complain(C_ERROR("line %d: Expected %hs<vaddr> <size>"),
+        Output(C_ERROR "line %d: Expected %s<vaddr> <size>",
                  ScriptLine, fn ? "<fname>" : "");
         return;
     }
@@ -666,7 +666,7 @@ static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
   }
   catch (...)
   {
-    Complain (C_ERROR ("EXCEPTION while writing %08x to address %08x"),
+    Output(C_ERROR "EXCEPTION while writing %08x to address %p",
       value, vaddr);
   }
 }
@@ -699,7 +699,7 @@ cmd_memfill(const char *tok, const char *x)
         || !get_expression(&x, &size)
         || !get_expression(&x, &value))
     {
-        Complain(C_ERROR("line %d: Expected <addr> <size> <value>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <addr> <size> <value>", ScriptLine);
         return;
     }
 
@@ -752,12 +752,12 @@ static bool memWrite (FILE *f, uint32 addr, uint32 size)
     catch (...)
     {
       wc = 0;
-      Complain (C_ERROR ("Exception caught!"));
+      Output(C_ERROR "Exception caught!");
     }
 
     if (wc != sz)
     {
-      Complain (C_ERROR ("Short write detected while writing to file"));
+      Output(C_ERROR "Short write detected while writing to file");
       fclose (f);
       return false;
     }
@@ -773,7 +773,7 @@ static bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size)
   FILE *f = fopen (fn, "wb");
   if (!f)
   {
-    Complain (C_ERROR ("Cannot write file %hs"), fn);
+    Output(C_ERROR "Cannot write file %s", fn);
     return false;
   }
 
@@ -790,7 +790,7 @@ static bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
   FILE *f = fopen (fn, "wb");
   if (!f)
   {
-    Complain (C_ERROR ("Cannot write file %hs"), fn);
+    Output(C_ERROR "Cannot write file %s", fn);
     return false;
   }
 
@@ -816,7 +816,7 @@ cmd_memtofile(const char *tok, const char *args)
     char *fn = _strdup(get_token(&args));
     if (!fn)
     {
-        Complain (C_ERROR ("line %d: file name expected"), ScriptLine);
+        Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
 
@@ -824,7 +824,7 @@ cmd_memtofile(const char *tok, const char *args)
     if (!get_expression(&args, &addr)
         || !get_expression(&args, &size))
     {
-        Complain (C_ERROR ("line %d: Expected <filename> <address> <size>"), ScriptLine);
+        Output(C_ERROR "line %d: Expected <filename> <address> <size>", ScriptLine);
         free(fn);
         return;
     }
@@ -974,7 +974,7 @@ static bool memDumpMMU(uint32 *args)
   }
   catch (...)
   {
-    Complain (C_ERROR ("EXCEPTION CAUGHT AT MEGABYTE %d!"), mb);
+    Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
   }
 
   Output(" ffffffff |          |         | End of virtual address space");

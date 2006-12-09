@@ -6,7 +6,7 @@
 */
 
 #include "xtypes.h"
-#include "output.h" // Complain
+#include "output.h" // Output
 #include "script.h" // REG_DUMP
 
 extern "C" uint32 _cpu_get_cp (uint32 cp, uint32 regno);
@@ -25,7 +25,7 @@ uint32 cpuGetCP (uint cp, uint regno)
   }
   catch (...)
   {
-    Complain (C_ERROR ("EXCEPTION reading coprocessor %d register %d"), cp, regno);
+    Output(C_ERROR "EXCEPTION reading coprocessor %d register %d", cp, regno);
     value = 0xffffffff;
   }
 
@@ -45,7 +45,7 @@ bool cpuSetCP (uint cp, uint regno, uint32 val)
   }
   catch (...)
   {
-    Complain (C_ERROR ("EXCEPTION writing to coprocessor %d register %d"), cp, regno);
+    Output(C_ERROR "EXCEPTION writing to coprocessor %d register %d", cp, regno);
     rc = false;
   }
 
@@ -59,7 +59,7 @@ cpuDumpCP(uint32 *args)
 
   if (cp > 15)
   {
-    Complain (C_ERROR ("Coprocessor number is a number in range 0..15"));
+    Output(C_ERROR "Coprocessor number is a number in range 0..15");
     return false;
   }
 

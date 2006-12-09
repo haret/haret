@@ -11,7 +11,7 @@
 
 #include "xtypes.h" // uint
 #include "lateload.h" // LATE_LOAD
-#include "output.h" // Complain
+#include "output.h" // Output
 #include "script.h" // REG_CMD
 
 LATE_LOAD(CreateToolhelp32Snapshot, "toolhelp")
@@ -36,7 +36,7 @@ cmd_kill(const char *cmd, const char *args)
 {
     char *name = get_token(&args);
     if (!name) {
-        Complain(C_ERROR("line %d: process name expected"), ScriptLine);
+        Output(C_ERROR "line %d: process name expected", ScriptLine);
         return;
     }
     wchar_t wname[200];
