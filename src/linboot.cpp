@@ -50,6 +50,49 @@ enum {
     COLOR_MAGENTA = COLOR_RED | COLOR_BLUE,
 };
 
+/*
+ * Theory of operation:
+ *
+ * This code is tasked with loading the linux kernel (and an optional
+ * initrd) into memory and then jumping to that kernel so that linux
+ * can start.  In order to jump to the kernel, all hardware must be
+ * disabled (see Mach->hardwareShutdown), the Memory Management Unit
+ * (MMU) must be off (see mmu_trampoline in asmstuff.S), and the
+ * kernel must be allocated in physically continous ram at a certain
+ * position in memory.  Note that it is difficult to allocate
+ * physically continuous ram at preset locations while CE is still
+ * running (because some other program or the OS might already be
+ * using those pages).  To account for this, the code will disable the
+ * hardware/mmu, jump to a "preloader" function which will copy the
+ * kernel from any arbitrary memory location to the necessary preset
+ * areas of memory, and then jump to the kernel.
+ *
+ * For the above to work, it must load the kernel image into memory
+ * while CE is still running.  As a result of this, the kernel is
+ * loaded into "virtual memory".  However the preloader is run while
+ * the MMU is off and thus sees "physical memory".  A list of physical
+ * addresses for each virtual page is maintained so that the preloader
+ * can find the proper pages when the mmu is off.  This is complicated
+ * because the list itself is built while CE is running (it is
+ * allocated in virtual memory) and it can exceed one page in size.
+ * To handle this, the system uses a "three level page list" - a list
+ * of pointers to pages which contain pointers to pages.  The
+ * preloader is passed in a data structure which can not exceed one
+ * page (see preloadData).  This structure has a list of pointers to
+ * pages (indexPages) that contain pointers to pages of the kernel.
+ *
+ * Because the preloader and hardware shutdown can be complicated, the
+ * code will try to write a status indicator to the video screen to
+ * indicate its progress.  This can be used to help diagnose failures
+ * during the boot.  A green line is written after disabling
+ * interrupts, a magenta line is written after disabling hardware
+ * (Mach->hardwareShutdown), a blue line after starting the preloader
+ * function, a red line after copying the "linux tags" structure, a
+ * cyan line after copying the kernel, and finally a black line after
+ * copying the initrd (if any).  After the black line is written the
+ * code jumps into the kernel.
+ */
+
 
 /****************************************************************
  * Linux utility functions
@@ -202,7 +245,7 @@ preloader(struct preloadData *data)
 
 
 /****************************************************************
- * Physical ram kernel allocation and setup
+ * Kernel ram allocation and setup
  ****************************************************************/
 
 extern "C" {
@@ -248,6 +291,7 @@ struct bootmem {
     void *allocedRam;
 };
 
+// Release resources allocated in prepForKernel.
 static void
 cleanupBootMem(struct bootmem *bm)
 {
@@ -257,11 +301,9 @@ cleanupBootMem(struct bootmem *bm)
     free(bm);
 }
 
-// Allocate a continuous are of memory for a kernel (and possibly
-// initrd), and configure a preloader that can launch that kernel.
-// The resulting data is allocated in physically continuous ram that
-// the caller can jump to when the MMU is disabled.  Note the caller
-// needs to copy the kernel and initrd into this ram.
+// Allocate memory for a kernel (and possibly initrd), and configure a
+// preloader that can launch that kernel.  Note the caller needs to
+// copy the kernel and initrd into the pages allocated.
 static bootmem *
 prepForKernel(uint32 kernelSize, uint32 initrdSize)
 {
@@ -438,7 +480,7 @@ setupTrampoline()
     return physAddrTram;
 }
 
-// Launch a kernel loaded in physical memory.
+// Launch a kernel loaded in memory.
 static void
 launchKernel(uint32 physExec)
 {
@@ -536,8 +578,8 @@ file_read(FILE *f, char **pages, uint32 size)
     return 0;
 }
 
-// Load a kernel (and possibly initrd) from disk into physically
-// continous ram and prep it for kernel starting.
+// Load a kernel (and possibly initrd) from disk into ram and prep it
+// for kernel starting.
 static bootmem *
 loadDiskKernel()
 {
@@ -558,7 +600,7 @@ loadDiskKernel()
             initrdSize = get_file_size(initrdFile);
     }
 
-    // Obtain physically continous ram for the kernel
+    // Obtain ram for the kernel
     int ret;
     struct bootmem *bm = NULL;
     bm = prepForKernel(kernelSize, initrdSize);
@@ -604,8 +646,8 @@ abort:
 
 static uint32 winceResumeAddr = 0xa0040000;
 
-// Setup a kernel in physical ram and hook the wince resume vector so
-// that it runs on resume.
+// Setup a kernel in ram and hook the wince resume vector so that it
+// runs on resume.
 static void
 resumeIntoBoot(uint32 physExec)
 {
@@ -664,7 +706,7 @@ bootLinux(const char *cmd, const char *args)
 {
     int bootViaResume = toupper(cmd[0]) == 'R';
 
-    // Load the kernel/initrd/tags/preloader into physical memory
+    // Load the kernel/initrd/tags/preloader into memory
     struct bootmem *bm = loadDiskKernel();
     if (!bm)
         return;
@@ -713,7 +755,7 @@ bootRamLinux(const char *kernel, uint32 kernelSize
     if (cmdline)
         bootCmdline = const_cast<char *>(cmdline);
 
-    // Obtain physically continous ram for the kernel
+    // Obtain ram for the kernel
     struct bootmem *bm = prepForKernel(kernelSize, initrdSize);
     if (!bm)
         return;
