@@ -17,6 +17,9 @@ Misc cleanups:
 * Audit existing commands for PXA specific requirements, and disable
   them on non pxa platforms.
 
+* Don't export ScriptLine from script.cpp - instead export a wrapper
+  around Output that prepends the script line.
+
 * Scan all L1 based 1meg virtual->physical mappings at startup.  This
   will make memPhysMap_section available even in critical sections
   where the code can't call into wince.
@@ -77,3 +80,15 @@ Possible features for "wi":
 
 * Find out why AllocPhysMem is needed - it is unclear why the
   interrupt vector can't jump to an address in normal Haret exe space.
+
+
+Possible features for Linux booting:
+
+* Make sure error messages in boot code cause message box to popup.
+
+* Verify linux booting from resume code.
+
+* Possibly add fonts to write to framebuffer during linux boot.
+
+* Possibly do crc checks before and after kernel load to check for DMA
+  corruption.
