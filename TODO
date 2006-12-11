@@ -4,9 +4,6 @@ New features:
 
 * Define new machine classes (eg, hermes, wizard)
 
-* Extend "dump mmu" code to show more flags in the page tables (eg,
-  domains).
-
 * Gpio watching infrastructure.  Monitoring of gpios is a critical
   part of machine discovery.  The current code only support old PXA
   gpios.
