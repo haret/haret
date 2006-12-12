@@ -54,6 +54,9 @@ Misc cleanups:
 
 * Get linux penguin logo working or remove it.
 
+* Generalize architecture ->detect() calls so that each new platform
+  doesn't need to modify machines.cpp.
+
 
 Possible features for "wi":
 

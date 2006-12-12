@@ -71,10 +71,12 @@ $(OUT)%.exe: out/%-debug
 
 ################ Haret exe rules
 
-MACHOBJS := machines.o arch-pxa.o arch-pxa27x.o arch-sa.o \
+MACHOBJS := machines.o \
+  arch-pxa.o arch-pxa27x.o arch-sa.o arch-omap.o arch-s3.o \
   mach-alpine.o mach-apache.o mach-beetles.o mach-blueangel.o \
   mach-himalya.o mach-magician.o mach-universal.o mach-h4000.o \
-  mach-h4700.o mach-sable.o mach-jornada820.o
+  mach-h4700.o mach-sable.o mach-jornada820.o mach-wizard.o \
+  mach-hermes.o
 
 COREOBJS := $(MACHOBJS) haret-res.o \
   memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
