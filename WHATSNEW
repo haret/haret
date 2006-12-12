@@ -1,3 +1,7 @@
+next version <kevin@koconnor.net>
+
+  * Add new machines: hermes, wizard
+
 20061205 0.4.5 <kevin@koconnor.net>
 
   * Support memory polling commands (WATCH/ADDWATCH).  This will allow
