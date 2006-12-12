@@ -86,7 +86,7 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
         for (uint i=0; i<total; i++) {
             memcheck *mc = &list[i];
             Output("%2d: 0x%p %08x %2d"
-                   , i, mc->addr, mc->mask, 4<<mc->readSize);
+                   , i, mc->addr, ~mc->mask, 4<<mc->readSize);
         }
         return;
     }
