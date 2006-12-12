@@ -14,6 +14,7 @@
 #include "pxa2xx.h" // pxaAC97
 #include "machines.h" // Mach
 #include "script.h" // REG_VAR_ROFUNC
+#include "arch-pxa.h" // testPXA
 #include "cpu.h"
 
 REG_VAR_ROFUNC(0, "PSR", cpuGetPSR, 0, "Program Status Register")
@@ -125,7 +126,7 @@ cpuDumpAC97(uint32 *args)
          (i + 32) * 2, regs [i + 32], (i + 48) * 2, regs [i + 48]);
   return true;
 }
-REG_DUMP(0, "AC97", cpuDumpAC97, 1,
+REG_DUMP(testPXA, "AC97", cpuDumpAC97, 1,
          "PXA AC97 ctrl (64x16-bit regs) (arg = ctrl number, 0..3).")
 
 DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)

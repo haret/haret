@@ -588,12 +588,12 @@ cmd_addirqwatch(const char *cmd, const char *args)
     watchCmdHelper(watchirqpolls, ARRAY_SIZE(watchirqpolls), &watchirqcount
                    , cmd, args);
 }
-REG_CMD(0, "ADDIRQWATCH", cmd_addirqwatch,
+REG_CMD(testAvail, "ADDIRQWATCH", cmd_addirqwatch,
         "ADDIRQWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
         "  Setup an address to be polled when an irq hits\n"
         "  See ADDWATCH for syntax.  <CLEAR|LS>IRQWATCH is also available.")
-REG_CMD_ALT(0, "CLEARIRQWATCH", cmd_addirqwatch, clear, 0)
-REG_CMD_ALT(0, "LSIRQWATCH", cmd_addirqwatch, list, 0)
+REG_CMD_ALT(testAvail, "CLEARIRQWATCH", cmd_addirqwatch, clear, 0)
+REG_CMD_ALT(testAvail, "LSIRQWATCH", cmd_addirqwatch, list, 0)
 
 static uint32 watchtracecount;
 static memcheck watchtracepolls[16];
@@ -604,12 +604,12 @@ cmd_addtracewatch(const char *cmd, const char *args)
     watchCmdHelper(watchtracepolls, ARRAY_SIZE(watchtracepolls), &watchtracecount
                    , cmd, args);
 }
-REG_CMD(0, "ADDTRACEWATCH", cmd_addtracewatch,
+REG_CMD(testAvail, "ADDTRACEWATCH", cmd_addtracewatch,
         "ADDTRACEWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
         "  Setup an address to be polled when an irq hits\n"
         "  See ADDWATCH for syntax.  <CLEAR|LS>TRACEWATCH is also available.")
-REG_CMD_ALT(0, "CLEARTRACEWATCH", cmd_addtracewatch, clear, 0)
-REG_CMD_ALT(0, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
+REG_CMD_ALT(testAvail, "CLEARTRACEWATCH", cmd_addtracewatch, clear, 0)
+REG_CMD_ALT(testAvail, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
 
 
 /****************************************************************

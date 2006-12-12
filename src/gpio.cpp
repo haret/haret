@@ -12,11 +12,12 @@
 #include "memory.h"
 #include "output.h"
 #include "script.h" // REG_VAR_BITSET
+#include "arch-pxa.h" // testPXA
 
 // Which GPIO changes to ignore during watch
 uint32 gpioIgnore [3] = { 0, 0, 0 };
 
-REG_VAR_BITSET(0, "IGPIO", gpioIgnore, 84
+REG_VAR_BITSET(testPXA, "IGPIO", gpioIgnore, 84
                , "The list of GPIOs to ignore during WGPIO")
 
 void gpioSetDir (int num, bool out)
@@ -204,7 +205,7 @@ cmd_wgpio(const char *cmd, const char *x)
     }
     gpioWatch (sec);
 }
-REG_CMD(0, "WG|PIO", cmd_wgpio,
+REG_CMD(testPXA, "WG|PIO", cmd_wgpio,
         "WGPIO <seconds>\n"
         "  Watch GPIO pins for given period of time and report changes.")
 
@@ -224,7 +225,8 @@ static uint32 gpioScrGPLR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetState (args [0]);
 }
-REG_VAR_RWFUNC(0, "GPLR", gpioScrGPLR, 1, "General Purpose I/O Level Register")
+REG_VAR_RWFUNC(testPXA, "GPLR", gpioScrGPLR, 1,
+               "General Purpose I/O Level Register")
 
 static uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
 {
@@ -242,7 +244,7 @@ static uint32 gpioScrGPDR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetDir (args [0]);
 }
-REG_VAR_RWFUNC(0, "GPDR", gpioScrGPDR, 1
+REG_VAR_RWFUNC(testPXA, "GPDR", gpioScrGPDR, 1
                , "General Purpose I/O Direction Register")
 
 static uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
@@ -261,7 +263,7 @@ static uint32 gpioScrGAFR (bool setval, uint32 *args, uint32 val)
 
   return gpioGetAlt (args [0]);
 }
-REG_VAR_RWFUNC(0, "GAFR", gpioScrGAFR, 1
+REG_VAR_RWFUNC(testPXA, "GAFR", gpioScrGAFR, 1
                , "General Purpose I/O Alternate Function Select Register")
 
 // Dump the overall GPIO state
@@ -289,7 +291,7 @@ static bool gpioDump(uint32 *args)
   }
   return true;
 }
-REG_DUMP(0, "GPIO", gpioDump, 0,
+REG_DUMP(testPXA, "GPIO", gpioDump, 0,
          "GPIO machinery state in a human-readable format.")
 
 // Dump GPIO state in a linux-specific format
@@ -314,5 +316,5 @@ static bool gpioDumpState(uint32 *args)
          i, gpioGetSleepState (i));
   return true;
 }
-REG_DUMP(0, "GPIOST", gpioDumpState, 0,
+REG_DUMP(testPXA, "GPIOST", gpioDumpState, 0,
          "GPIO state suitable for include/asm/arch/xxx-init.h")

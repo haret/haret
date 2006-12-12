@@ -11,9 +11,6 @@ New features:
 
 Misc cleanups:
 
-* Audit existing commands for PXA specific requirements, and disable
-  them on non pxa platforms.
-
 * Don't export ScriptLine from script.cpp - instead export a wrapper
   around Output that prepends the script line.
 
