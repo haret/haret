@@ -2,14 +2,14 @@ New features:
 
 * Port commands from gnu-haret to mainline haret.
 
-* Define new machine classes (eg, hermes, wizard)
-
 * Gpio watching infrastructure.  Monitoring of gpios is a critical
-  part of machine discovery.  The current code only support old PXA
+  part of machine discovery.  The current code only supports old PXA
   gpios.
 
 
 Misc cleanups:
+
+* Define linux "mach-type" boot code for wizard.
 
 * Don't export ScriptLine from script.cpp - instead export a wrapper
   around Output that prepends the script line.
@@ -18,8 +18,8 @@ Misc cleanups:
   will make memPhysMap_section available even in critical sections
   where the code can't call into wince.
 
-  * It might be useful to make the memPhysMap_section call the default
-    and implement a new memPhysMap_temp that can call the wince
+  * It might be useful to make memPhysMap_section the default and
+    implement a new memPhysMap_temp that can call the wince
     VirtualCopy function when there is no l1 mapping available.  Many
     places in the code assume a reference from memPhysMap has a long
     lifespan, and if the VirtualCopy method is invoked these places
@@ -54,6 +54,10 @@ Misc cleanups:
 * Generalize architecture ->detect() calls so that each new platform
   doesn't need to modify machines.cpp.
 
+* Possibly go back to the coprocessor accessor code that did
+  code-modification.  The current code can't set opcode_1 and opcode_2
+  which is useful in some situations.
+
 
 Possible features for "wi":
 
@@ -78,6 +82,11 @@ Possible features for "wi":
 * Find out why AllocPhysMem is needed - it is unclear why the
   interrupt vector can't jump to an address in normal Haret exe space.
 
+* See if it is possible to monitor memory accesses immediately after a
+  resume.  Early attempts at this failed because the MMU wasn't on and
+  the fault handlers couldn't run.  As a result, the current code just
+  re-enables traces on the first irq.
+
 
 Possible features for Linux booting:
 
@@ -89,3 +98,11 @@ Possible features for Linux booting:
 
 * Possibly do crc checks before and after kernel load to check for DMA
   corruption.
+
+* Determine if arm-920t needs its own cpuFlushCache, and if so define
+  a Mach->cpuFlushCache() call that implements the necessary code.
+
+* Possibly allow PHYSOFFSET_KERNEL (et al.) be set via commands.  It
+  may also be necessary to handle the "overwriting memory" case -
+  possibly by just allocating additional pages and discarding pages
+  that are too low.
