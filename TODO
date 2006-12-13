@@ -90,8 +90,6 @@ Possible features for "wi":
 
 Possible features for Linux booting:
 
-* Make sure error messages in boot code cause message box to popup.
-
 * Verify linux booting from resume code.
 
 * Possibly add fonts to write to framebuffer during linux boot.

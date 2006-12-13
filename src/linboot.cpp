@@ -309,7 +309,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 {
     // Sanity test.
     if (preload_size > PAGE_SIZE || sizeof(preloadData) > PAGE_SIZE) {
-        Output("Internal error.  Preloader too large");
+        Output(C_ERROR "Internal error.  Preloader too large");
         return NULL;
     }
 
@@ -330,21 +330,21 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
                                 * sizeof(char*)) / PAGE_SIZE;
     int totalCount = kernelCount + initrdCount + indexCount + 4;
     if (indexCount > MAX_INDEX) {
-        Output("Image too large (%d/%d) - largest size is %d"
+        Output(C_ERROR "Image too large (%d/%d) - largest size is %d"
                , kernelSize, initrdSize
                , MAX_INDEX * PAGES_PER_INDEX * PAGE_SIZE);
         return NULL;
     }
     void *data = calloc(totalCount * PAGE_SIZE + PAGE_SIZE - 1, 1);
     if (! data) {
-        Output("Failed to allocate %d pages", totalCount);
+        Output(C_ERROR "Failed to allocate %d pages", totalCount);
         return NULL;
     }
 
     // Allocate data structure.
     struct bootmem *bm = (bootmem*)calloc(sizeof(bootmem), 1);
     if (!bm) {
-        Output("Failed to allocate bootmem struct");
+        Output(C_ERROR "Failed to allocate bootmem struct");
         free(data);
         return NULL;
     }
@@ -358,7 +358,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
         pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
         if (pd->physLoc == (uint32)-1) {
-            Output("Page at %p not mapped", pd->virtLoc);
+            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
             cleanupBootMem(bm);
             return NULL;
         }
@@ -387,7 +387,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         || pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL
         || (initrdSize
             && pgs_initrd->physLoc < memPhysAddr + PHYSOFFSET_INITRD)) {
-        Output("Allocated memory will overwrite itself");
+        Output(C_ERROR "Allocated memory will overwrite itself");
         cleanupBootMem(bm);
         return NULL;
     }
@@ -457,20 +457,20 @@ setupTrampoline()
     uint32 virtTram = MVAddr((uint32)mmu_trampoline);
     uint32 virtTramEnd = MVAddr((uint32)mmu_trampoline_end);
     if ((virtTram & 0xFFFFF000) != (virtTramEnd & 0xFFFFF000)) {
-        Output("Can't handle trampoline spanning page boundary"
+        Output(C_ERROR "Can't handle trampoline spanning page boundary"
                " (%p %08x %08x)"
                , mmu_trampoline, virtTram, virtTramEnd);
         return 0;
     }
     uint32 physAddrTram = memVirtToPhys(virtTram);
     if (physAddrTram == (uint32)-1) {
-        Output("Trampoline not in physical ram. (virt=%08x)"
+        Output(C_ERROR "Trampoline not in physical ram. (virt=%08x)"
                , virtTram);
         return 0;
     }
     uint32 physTramL1 = physAddrTram & 0xFFF00000;
     if (virtTram > physTramL1 && virtTram < (physTramL1 + 0x100000)) {
-        Output("Trampoline physical/virtual addresses overlap.");
+        Output(C_ERROR "Trampoline physical/virtual addresses overlap.");
         return 0;
     }
 
@@ -567,7 +567,7 @@ file_read(FILE *f, char **pages, uint32 size)
         uint32 s = size < PAGE_SIZE ? size : PAGE_SIZE;
         uint32 ret = fread(*pages, 1, s, f);
         if (ret != s) {
-            Output("Error reading file.  Expected %d got %d", s, ret);
+            Output(C_ERROR "Error reading file.  Expected %d got %d", s, ret);
             return -1;
         }
         pages++;
@@ -654,13 +654,13 @@ resumeIntoBoot(uint32 physExec)
     // Lookup wince resume address and verify it looks sane.
     uint32 *resume = (uint32*)memPhysMap(winceResumeAddr);
     if (!resume) {
-        Output("Could not map addr %08x", winceResumeAddr);
+        Output(C_ERROR "Could not map addr %08x", winceResumeAddr);
         return;
     }
     // Check for "b 0x41000 ; 0x0" at the address.
     uint32 old1 = resume[0], old2 = resume[1];
     if (old1 != 0xea0003fe || old2 != 0x0) {
-        Output("Unexpected resume vector. (%08x %08x)", old1, old2);
+        Output(C_ERROR "Unexpected resume vector. (%08x %08x)", old1, old2);
         return;
     }
 
