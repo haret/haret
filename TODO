@@ -58,8 +58,15 @@ Misc cleanups:
   code-modification.  The current code can't set opcode_1 and opcode_2
   which is useful in some situations.
 
+* Possibly change get_token to parse filenames that contain slashes
+  and periods without requiring the user place quotes around them.
+
 
 Possible features for "wi":
+
+* Show windows time on each trace report.  This is useful because the
+  PXA clock (where available) can be misleading when the clock
+  frequency changes.
 
 * Support hooking of interrupts on non-pxa based processors.  There is
   nothing PXA specific about hooking the wince interrupt vector - the
