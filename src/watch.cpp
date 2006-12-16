@@ -15,16 +15,14 @@
 #include "script.h" // REG_CMD
 #include "watch.h"
 
-LATE_LOAD(SleepTillTick, "coredll")
-
+// Older versions of wince don't have SleepTillTick - use Sleep(1)
+// instead.
 void
-yieldCPU()
+alt_SleepTillTick()
 {
-    if (late_SleepTillTick)
-        late_SleepTillTick();
-    else
-        Sleep(1);
+    Sleep(1);
 }
+LATE_LOAD_ALT(SleepTillTick, "coredll")
 
 // Types of memory accesses.
 enum MemOps {
@@ -66,9 +64,12 @@ testMem(struct memcheck *mc, uint32 *pnewval)
  ****************************************************************/
 
 void
-r_basic(uint32 clock, struct memcheck *mc, uint32 newval)
+r_basic(uint32 msecs, uint32 clock, struct memcheck *mc, uint32 newval)
 {
-    Output("%10d: %p=%08x", clock, mc->addr, newval);
+    if (clock != (uint32)-1)
+        Output("%06d: %08x: mem %p=%08x", msecs, clock, mc->addr, newval);
+    else
+        Output("%06d: mem %p=%08x", msecs, mc->addr, newval);
 }
 
 void
@@ -147,10 +148,10 @@ REG_CMD(0, "ADDWATCH", cmd_addwatch,
         "ADDWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
         "  Setup an address to be watched (via WATCH)\n"
         "  <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
-        "  <mask>     is a bitmask to ignore when detecting a change\n"
-        "  <32|16|8>  specifies the memory access type\n"
+        "  <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
+        "  <32|16|8>  specifies the memory access type (default 32)\n"
         "  <cmpValue> when specified forces a report if read value doesn't\n"
-        "             equal that value")
+        "             equal that value (default is to report on change)")
 REG_CMD_ALT(0, "CLEARWATCH", cmd_addwatch, clear,
             "CLEARWATCH\n"
             "  Remove all items from the list of polled memory");
@@ -165,24 +166,24 @@ cmd_watch(const char *cmd, const char *args)
     if (!get_expression(&args, &seconds))
         seconds = 0;
 
-    int cur_time = time(NULL);
-    int fin_time = cur_time + seconds;
+    uint32 start_time = GetTickCount();
+    uint32 cur_time = start_time;
+    uint32 fin_time = cur_time + seconds * 1000;
 
     for (;;) {
-        uint32 clock = GetTickCount();
         for (uint i=0; i<watchcount; i++) {
             memcheck *mc = &watchlist[i];
             uint32 val;
             int ret = testMem(mc, &val);
             if (!ret)
                 continue;
-            mc->reporter(clock, mc, val);
+            mc->reporter(cur_time - start_time, -1, mc, val);
         }
 
-        cur_time = time(NULL);
+        cur_time = GetTickCount();
         if (cur_time >= fin_time)
             break;
-        yieldCPU();
+        late_SleepTillTick();
     }
 }
 REG_CMD(0, "WATCH", cmd_watch,

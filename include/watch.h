@@ -7,7 +7,8 @@
 
 // Function callback definition to report the results of a memory
 // check.
-typedef void (*reporter_t)(uint32 clock, struct memcheck *, uint32 newval);
+typedef void (*reporter_t)(uint32 msecs, uint32 clock
+                           , struct memcheck *, uint32 newval);
 
 // Main definition of a memory polling request.
 struct memcheck {
@@ -27,8 +28,7 @@ int __irq testMem(struct memcheck *mc, uint32 *pnewval);
 void watchCmdHelper(memcheck *list, uint32 max, uint32 *total
                     , const char *cmd, const char *args);
 
-// Give up rest of time slice.  This calls SleepTillTick() if it is
-// available - otherwise Sleep(1).
-void yieldCPU();
+// Give up rest of time slice.
+extern void (*late_SleepTillTick)();
 
 #endif // watch.h

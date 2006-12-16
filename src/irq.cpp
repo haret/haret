@@ -255,6 +255,8 @@ irq_handler(struct irqData *data, struct irqregs *regs)
 
     // Irq time memory polling.
     checkPolls(data, clock, data->irqpolls, data->irqpollcount);
+    // Trace time memory polling.
+    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
 
     if (get_DBCON() != data->dbcon) {
         // Performance counter not running - reenable.
@@ -487,7 +489,7 @@ getInsnName(uint32 insn)
 // Pull a trace event from the trace buffer and print it out.  Returns
 // 0 if nothing was available.
 static int
-printTrace(struct irqData *data)
+printTrace(uint32 msecs, struct irqData *data)
 {
     struct traceitem *cur = get_trace(data);
     if (! cur)
@@ -504,26 +506,26 @@ printTrace(struct irqData *data)
     if (insn == FI_IRQ) {
         // Irq event
         if (value >= START_GPIO_IRQS)
-            Output("%08x: irq %d(gpio %d)"
-                   , cur->clock, value, value-START_GPIO_IRQS);
+            Output("%06d: %08x: irq %d(gpio %d)"
+                   , msecs, cur->clock, value, value-START_GPIO_IRQS);
         else
-            Output("%08x: irq %d(%s)"
-                   , cur->clock, value, Mach->getIrqName(value));
+            Output("%06d: %08x: irq %d(%s)"
+                   , msecs, cur->clock, value, Mach->getIrqName(value));
     } else if (insn == FI_INSN) {
         // Instruction trace event
-        Output("%08x: insn %08x: %08x %08x"
-               , cur->clock, cur->mvaloc, value, cur->addr);
+        Output("%06d: %08x: insn %08x: %08x %08x"
+               , msecs, cur->clock, cur->mvaloc, value, cur->addr);
     } else if (insn == FI_RESUME) {
         // WinCE CPU resume event
-        Output("%08x: cpu resumed", cur->clock);
+        Output("%06d: %08x: cpu resumed", msecs, cur->clock);
     } else if (insn == FI_MEMPOLL) {
         // Memory trace event
         memcheck *mc = (memcheck*)cur->addr;
-        mc->reporter(cur->clock, mc, value);
+        mc->reporter(msecs, cur->clock, mc, value);
     } else {
         // Software debug event
-        Output("%08x: debug %08x: %08x(%s) %08x %08x"
-               , cur->clock
+        Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
+               , msecs, cur->clock
                , cur->mvaloc, insn, getInsnName(insn), value, cur->addr);
     }
     data->readPos++;
@@ -537,11 +539,12 @@ printTrace(struct irqData *data)
 static void
 mainLoop(struct irqData *data, int seconds)
 {
-    int cur_time = time(NULL);
-    int fin_time = cur_time + seconds;
+    uint32 start_time = GetTickCount();
+    uint32 cur_time = start_time;
+    uint32 fin_time = cur_time + seconds * 1000;
     int tmpcount = 0;
     while (cur_time <= fin_time) {
-        int ret = printTrace(data);
+        int ret = printTrace(cur_time - start_time, data);
         if (ret) {
             // Processed a trace - try to process another without
             // sleeping.
@@ -552,8 +555,8 @@ mainLoop(struct irqData *data, int seconds)
             // away reporting traces.
         } else
             // Nothing to report; yield the cpu.
-            yieldCPU();
-        cur_time = time(NULL);
+            late_SleepTillTick();
+        cur_time = GetTickCount();
         tmpcount = 0;
     }
 }
@@ -565,7 +568,7 @@ postLoop(struct irqData *data)
 {
     // Flush trace buffer.
     for (;;) {
-        int ret = printTrace(data);
+        int ret = printTrace(0, data);
         if (! ret)
             break;
     }
