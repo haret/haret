@@ -45,8 +45,9 @@ def encodeBuf(buf):
 def flushBuffer():
     global Buffer, BufferType, BufferStart, BufferEnd
     if Buffer:
-        print "%010.6f-%010.6f %5s: %s" % (
-            BufferStart, BufferEnd, BufferType, encodeBuf(Buffer))
+        print "%s-%s %5s: %s" % (
+            dis.getClock(BufferStart), dis.getClock(BufferEnd)
+            , BufferType, encodeBuf(Buffer))
     Buffer = ""
     BufferStart = BufferEnd = BufferType = None
 
@@ -54,7 +55,6 @@ def procline(line):
     m = redebug.match(line)
     if m is None:
         return dis.procline(line)
-    t = int(m.group('time'), 16) / CLOCKRATE
     insn = int(m.group('insn'), 16)
     if insn == 0xe5832000:
         cmdtype = 'write'
@@ -67,7 +67,7 @@ def procline(line):
         return dis.procline(line)
     if cmdtype != BufferType and BufferType is not None:
         flushBuffer()
-    appendBuffer(t, cmdtype, Rd)
+    appendBuffer(m, cmdtype, Rd)
     if (cmdtype == 'read' and (Rd == 10 or (Rd == 13 and Buffer == '0\r'))
         or cmdtype == 'write' and Rd == 13):
         flushBuffer()

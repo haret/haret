@@ -46,23 +46,36 @@ def dis(insn):
     InsnCache[insn] = out
     return out
 
-redebug = re.compile(r'^(?P<time>[0-9a-f]+): debug (?P<addr>.*):'
+TIMEPRE_S = r'^(?P<time>[0-9]+): (?P<clock>[0-9a-f]+): '
+redebug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
                      r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
-reirq = re.compile(r'^(?P<time>[0-9a-f]+): (irq|insn) .*$')
+reirq = re.compile(TIMEPRE_S + r'(?P<data>(irq|insn|mem) .*)$')
+re_start = re.compile(r'^Replacing windows exception handlers')
 
 def transRegVal(reg, val):
     return "r%d=%s" % (reg, val)
+
+LastClock = 0
+
+def getClock(m):
+    global LastClock
+    clock = int(m.group('clock'), 16)
+    out = "%07d" % (clock - LastClock,)
+    LastClock = clock
+    return "%07.3f(%s)" % (int(m.group('time')) / 1000.0, out)
 
 def procline(line):
     m = redebug.match(line)
     if m is None:
         m = reirq.match(line)
         if m is not None:
-            print "%010.6f %s" % (
-                int(m.group('time'), 16) / CLOCKRATE
-                , "".join(line.split(None, 1)[1:]).strip())
+            print getClock(m), m.group('data')
         else:
-            print line.strip()
+            m = re_start.match(line)
+            if m is not None:
+                global LastClock
+                LastClock = 0
+            print line.rstrip()
         return
     insn = int(m.group('insn'), 16)
     iname = dis(insn)
@@ -73,9 +86,8 @@ def procline(line):
         regs = Rdval
     else:
         regs = Rdval + " " + transRegVal(Rn, m.group('Rn'))
-    print "%010.6f %s: %-30s # %s" % (
-        int(m.group('time'), 16) / CLOCKRATE
-        ,m.group('addr'), iname, regs)
+    print "%s %s: %-30s # %s" % (
+        getClock(m), m.group('addr'), iname, regs)
 
 def main():
     lines = sys.stdin.readlines()
