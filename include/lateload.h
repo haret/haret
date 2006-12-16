@@ -3,17 +3,31 @@
 
 // Late loading of library calls.
 
-#define LATE_LOAD(Func, DLL) __LATE_LOAD(Func, L ## #Func, L ##DLL)
+// Create a pointer called "late_XXX" that points to a function XXX if
+// it can be succesfully pulled in from the given DLL at runtime.
+// Otherwise it points to NULL.
+#define LATE_LOAD(Func, DLL) \
+    __LATE_LOAD(Func, L ## #Func, L ##DLL, 0)
 
-#define __LATE_LOAD(Func, Name, DLL)                            \
+// As above, but have the pointer point to the function "alt_XXX" if
+// the real function can't be pulled in from the dll.
+#define LATE_LOAD_ALT(Func, DLL) \
+    __LATE_LOAD(Func, L ## #Func, L ##DLL, (void*) & alt_ ##Func )
+
+//
+// Internal definitions.
+//
+
+#define __LATE_LOAD(Func, Name, DLL, Alt)                       \
     typeof(&Func) late_ ##Func;                                 \
     struct late_load_s LateLoad ##Func                          \
         __attribute__((__section__ (".rdata.late"))) = {        \
-            DLL, Name, (void **) & late_ ##Func };
+        DLL, Name, (void **) & late_ ##Func , Alt };
 
 struct late_load_s {
     const wchar_t *dll, *funcname;
     void **funcptr;
+    void *alt;
 };
 
 void setup_LateLoading();

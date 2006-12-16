@@ -75,7 +75,21 @@ REG_CMD(0, "NLEDSET", LedSet,
         "  <id> is the LED id.\n"
         "  <value> may be 0 for off, 1 for on, or 2 for blink.")
 
-LATE_LOAD(GetSystemPowerStatusEx2, "coredll")
+// The GetSystemPowerStatusEx2 is only available on wince 2.12 and
+// later.  However, earlier versions of CE have GetSystemPowerStatusEx
+// which uses a struct that is compatible (but smaller) than the
+// original.
+DWORD alt_GetSystemPowerStatusEx2(
+    PSYSTEM_POWER_STATUS_EX2 pSystemPowerStatusEx2, DWORD dwLen, BOOL fUpdate)
+{
+    bool ret = GetSystemPowerStatusEx(
+        (SYSTEM_POWER_STATUS_EX *)&pSystemPowerStatusEx2, fUpdate);
+    if (ret)
+        return sizeof(SYSTEM_POWER_STATUS_EX);
+    return 0;
+}
+
+LATE_LOAD_ALT(GetSystemPowerStatusEx2, "coredll")
 
 static void
 powerMon(const char *cmd, const char *args)
@@ -88,66 +102,38 @@ powerMon(const char *cmd, const char *args)
     int fin_time = cur_time + seconds;
 
     for (;;) {
-        if (late_GetSystemPowerStatusEx2) {
-            SYSTEM_POWER_STATUS_EX2 stat2;
-            int ret = late_GetSystemPowerStatusEx2(&stat2, sizeof(stat2), false);
-            if (!ret) {
-                Output(C_INFO "GetSystemPowerStatusEx2");
-                return;
-            }
-
-            Output("%5ld %5d %5d %% %5ld %5ld %5ld %5ld "
-                   "%5d %5d %5ld %5ld %5d %5d"
-                   "  %5d %5d %5ld %5ld %5ld %5ld %5ld %5d",
-                   GetTickCount(),                         //
-                   stat2.BatteryFlag,                      //
-                   stat2.BatteryLifePercent,               //
-                   stat2.BatteryVoltage,                   //  
-                   stat2.BatteryCurrent,                   //  
-                   stat2.BatteryAverageCurrent,            //  
-                   stat2.BatteryTemperature,               //  
-                   stat2.ACLineStatus,                     //  0x00
-                   stat2.Reserved1,                        //  0x00
-                   stat2.BatteryLifeTime,                  //  -1
-                   stat2.BatteryFullLifeTime,              //  -1
-                   stat2.Reserved2,                        //  0x00
-                   stat2.BackupBatteryFlag,                //  0x01
-                   stat2.BackupBatteryLifePercent,         //  255
-                   stat2.Reserved3,                        //  0x00
-                   stat2.BackupBatteryLifeTime,            //  -1
-                   stat2.BackupBatteryFullLifeTime,        //  -1
-                   stat2.BatteryAverageInterval,           //  0
-                   stat2.BatterymAHourConsumed,            //  0
-                   stat2.BackupBatteryVoltage,             //  0
-                   stat2.BatteryChemistry);                 //  5
-        } else {
-            // Use older call (it has less info).
-            SYSTEM_POWER_STATUS_EX stat;
-            int ret = GetSystemPowerStatusEx(&stat, false);
-            if (!ret) {
-                Output(C_INFO "GetSystemPowerStatusEx");
-                return;
-            }
-
-            Output("%5ld %5d %5d %% %5d %5d %5d %5d "
-                   "%5d %5d %5ld %5ld %5d %5d"
-                   "  %5d %5d %5ld %5ld %5d %5d %5d %5d",
-                   GetTickCount(),                         //
-                   stat.BatteryFlag,                      //
-                   stat.BatteryLifePercent,               //
-                   stat.ACLineStatus,                     //  0x00
-                   -1,-1,-1,-1,
-                   stat.Reserved1,                        //  0x00
-                   stat.BatteryLifeTime,                  //  -1
-                   stat.BatteryFullLifeTime,              //  -1
-                   stat.Reserved2,                        //  0x00
-                   stat.BackupBatteryFlag,                //  0x01
-                   stat.BackupBatteryLifePercent,         //  255
-                   stat.Reserved3,                        //  0x00
-                   stat.BackupBatteryLifeTime,            //  -1
-                   stat.BackupBatteryFullLifeTime,        //  -1
-                   -1,-1,-1,-1);
+        SYSTEM_POWER_STATUS_EX2 stat2;
+        memset(&stat2, 0, sizeof(stat2));
+        int ret = late_GetSystemPowerStatusEx2(&stat2, sizeof(stat2), false);
+        if (!ret) {
+            Output(C_INFO "GetSystemPowerStatusEx2");
+            return;
         }
+
+        Output("%5ld %5d %5d %% %5ld %5ld %5ld %5ld "
+               "%5d %5d %5ld %5ld %5d %5d"
+               "  %5d %5d %5ld %5ld %5ld %5ld %5ld %5d",
+               GetTickCount(),                         //
+               stat2.BatteryFlag,                      //
+               stat2.BatteryLifePercent,               //
+               stat2.BatteryVoltage,                   //  
+               stat2.BatteryCurrent,                   //  
+               stat2.BatteryAverageCurrent,            //  
+               stat2.BatteryTemperature,               //  
+               stat2.ACLineStatus,                     //  0x00
+               stat2.Reserved1,                        //  0x00
+               stat2.BatteryLifeTime,                  //  -1
+               stat2.BatteryFullLifeTime,              //  -1
+               stat2.Reserved2,                        //  0x00
+               stat2.BackupBatteryFlag,                //  0x01
+               stat2.BackupBatteryLifePercent,         //  255
+               stat2.Reserved3,                        //  0x00
+               stat2.BackupBatteryLifeTime,            //  -1
+               stat2.BackupBatteryFullLifeTime,        //  -1
+               stat2.BatteryAverageInterval,           //  0
+               stat2.BatterymAHourConsumed,            //  0
+               stat2.BackupBatteryVoltage,             //  0
+               stat2.BatteryChemistry);                 //  5
 
         cur_time = time(NULL);
         if (cur_time >= fin_time)

@@ -48,8 +48,12 @@ uint32 vidGetVRAM()
 }
 REG_VAR_ROFUNC(0, "VRAM", vidGetVRAM, 0, "Video Memory physical address")
 
-__LATE_LOAD(GXOpenDisplay, L"?GXOpenDisplay@@YAHPAUHWND__@@K@Z", L"gx")
-__LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx")
+static uint32 returnZero(void) { return 0; }
+
+__LATE_LOAD(GXOpenDisplay, L"?GXOpenDisplay@@YAHPAUHWND__@@K@Z", L"gx"
+            , (void*)&returnZero)
+__LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx"
+            , (void*)&returnZero)
 
 bool videoBeginDraw ()
 {
@@ -69,8 +73,6 @@ bool videoBeginDraw ()
     } 
     else
     {
-      if (! late_GXOpenDisplay || ! late_GXBeginDraw)
-        return FALSE;
       if (late_GXOpenDisplay(GetDesktopWindow (), 0) == 0)
         return FALSE;
       vram = (uint16 *)late_GXBeginDraw();

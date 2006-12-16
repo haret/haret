@@ -27,12 +27,14 @@ setup_LateLoading()
         Output("Trying to load library '%ls'", ll->dll);
         HINSTANCE hi = LoadLibrary(ll->dll);
         if (!hi) {
+            *(ll->funcptr) = ll->alt;
             Output("Unable to load library '%ls'", ll->dll);
             continue;
         }
 
         void *func = (void*)GetProcAddress(hi, ll->funcname);
         if (!func) {
+            *(ll->funcptr) = ll->alt;
             Output("Unable to find function '%ls' in library '%ls'"
                    , ll->funcname, ll->dll);
             continue;
