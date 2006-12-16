@@ -32,7 +32,7 @@ enum MemOps {
 };
 
 int __irq
-testMem(struct memcheck *mc, uint32 *pnewval)
+testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
 {
     uint32 curval;
     switch (mc->readSize) {
@@ -48,13 +48,19 @@ testMem(struct memcheck *mc, uint32 *pnewval)
         break;
     }
 
-    if (mc->trySuppress && (curval & mc->mask) == (mc->cmpVal & mc->mask))
-        // No change in value.
-        return 0;
+    uint32 maskedval = (curval ^ mc->cmpVal) & mc->mask;
+    if (mc->trySuppress) {
+        if (maskedval == 0)
+            // No change in value.
+            return 0;
+    } else {
+        maskedval = -1;
+    }
     if (mc->setCmp)
         mc->cmpVal = curval;
     mc->trySuppress = mc->trySuppressNext;
     *pnewval = curval;
+    *pmaskval = maskedval;
     return 1;
 }
 
@@ -64,12 +70,14 @@ testMem(struct memcheck *mc, uint32 *pnewval)
  ****************************************************************/
 
 void
-r_basic(uint32 msecs, uint32 clock, struct memcheck *mc, uint32 newval)
+r_basic(uint32 msecs, uint32 clock, struct memcheck *mc
+        , uint32 newval, uint32 maskval)
 {
     if (clock != (uint32)-1)
-        Output("%06d: %08x: mem %p=%08x", msecs, clock, mc->addr, newval);
+        Output("%06d: %08x: mem %p=%08x (%08x)"
+               , msecs, clock, mc->addr, newval, maskval);
     else
-        Output("%06d: mem %p=%08x", msecs, mc->addr, newval);
+        Output("%06d: mem %p=%08x (%08x)", msecs, mc->addr, newval, maskval);
 }
 
 void
@@ -173,11 +181,11 @@ cmd_watch(const char *cmd, const char *args)
     for (;;) {
         for (uint i=0; i<watchcount; i++) {
             memcheck *mc = &watchlist[i];
-            uint32 val;
-            int ret = testMem(mc, &val);
+            uint32 val, maskval;
+            int ret = testMem(mc, &val, &maskval);
             if (!ret)
                 continue;
-            mc->reporter(cur_time - start_time, -1, mc, val);
+            mc->reporter(cur_time - start_time, -1, mc, val, maskval);
         }
 
         cur_time = GetTickCount();

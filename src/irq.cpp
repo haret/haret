@@ -190,11 +190,11 @@ checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
 {
     for (uint i=0; i<count; i++) {
         memcheck *mc = &list[i];
-        uint32 val;
-        int ret = testMem(mc, &val);
+        uint32 val, maskval;
+        int ret = testMem(mc, &val, &maskval);
         if (!ret)
             continue;
-        ret = add_trace(data, clock, 0, FI_MEMPOLL, val, (uint32)mc);
+        ret = add_trace(data, clock, (uint32)mc, FI_MEMPOLL, val, maskval);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
@@ -520,8 +520,8 @@ printTrace(uint32 msecs, struct irqData *data)
         Output("%06d: %08x: cpu resumed", msecs, cur->clock);
     } else if (insn == FI_MEMPOLL) {
         // Memory trace event
-        memcheck *mc = (memcheck*)cur->addr;
-        mc->reporter(msecs, cur->clock, mc, value);
+        memcheck *mc = (memcheck*)cur->mvaloc;
+        mc->reporter(msecs, cur->clock, mc, value, cur->addr);
     } else {
         // Software debug event
         Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"

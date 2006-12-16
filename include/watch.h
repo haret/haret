@@ -7,8 +7,8 @@
 
 // Function callback definition to report the results of a memory
 // check.
-typedef void (*reporter_t)(uint32 msecs, uint32 clock
-                           , struct memcheck *, uint32 newval);
+typedef void (*reporter_t)(uint32 msecs, uint32 clock, struct memcheck *
+                           , uint32 newval, uint32 maskval);
 
 // Main definition of a memory polling request.
 struct memcheck {
@@ -22,7 +22,7 @@ struct memcheck {
 };
 
 // Read a memory area and check for a change.
-int __irq testMem(struct memcheck *mc, uint32 *pnewval);
+int __irq testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
 
 // Helper for handling memory poll haret commands.
 void watchCmdHelper(memcheck *list, uint32 max, uint32 *total
