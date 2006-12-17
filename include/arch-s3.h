@@ -5,4 +5,9 @@ class MachineS3 : public Machine {
 public:
     MachineS3();
     int detect();
+    void init();
+    int preHardwareShutdown();
+    void hardwareShutdown();
+
+    uint32 *channels;
 };
