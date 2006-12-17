@@ -12,8 +12,11 @@
 #include <stdio.h> // vsnprintf
 #include <ctype.h> // toupper
 
+#include "machines.h" // setupMachineType
+#include "memory.h" // mem_autodetect
+#include "lateload.h" // setup_LateLoading
 #include "resource.h" // ID_PROGRESSBAR
-#include "script.h" // REG_CMD
+#include "script.h" // REG_CMD, setupCommands
 #include "haret.h" // hInst, MainWindow
 #include "output.h"
 
@@ -241,7 +244,7 @@ preparePath()
     GetModuleFileName(hInst, sp, ARRAY_SIZE(sp));
     int len = wcstombs(SourcePath, sp, sizeof(SourcePath));
     char *x = SourcePath + len;
-    while ((x > SourcePath) && (x[-1] != L'\\'))
+    while ((x > SourcePath) && (x[-1] != '\\'))
         x--;
     *x = 0;
 }
@@ -262,9 +265,9 @@ prepThread()
     Output("Old KMode was %d", kmode);
 }
 
-// Initialize the output settings.
+// Initialize the haret application.
 void
-setupOutput()
+setupHaret()
 {
     preparePath();
 
@@ -283,6 +286,16 @@ setupOutput()
     prepThread();
 
     Output("Finished initializing output");
+
+    // Bind to DLLs dynamically.
+    setup_LateLoading();
+
+    // Detect the memory on the machine via wince first.
+    Output("Detecting memory");
+    mem_autodetect();
+
+    // Detect some system settings
+    setupMachineType();
 }
 
 

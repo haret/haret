@@ -22,8 +22,8 @@ extern void Status (const wchar_t *format, ...);
 // Prepend executable source directory to file name if it does not
 // already contain a path.
 extern void fnprepare(const char *ifn, char *ofn, int ofn_max);
-// Initialize output logging code.
-void setupOutput();
+// Initialize Haret application.
+void setupHaret();
 void prepThread();
 // Internal function for outputing to screen/logs/socket.
 void __output(int sendScreen, const char *fmt, ...)

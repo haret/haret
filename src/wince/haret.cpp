@@ -91,11 +91,8 @@ WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {
     hInst = hInstance;
 
-    // Prep for early output.
-    setupOutput();
-
-    // Detect some system settings
-    setupMachineType();
+    // Setup haret.
+    setupHaret();
 
     // Setup variable/command lists.
     setupCommands();

@@ -42,13 +42,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {
     hInst = hInstance;
 
-    // Prep for early output.
-    setupOutput();
+    // Setup haret.
+    setupHaret();
 
-    // Detect some system settings
-    setupMachineType();
-
-    // Override command line (of one set).
+    // Override command line (if one set).
     char *cmd = &cmdline_data;
     if (!cmd[0])
         cmd = NULL;
