@@ -49,7 +49,7 @@ def dis(insn):
 TIMEPRE_S = r'^(?P<time>[0-9]+): (?P<clock>[0-9a-f]+): '
 redebug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
                      r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
-reirq = re.compile(TIMEPRE_S + r'(?P<data>(irq|insn|mem) .*)$')
+reirq = re.compile(TIMEPRE_S + r'(?P<data>(irq |insn |mem |cpu resumed).*)$')
 re_start = re.compile(r'^Replacing windows exception handlers')
 
 def transRegVal(reg, val):
