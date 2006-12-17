@@ -5,7 +5,7 @@ see the files in the docs/ directory. This file documents how to build and
 install it.
 
 HaRET is now compiled with the gcc toolset.  Previous versions (see
-cvs tag haret-0_3_8 and earier) made use of the MSVC/ARM toolkit for
+cvs tag haret-0_3_8 and earlier) made use of the MSVC/ARM toolkit for
 compiling.
 
 The gcc toolset in use is from the cegcc project.  See
@@ -30,3 +30,6 @@ developers are using:
     build gdb, but this isn't a problem.
 
 6 - Build HaRET (cd /path/to/haret; make)
+
+The HaRET tool should work on WinCE (2.10 or later) based ARM
+processors (arm v4 or later).

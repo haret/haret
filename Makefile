@@ -13,9 +13,9 @@ VERSION=pre-0.4.6
 # Output directory
 OUT=out/
 
-# Default compiler flags
+# Default compiler flags (note -march=armv4 is needed for 16 bit insns)
 CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude -DVERSION=\"$(VERSION)\"
-LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=1
+LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
 
