@@ -106,6 +106,7 @@ struct irqData {
 
     // Debug information.
     uint32 ignoreAddr[MAX_IGNOREADDR];
+    uint32 traceForWatch;
 
     // Instruction trace information.
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];
@@ -185,20 +186,23 @@ add_trace(struct irqData *data
 }
 
 // Perform a set of memory polls and add to trace buffer.
-static void __irq
+static int __irq
 checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
 {
+    int foundcount = 0;
     for (uint i=0; i<count; i++) {
         memcheck *mc = &list[i];
         uint32 val, maskval;
         int ret = testMem(mc, &val, &maskval);
         if (!ret)
             continue;
+        foundcount++;
         ret = add_trace(data, clock, (uint32)mc, FI_MEMPOLL, val, maskval);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
     }
+    return foundcount;
 }
 
 // Enable CPU registers to catch insns and memory accesses
@@ -232,6 +236,13 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     uint32 clock = get_CCNT();
     data->irqCount++;
 
+    if (get_DBCON() != data->dbcon) {
+        // Performance counter not running - reenable.
+        add_trace(data, 0, 0, FI_RESUME, 0, 0);
+        start_traps(data);
+        clock = 0;
+    }
+
     uint32 irqs[2] = {
         (*(uint32*)&data->irq_ctrl[IRQ_ICIP_OFFSET]
          & *(uint32*)&data->irq_ctrl[IRQ_ICMR_OFFSET]),
@@ -257,12 +268,6 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     checkPolls(data, clock, data->irqpolls, data->irqpollcount);
     // Trace time memory polling.
     checkPolls(data, clock, data->tracepolls, data->tracepollcount);
-
-    if (get_DBCON() != data->dbcon) {
-        // Performance counter not running - reenable.
-        add_trace(data, 0, 0, FI_RESUME, 0, 0);
-        start_traps(data);
-    }
 }
 
 // Return the Modified Virtual Address (MVA) of a given PC.
@@ -328,6 +333,13 @@ abort_handler(struct irqData *data, struct irqregs *regs)
     uint32 clock = get_CCNT();
     data->abortCount++;
 
+    // Trace time memory polling.
+    int count;
+    count = checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+
+    if (data->traceForWatch && !count)
+        return;
+
     uint32 old_pc = transPC(regs->old_pc - 8);
     uint32 ignoreCount = data->ignoreAddr[0];
     for (uint32 i=1; i<ignoreCount; i++) {
@@ -342,9 +354,6 @@ abort_handler(struct irqData *data, struct irqregs *regs)
     add_trace(data, clock, old_pc, insn
               , getReg(regs, &er, mask_Rd(insn))
               , getReg(regs, &er, mask_Rn(insn)));
-
-    // Trace time memory polling.
-    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
 }
 
 // Code that handles instruction breakpoint events.
@@ -416,6 +425,7 @@ static int testAvail() {
 static uint32 irqIgnore[BITMAPSIZE(MAX_IRQ)];
 static uint32 irqDemuxGPIO = 1;
 static uint32 irqIgnoreAddr[MAX_IGNOREADDR];
+static uint32 traceForWatch;
 
 REG_VAR_BITSET(testAvail, "II", irqIgnore, MAX_IRQ,
                "The list of interrupts to ignore during WI")
@@ -423,6 +433,8 @@ REG_VAR_INT(testAvail, "IRQGPIO", irqDemuxGPIO,
             "Turns on/off interrupt handler gpio irq demuxing")
 REG_VAR_INTLIST(testAvail, "TRACEIGNORE", irqIgnoreAddr, MAX_IGNOREADDR,
                 "List of pc addresses to ignore when tracing")
+REG_VAR_INT(testAvail, "TRACEFORWATCH", traceForWatch,
+            "Only report memory trace if ADDTRACEWATCH poll succeeds")
 
 static uint32 LastOverflowReport;
 
@@ -435,6 +447,7 @@ preLoop(struct irqData *data)
     memcpy(data->ignoredIrqs, irqIgnore, sizeof(irqIgnore));
     data->demuxGPIOirq = irqDemuxGPIO;
     memcpy(data->ignoreAddr, irqIgnoreAddr, sizeof(data->ignoreAddr));
+    data->traceForWatch = traceForWatch;
     LastOverflowReport = 0;
 }
 
