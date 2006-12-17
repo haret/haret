@@ -38,6 +38,7 @@ mem_autodetect(void)
     /* WinCE is returning ~1Mb less memory, let's suppose minus kernel size,
        so we'll round the result up to nearest 8Mb boundary. */
     memPhysSize = (mst.dwTotalPhys + sti.dwStoreSize + 0x7fffff) & ~0x7fffff;
+    Output("WinCE reports memory size %d", memPhysSize);
 }
 
 #if 1

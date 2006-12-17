@@ -29,6 +29,8 @@ MachinePXA::preHardwareShutdown()
     /* Map now everything we'll need later */
     dma = (uint32 *)memPhysMap(DMA_BASE_ADDR);
     udc = (uint32 *)memPhysMap(UDC_BASE_ADDR);
+    if (! dma || ! udc)
+        return -1;
     return 0;
 }
 

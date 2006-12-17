@@ -321,7 +321,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         Output(C_ERROR "undefined MTYPE");
         return NULL;
     }
-    Output("boot MTYPE=%d CMDLINE='%s'", machType, bootCmdline);
+    Output("boot RAMADDR=%08x RAMSIZE=%08x MTYPE=%d CMDLINE='%s'"
+           , memPhysAddr, memPhysSize, machType, bootCmdline);
 
     // Allocate ram for kernel/initrd
     uint32 kernelCount = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
@@ -506,8 +507,10 @@ launchKernel(uint32 physExec)
 
     // Call per-arch setup.
     int ret = Mach->preHardwareShutdown();
-    if (ret)
+    if (ret) {
+        Output(C_ERROR "Setup for machine shutdown failed");
         return;
+    }
 
     Screen("Go Go Go...");
 
