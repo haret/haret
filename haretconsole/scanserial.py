@@ -11,11 +11,18 @@ import struct
 
 import dis
 
-CLOCKRATE=dis.CLOCKRATE
 HEXALL=0
 
 redebug = dis.redebug
 reirq = dis.reirq
+
+# Codes to watch for
+SCANTRACE = 1
+WRITEINSN = 0xe5832000
+READINSN = 0xe5933000
+##SCANTRACE = 0
+##WRITEINSN = 0x0935acb0
+##READINSN = 0x0935a9f0
 
 # Buffer variables
 Buffer = ""
@@ -52,17 +59,32 @@ def flushBuffer():
     BufferStart = BufferEnd = BufferType = None
 
 def procline(line):
-    m = redebug.match(line)
-    if m is None:
-        return dis.procline(line)
-    insn = int(m.group('insn'), 16)
-    if insn == 0xe5832000:
+    if SCANTRACE:
+        # Look at memory trace events
+        m = redebug.match(line)
+        if m is None:
+            return dis.procline(line)
+        insn = int(m.group('insn'), 16)
+        Rd = int(m.group('Rd'), 16)
+    else:
+        # Look at breakpoints
+        m = reirq.match(line)
+        if m is None:
+            return dis.procline(line)
+        parts = line.split()
+        if parts[2] != 'insn':
+            return dis.procline(line)
+        insn = int(parts[3][:-1], 16)
+        if insn not in (WRITEINSN, READINSN):
+            return
+        Rd = int(parts[4], 16)
+    if insn == WRITEINSN:
         cmdtype = 'write'
-    elif insn == 0xe5933000:
+    elif insn == READINSN:
         cmdtype = 'read'
     else:
         return dis.procline(line)
-    Rd = int(m.group('Rd'), 16)
+
     if Rd > 0xff:
         return dis.procline(line)
     if cmdtype != BufferType and BufferType is not None:
