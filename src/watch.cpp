@@ -48,13 +48,12 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
         break;
     }
 
-    uint32 maskedval = (curval ^ mc->cmpVal) & mc->mask;
+    uint32 maskedval = -1;
     if (mc->trySuppress) {
+        maskedval = (curval ^ mc->cmpVal) & mc->mask;
         if (maskedval == 0)
             // No change in value.
             return 0;
-    } else {
-        maskedval = -1;
     }
     if (mc->setCmp)
         mc->cmpVal = curval;
