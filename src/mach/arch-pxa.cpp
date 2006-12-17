@@ -64,3 +64,5 @@ testPXA()
 {
     return dynamic_cast<MachinePXA*>(Mach) != NULL;
 }
+
+REGMACHINE(MachinePXA)

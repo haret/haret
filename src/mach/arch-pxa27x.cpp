@@ -77,3 +77,5 @@ MachinePXA27x::getIrqName(uint irq)
         return "Unknown";
     return irq_names[irq];
 }
+
+REGMACHINE(MachinePXA27x)

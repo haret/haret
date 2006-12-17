@@ -1,15 +1,15 @@
 #include <windows.h> // SystemParametersInfo
 
-#include "memory.h" // mem_autodetect
-#include "lateload.h" // setup_LateLoading
 #include "output.h" // Output
-#include "script.h" // setupCommands
-#include "arch-sa.h" // MachineSA
-#include "arch-pxa.h" // MachinePXA, MachinePXA27x
 #include "machines.h"
 
 // Global current machine setting.
 class Machine *Mach;
+
+
+/****************************************************************
+ * Machine base class
+ ****************************************************************/
 
 Machine::Machine()
     : name("Default"), PlatformType(L"PocketPC")
@@ -46,11 +46,18 @@ Machine::getIrqName(uint)
     return "Unknown";
 }
 
-// Some defaults.
-static MachinePXA27x RefMachinePXA27x;
-static MachinePXA RefMachinePXA;
-static MachineSA RefMachineSA;
+int
+Machine::detect()
+{
+    return 0;
+}
+
 static Machine RefMachine;
+
+
+/****************************************************************
+ * Machine auto-detection
+ ****************************************************************/
 
 // Symbols added by linker.
 extern "C" {
@@ -84,12 +91,20 @@ findMachineType()
     }
 
     // Couldn't find a machine - try by architecture.
-    if (RefMachinePXA27x.detect())
-        return &RefMachinePXA27x;
-    if (RefMachinePXA.detect())
-        return &RefMachinePXA;
-    if (RefMachineSA.detect())
-        return &RefMachineSA;
+    p = mach_start;
+    while (p < &mach_end) {
+        Machine *m = *p;
+        p++;
+        if (m->OEMInfo[0])
+            // Not an architecture.
+            continue;
+        Output("Looking at arch %s", m->name);
+        if (m->detect())
+            // Match
+            return m;
+    }
+
+    // Nothing matched - use generic default.
     return &RefMachine;
 }
 
@@ -101,13 +116,6 @@ setupMachineType()
         Output("Error: machine already defined to '%s'", Mach->name);
         return;
     }
-
-    // Bind to DLLs dynamically.
-    setup_LateLoading();
-
-    // Detect the memory on the machine via wince first.
-    Output("Detecting memory");
-    mem_autodetect();
 
     // Determine what the current machine type is.
     Output("Detecting current machine");

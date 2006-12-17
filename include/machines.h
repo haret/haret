@@ -5,6 +5,16 @@
 
 /*
  * Support for multiple machines types from within HaRET.
+ *
+ * To utilize this support, derive a new class from Machine and
+ * register it using the REG_MACHINE(xxx) macro.  Set the OEMInfo
+ * parameter to match the OEMInfo WinCE returns to declare a specific
+ * machine.  Alternatively, one may leave OEMInfo empty and declare a
+ * ->detect() method to declare an architecture.
+ *
+ * At startup, haret will test for all machines using the OEMInfo
+ * data.  If no machines match, it will scan for architectures using
+ * the detect() method.
  */
 
 // Global current machine setting.
@@ -13,7 +23,7 @@ extern class Machine *Mach;
 // Global detection mechanism
 void setupMachineType();
 
-// Machine class base definition
+// Machine class base definition.
 class Machine {
 public:
     Machine();
@@ -30,6 +40,7 @@ public:
     virtual void hardwareShutdown();
     virtual int getBoardID();
     virtual const char *getIrqName(uint);
+    virtual int detect();
 };
 
 // Register a machine class to be scanned during haret start.
