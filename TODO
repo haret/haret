@@ -47,6 +47,9 @@ Misc cleanups:
 
 * Submit nled.h, pkfuncs.h, and pwinuser.h to cegcc.
 
+  * Find out origin of gx.h - sanitize and submit to cegcc if
+    necessary.
+
 * Get "bwmem" command working or remove it.
 
 * Get linux penguin logo working or remove it.
@@ -63,10 +66,6 @@ Misc cleanups:
 
 
 Possible features for "wi":
-
-* Show windows time on each trace report.  This is useful because the
-  PXA clock (where available) can be misleading when the clock
-  frequency changes.
 
 * Support hooking of interrupts on non-pxa based processors.  There is
   nothing PXA specific about hooking the wince interrupt vector - the
@@ -91,8 +90,8 @@ Possible features for "wi":
 
 * See if it is possible to monitor memory accesses immediately after a
   resume.  Early attempts at this failed because the MMU wasn't on and
-  the fault handlers couldn't run.  As a result, the current code just
-  re-enables traces on the first irq.
+  the fault handlers couldn't run.  The current code re-enables traces
+  on the first irq.
 
 
 Possible features for Linux booting:
