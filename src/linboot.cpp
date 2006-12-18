@@ -88,9 +88,13 @@ enum {
  * interrupts, a magenta line is written after disabling hardware
  * (Mach->hardwareShutdown), a blue line after starting the preloader
  * function, a red line after copying the "linux tags" structure, a
- * cyan line after copying the kernel, and finally a black line after
- * copying the initrd (if any).  After the black line is written the
- * code jumps into the kernel.
+ * cyan line after copying the kernel, a yellow line after copying the
+ * initrd (if any), and finally a black line right before jumping to
+ * the kernel.  If CRC checking is enabled (via the variable
+ * KERNELCRC) then the kernel and CRC are checked between the yellow
+ * and black lines - a red line is written if the kernel crc
+ * mismatches and a magenta line is written if the initrd crc
+ * mismatches.
  */
 
 
@@ -175,10 +179,38 @@ struct preloadData {
     uint32 startRam;
 
     char *tags;
-    uint32 kernelCount;
-    uint32 initrdCount;
+    uint32 kernelSize;
+    uint32 initrdSize;
     const char **indexPages[MAX_INDEX];
+
+    // Optional CRC check
+    uint32 doCRC;
+    uint32 kernelCRC, initrdCRC;
 };
+
+// CRC a block of ram (from linux/lib/crc32.c)
+#define CRCPOLY_BE 0x04c11db7
+static uint32 __preload
+crc32_be(uint32 crc, const char *data, uint32 len)
+{
+    const unsigned char *p = (const unsigned char *)data;
+    int i;
+    while (len--) {
+        crc ^= *p++ << 24;
+        for (i = 0; i < 8; i++)
+            crc = (crc << 1) ^ ((crc & 0x80000000) ? CRCPOLY_BE : 0);
+    }
+    return crc;
+}
+static uint32 __preload
+crc32_be_finish(uint32 crc, uint32 len)
+{
+    for (; len; len >>= 8) {
+        unsigned char l = len;
+        crc = crc32_be(crc, (char *)&l, 1);
+    }
+    return ~crc & 0xFFFFFFFF;
+}
 
 // Copy memory (need a memcpy with __preload tag).
 static void __preload
@@ -226,14 +258,32 @@ preloader(struct preloadData *data)
     drawLine(&data->videoRam, COLOR_RED);
 
     // Copy kernel image
-    uint32 destKernel = data->startRam + PHYSOFFSET_KERNEL;
-    do_copyPages((char *)destKernel, data->indexPages, 0, data->kernelCount);
+    char *destKernel = (char *)data->startRam + PHYSOFFSET_KERNEL;
+    int kernelCount = PAGE_ALIGN(data->kernelSize) / PAGE_SIZE;
+    do_copyPages((char *)destKernel, data->indexPages, 0, kernelCount);
 
     drawLine(&data->videoRam, COLOR_CYAN);
 
     // Copy initrd (if applicable)
-    do_copyPages((char *)data->startRam + PHYSOFFSET_INITRD, data->indexPages
-                 , data->kernelCount, data->initrdCount);
+    char *destInitrd = (char *)data->startRam + PHYSOFFSET_INITRD;
+    int initrdCount = PAGE_ALIGN(data->initrdSize) / PAGE_SIZE;
+    do_copyPages(destInitrd, data->indexPages, kernelCount, initrdCount);
+
+    drawLine(&data->videoRam, COLOR_YELLOW);
+
+    // Do CRC check (if enabled).
+    if (data->doCRC) {
+        uint32 crc = crc32_be(0, destKernel, data->kernelSize);
+        crc = crc32_be_finish(crc, data->kernelSize);
+        if (crc != data->kernelCRC)
+            drawLine(&data->videoRam, COLOR_RED);
+        if (data->initrdSize) {
+            crc = crc32_be(0, destInitrd, data->initrdSize);
+            crc = crc32_be_finish(crc, data->initrdSize);
+            if (crc != data->initrdCRC)
+                drawLine(&data->videoRam, COLOR_MAGENTA);
+        }
+    }
 
     drawLine(&data->videoRam, COLOR_BLACK);
 
@@ -289,6 +339,7 @@ struct bootmem {
     char **kernelPages, **initrdPages;
     uint32 physExec;
     void *allocedRam;
+    struct preloadData *pd;
 };
 
 // Release resources allocated in prepForKernel.
@@ -410,12 +461,13 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     struct preloadData *pd = (struct preloadData *)pg_data->virtLoc;
     pd->machtype = machType;
     pd->tags = (char *)pg_tag->physLoc;
-    pd->kernelCount = kernelCount;
-    pd->initrdCount = initrdCount;
+    pd->kernelSize = kernelSize;
+    pd->initrdSize = initrdSize;
     for (int i=0; i<indexCount; i++)
         pd->indexPages[i] = (const char **)pgs_index[i].physLoc;
     pd->startRam = memPhysAddr;
     pd->videoRam = 0;
+    bm->pd = pd;
 
     if (Mach->fbDuringBoot) {
         pd->videoRam = vidGetVRAM();
@@ -692,15 +744,47 @@ resumeIntoBoot(uint32 physExec)
  * Boot code
  ****************************************************************/
 
-// Simple switch on booting mechanisms.
-static void
-tryLaunch(uint32 physExec, int bootViaResume)
+static uint32 KernelCRC;
+REG_VAR_INT(0, "KERNELCRC", KernelCRC
+            , "If set, perform a CRC check on the kernel/initrd.")
+
+// Test the CRC of a set of pages.
+static uint32
+crc_pages(char **pages, uint32 origsize)
 {
-    Output("Launching to physical address %08x", physExec);
+    uint32 crc = 0;
+    uint32 size = origsize;
+    while (size) {
+        uint32 s = size < PAGE_SIZE ? size : PAGE_SIZE;
+        crc = crc32_be(crc, *pages, s);
+        pages++;
+        size -= s;
+    }
+    return crc32_be_finish(crc, origsize);
+}
+
+// Boot a kernel loaded into memory via one of two mechanisms.
+static void
+tryLaunch(struct bootmem *bm, int bootViaResume)
+{
+    // Setup CRC (if enabled).
+    if (KernelCRC) {
+        bm->pd->kernelCRC = crc_pages(bm->kernelPages, bm->pd->kernelSize);
+        if (bm->pd->initrdSize)
+            bm->pd->initrdCRC = crc_pages(bm->initrdPages, bm->pd->initrdSize);
+        bm->pd->doCRC = 1;
+        Output("CRC test complete.  kernel=%u initrd=%u"
+               , bm->pd->kernelCRC, bm->pd->initrdCRC);
+    }
+
+    Output("Launching to physical address %08x", bm->physExec);
     if (bootViaResume)
-        resumeIntoBoot(physExec);
+        resumeIntoBoot(bm->physExec);
     else
-        launchKernel(physExec);
+        launchKernel(bm->physExec);
+
+    // Cleanup (if boot failed somehow).
+    cleanupBootMem(bm);
 }
 
 // Load a kernel from disk, disable hardware, and jump into kernel.
@@ -715,10 +799,7 @@ bootLinux(const char *cmd, const char *args)
         return;
 
     // Luanch it.
-    tryLaunch(bm->physExec, bootViaResume);
-
-    // Cleanup (if boot failed somehow).
-    cleanupBootMem(bm);
+    tryLaunch(bm, bootViaResume);
 }
 REG_CMD(0, "BOOT|LINUX", bootLinux,
         "BOOTLINUX\n"
@@ -770,8 +851,5 @@ bootRamLinux(const char *kernel, uint32 kernelSize
     DoneProgress();
 
     // Luanch it.
-    tryLaunch(bm->physExec, bootViaResume);
-
-    // Cleanup (if boot failed somehow).
-    cleanupBootMem(bm);
+    tryLaunch(bm, bootViaResume);
 }

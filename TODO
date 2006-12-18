@@ -97,9 +97,6 @@ Possible features for Linux booting:
 
 * Possibly add fonts to write to framebuffer during linux boot.
 
-* Possibly do crc checks before and after kernel load to check for DMA
-  corruption.
-
 * Determine if arm-920t needs its own cpuFlushCache, and if so define
   a Mach->cpuFlushCache() call that implements the necessary code.
 

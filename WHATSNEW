@@ -2,6 +2,10 @@ next version <kevin@koconnor.net>
 
   * Add new machines: hermes, wizard, g500
 
+  * Add mechanism to check for DMA corruption during kernel load by
+    CRCing the kernel before and after the preloader relocates it.  To
+    enable, send the command "set kernelcrc 1" before booting.
+
 20061205 0.4.5 <kevin@koconnor.net>
 
   * Support memory polling commands (WATCH/ADDWATCH).  This will allow
