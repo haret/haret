@@ -24,7 +24,9 @@ MachinePXA27x::detect()
 int
 MachinePXA27x::preHardwareShutdown()
 {
-    MachinePXA::preHardwareShutdown();
+    int ret = MachinePXA::preHardwareShutdown();
+    if (ret)
+        return ret;
     cken = (uint32 *)memPhysMap(CKEN);
     uhccoms = (uint32 *)memPhysMap(UHCCOMS);
     if (! cken || ! uhccoms)
