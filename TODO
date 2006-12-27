@@ -6,6 +6,8 @@ New features:
   part of machine discovery.  The current code only supports old PXA
   gpios.
 
+* Document current feature set in wiki.
+
 
 Misc cleanups:
 
@@ -61,6 +63,9 @@ Misc cleanups:
 * Possibly change get_token to parse filenames that contain slashes
   and periods without requiring the user place quotes around them.
 
+* Possibly allow the current machine definition (Mach) to be
+  explicitly specified by a user command.
+
 
 Possible features for "wi":
 
@@ -93,7 +98,12 @@ Possible features for "wi":
 
 Possible features for Linux booting:
 
+* Make fbDuringBoot a script variable instead of a machine variable.
+
 * Verify linux booting from resume code.
+
+* Possibly allow the linboot executable to link in a script - this may
+  allow more flexibiilty and be more useful in custom environments.
 
 * Possibly add fonts to write to framebuffer during linux boot.
 
@@ -104,3 +114,7 @@ Possible features for Linux booting:
   may also be necessary to handle the "overwriting memory" case -
   possibly by just allocating additional pages and discarding pages
   that are too low.
+
+* Possibly allow the ability to launch an arbitrary binary (by
+  disabling tag generation, specifying a destination address, and a
+  jump-to address).  This may be useful for testing new boot loaders.
