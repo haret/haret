@@ -69,9 +69,6 @@ Misc cleanups:
 
 Possible features for "wi":
 
-* Disable memory watching within interrupt handlers so that memory
-  tracing of watched memory doesn't cause infinite loops.
-
 * Support hooking of interrupts on non-pxa based processors.  There is
   nothing PXA specific about hooking the wince interrupt vector - the
   code can be refactored to pull out the PXA specific stuff.
