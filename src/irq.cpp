@@ -243,6 +243,7 @@ irq_handler(struct irqData *data, struct irqregs *regs)
         clock = 0;
     }
 
+    set_DBCON(0);
     uint32 irqs[2] = {
         (*(uint32*)&data->irq_ctrl[IRQ_ICIP_OFFSET]
          & *(uint32*)&data->irq_ctrl[IRQ_ICMR_OFFSET]),
@@ -268,6 +269,7 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     checkPolls(data, clock, data->irqpolls, data->irqpollcount);
     // Trace time memory polling.
     checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    set_DBCON(data->dbcon);
 }
 
 // Return the Modified Virtual Address (MVA) of a given PC.
@@ -334,8 +336,9 @@ abort_handler(struct irqData *data, struct irqregs *regs)
     data->abortCount++;
 
     // Trace time memory polling.
-    int count;
-    count = checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    set_DBCON(0);
+    int count = checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    set_DBCON(data->dbcon);
 
     if (data->traceForWatch && !count)
         return;
@@ -393,7 +396,9 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
               , getReg(regs, &er, idata->reg2));
 
     // Trace time memory polling.
+    set_DBCON(0);
     checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    set_DBCON(data->dbcon);
 }
 
 // Reset CPU registers that conrol software debug / performance monitoring
