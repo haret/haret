@@ -32,13 +32,14 @@ mem_autodetect(void)
 {
     MEMORYSTATUS mst;
     STORE_INFORMATION sti;
-    mst.dwLength = sizeof (mst);
-    GlobalMemoryStatus (&mst);
+    mst.dwLength = sizeof(mst);
+    GlobalMemoryStatus(&mst);
     GetStoreInformation(&sti);
     /* WinCE is returning ~1Mb less memory, let's suppose minus kernel size,
        so we'll round the result up to nearest 8Mb boundary. */
     memPhysSize = (mst.dwTotalPhys + sti.dwStoreSize + 0x7fffff) & ~0x7fffff;
-    Output("WinCE reports memory size %d", memPhysSize);
+    Output("WinCE reports memory size %d (phys=%ld store=%ld)"
+           , memPhysSize, mst.dwTotalPhys, sti.dwStoreSize);
 }
 
 #if 1
