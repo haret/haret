@@ -659,7 +659,7 @@ cmd_help(const char *cmd, const char *x)
         Output("  [A|B] denotes either A or B");
         Output("  <ABC> denotes a mandatory argument");
         Output("  Any command name can be shortened to minimal unambiguous length,");
-        Output("  e.g. you can use 'p' for 'priint' but not 'vd' for 'vdump'");
+        Output("  e.g. you can use 'p' for 'print' but not 'vd' for 'vdump'");
         for (int i = 0; i < commands_count; i++) {
             haret_cmd_s *hc = &commands_start[i];
             if (hc->isAvail && hc->type == cmdFunc && hc->desc)
@@ -688,17 +688,17 @@ void scrExecute (const char *scrfn, bool complain)
     return;
   }
 
-  for (ScriptLine = 1; ; ScriptLine++)
+  for (int line = 1; ; line++)
   {
     char str [200];
     if (!fgets (str, sizeof (str), f))
       break;
 
-    char *x = strchr (str, 0);
+    char *x = str + strlen(str);
     while ((x [-1] == '\n') || (x [-1] == '\r'))
       *(--x) = 0;
 
-    scrInterpret (str, ScriptLine);
+    scrInterpret(str, line);
   }
 
   fclose (f);
