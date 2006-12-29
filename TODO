@@ -69,6 +69,9 @@ Misc cleanups:
 
 Possible features for "wi":
 
+* Disable memory watching within interrupt handlers so that memory
+  tracing of watched memory doesn't cause infinite loops.
+
 * Support hooking of interrupts on non-pxa based processors.  There is
   nothing PXA specific about hooking the wince interrupt vector - the
   code can be refactored to pull out the PXA specific stuff.
@@ -101,9 +104,6 @@ Possible features for Linux booting:
 * Make fbDuringBoot a script variable instead of a machine variable.
 
 * Verify linux booting from resume code.
-
-* Possibly allow the linboot executable to link in a script - this may
-  allow more flexibiilty and be more useful in custom environments.
 
 * Possibly add fonts to write to framebuffer during linux boot.
 

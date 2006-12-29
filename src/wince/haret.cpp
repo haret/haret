@@ -94,9 +94,6 @@ WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // Setup haret.
     setupHaret();
 
-    // Setup variable/command lists.
-    setupCommands();
-
     // Initialize sockets
     Output("Running WSAStartup");
     WSADATA wsadata;

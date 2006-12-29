@@ -296,6 +296,9 @@ setupHaret()
 
     // Detect some system settings
     setupMachineType();
+
+    // Setup variable/command lists.
+    setupCommands();
 }
 
 

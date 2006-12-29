@@ -834,11 +834,8 @@ copy_pages(char **pages, const char *src, uint32 size)
 void
 bootRamLinux(const char *kernel, uint32 kernelSize
              , const char *initrd, uint32 initrdSize
-             , const char *cmdline, int bootViaResume)
+             , int bootViaResume)
 {
-    if (cmdline)
-        bootCmdline = const_cast<char *>(cmdline);
-
     // Obtain ram for the kernel
     struct bootmem *bm = prepForKernel(kernelSize, initrdSize);
     if (!bm)

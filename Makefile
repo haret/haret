@@ -81,11 +81,11 @@ MACHOBJS := machines.o \
   mach-hermes.o mach-g500.o
 
 COREOBJS := $(MACHOBJS) haret-res.o \
-  memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
+  script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
 
 HARETOBJS := $(COREOBJS) haret.o \
   s-cpu.o gpio.o uart.o wincmds.o irqchain.o getsetcp.o watch.o irq.o \
-  script.o network.o terminal.o com_port.o tlhcmds.o
+  network.o terminal.o com_port.o tlhcmds.o
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 	@echo "  Linking $@"
@@ -96,11 +96,11 @@ LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
 
 INITRD := /dev/null
 KERNEL := zImage
-CMDLINE :=
+SCRIPT :=
 
 $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	@echo "  Building $@"
-	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_CMD='"$(CMDLINE)"' -o $@ $<
+	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
 
 $(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
 	@echo "  Linking $@"

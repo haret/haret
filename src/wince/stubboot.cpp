@@ -13,24 +13,52 @@
 #include "script.h" // to override get_token, etc.
 #include "haret.h"
 
-// Stub some functions in script.cpp.
-bool get_expression(const char **s, uint32 *v, int priority, int flags)
-{
-    return 0;
-}
-char *get_token(const char **s)
-{
-    return NULL;
-}
-uint ScriptLine;
-
-// Symbols surrounding kernel code added by linfiles.S
+// Symbols surrounding kernel code added by kernelfiles.S
 extern "C" {
-    extern char kernel_data;
+    extern char kernel_data[];
     extern char kernel_data_end;
-    extern char initrd_data;
+    extern char initrd_data[];
     extern char initrd_data_end;
-    extern char cmdline_data;
+    extern char script_data[];
+}
+
+// Boot kernel linked into exe.
+static void
+ramboot(const char *cmd, const char *args)
+{
+    uint32 kernelSize = &kernel_data_end - kernel_data;
+    uint32 initrdSize = &initrd_data_end - initrd_data;
+    bootRamLinux(kernel_data, kernelSize, initrd_data, initrdSize);
+}
+REG_CMD(0, "RAMBOOT|LINUX", ramboot,
+        "RAMBOOTLINUX\n"
+        "  Start booting linux kernel. See HELP VARS for variables affecting boot.")
+
+// Run a haret script that is loaded into memory.
+static void
+runMemScript(const char *script)
+{
+    const char *s = script;
+    for (int line = 1; *s; line++) {
+        const char *lineend = strchr(s, '\n');
+        const char *nexts;
+        if (! lineend) {
+            lineend = s + strlen(s);
+            nexts = lineend;
+        } else {
+            nexts = lineend + 1;
+        }
+        if (lineend > s && lineend[-1] == '\r')
+            lineend--;
+        uint len = lineend - s;
+        char str[200];
+        if (len >= sizeof(str))
+            len = sizeof(str) - 1;
+        memcpy(str, s, len);
+        str[len] = 0;
+        scrInterpret(str, line);
+        s = nexts;
+    }
 }
 
 HINSTANCE hInst;
@@ -45,16 +73,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // Setup haret.
     setupHaret();
 
-    // Override command line (if one set).
-    char *cmd = &cmdline_data;
-    if (!cmd[0])
-        cmd = NULL;
+    // Run linked in script.
+    runMemScript(script_data);
 
-    // Boot new kernel.
-    uint32 kernelSize = &kernel_data_end - &kernel_data;
-    uint32 initrdSize = &initrd_data_end - &initrd_data;
-    bootRamLinux(&kernel_data, kernelSize, &initrd_data, initrdSize, cmd);
-
+    // Shutdown.
     Output("Shutting down");
     memPhysReset();
 
