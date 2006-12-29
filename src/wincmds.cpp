@@ -98,8 +98,9 @@ powerMon(const char *cmd, const char *args)
     if (!get_expression(&args, &seconds))
         seconds = 0;
 
-    int cur_time = time(NULL);
-    int fin_time = cur_time + seconds;
+    uint32 start_time = GetTickCount();
+    uint32 cur_time = start_time;
+    uint32 fin_time = cur_time + seconds * 1000;
 
     for (;;) {
         SYSTEM_POWER_STATUS_EX2 stat2;
@@ -110,10 +111,10 @@ powerMon(const char *cmd, const char *args)
             return;
         }
 
-        Output("%5ld %5d %5d %% %5ld %5ld %5ld %5ld "
+        Output("%06d: %5d %5d %% %5ld %5ld %5ld %5ld "
                "%5d %5d %5ld %5ld %5d %5d"
                "  %5d %5d %5ld %5ld %5ld %5ld %5ld %5d",
-               GetTickCount(),                         //
+               cur_time - start_time,                  //
                stat2.BatteryFlag,                      //
                stat2.BatteryLifePercent,               //
                stat2.BatteryVoltage,                   //  
@@ -135,7 +136,7 @@ powerMon(const char *cmd, const char *args)
                stat2.BackupBatteryVoltage,             //  0
                stat2.BatteryChemistry);                 //  5
 
-        cur_time = time(NULL);
+        cur_time = GetTickCount();
         if (cur_time >= fin_time)
             break;
         Sleep(1000);
