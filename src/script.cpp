@@ -52,7 +52,7 @@ setupCommands()
 }
 
 char *
-get_token(const char **s)
+get_token(const char **s, int for_expr)
 {
   const char *x = *s;
   static char storage [1000];
@@ -77,8 +77,11 @@ get_token(const char **s)
   if (has_quote)
     while (*e && (*e != quote))
       e++;
-  else
+  else if (for_expr)
     while (*e && isalnum (*e))
+      e++;
+  else
+    while (*e && !isspace(*e))
       e++;
 
   if (e >= x + sizeof (storage))
@@ -218,7 +221,7 @@ bool
 get_expression(const char **s, uint32 *v, int priority, int flags)
 {
   uint32 b;
-  char *x = get_token (s);
+  char *x = get_token(s, 1);
 
   if (!*x)
   {
@@ -533,10 +536,11 @@ redir(const char *args)
 }
 
 static void
-bgRun(const char *args)
+bgRun(char *args)
 {
     prepThread();
     redir(args);
+    free(args);
 }
 
 static void
@@ -545,7 +549,7 @@ cmd_redir(const char *cmd, const char *args)
     if (toupper(cmd[0]) == 'B')
         // Run in background thread.
         CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)bgRun,
-                     (LPVOID)args, 0, NULL);
+                     (LPVOID)_strdup(args), 0, NULL);
     else
         redir(args);
 }
