@@ -5,6 +5,8 @@
     For conditions of use see file COPYING
 */
 
+#include <windows.h> // CreateThread
+
 #include <stdio.h> // fopen, FILE
 #include <ctype.h> // isspace, toupper
 #include <stdarg.h> // va_list
@@ -440,8 +442,25 @@ bool scrInterpret (const char *str, uint lineno)
 }
 
 class fileredir : public outputfn {
-public:
     FILE *f;
+    outputfn *old;
+public:
+    int init(const char *vn) {
+        char fn [200];
+        fnprepare(vn, fn, sizeof (fn));
+
+        f = fopen(fn, "wb");
+        if (!f) {
+            Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
+            return -1;
+        }
+        old = setOutputFn(this);
+        return 0;
+    }
+    void done() {
+        setOutputFn(old);
+        fclose(f);
+    }
     void sendMessage(const char *msg, int len) {
         fwrite(msg, len, 1, f);
     }
@@ -481,21 +500,12 @@ cmd_dump(const char *cmd, const char *x)
 
     if (vn)
     {
-        char fn [200];
-        fnprepare (vn, fn, sizeof (fn));
-
-        FILE *f = fopen(fn, "wb");
-        if (!f)
-        {
-            Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
-            return;
-        }
         fileredir redir;
-        redir.f = f;
-        outputfn *old = setOutputFn(&redir);
+        int ret = redir.init(vn);
+        if (ret)
+            return;
         hwd->dump(args);
-        setOutputFn(old);
-        fclose (f);
+        redir.done();
     } else {
         hwd->dump(args);
     }
@@ -504,6 +514,47 @@ REG_CMD(0, "D|UMP", cmd_dump,
         "DUMP <hardware>[(args...)] [filename]\n"
         "  Dump the state of given hardware to given file (or to connection if\n"
         "  no filename specified). Use HELP DUMP to see available dumpers.")
+
+static void
+redir(const char *args)
+{
+    char *vn = get_token(&args);
+    if (!vn) {
+        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        return;
+    }
+
+    fileredir redir;
+    int ret = redir.init(vn);
+    if (ret)
+        return;
+    scrInterpret(args, ScriptLine);
+    redir.done();
+}
+
+static void
+bgRun(const char *args)
+{
+    prepThread();
+    redir(args);
+}
+
+static void
+cmd_redir(const char *cmd, const char *args)
+{
+    if (toupper(cmd[0]) == 'B')
+        // Run in background thread.
+        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)bgRun,
+                     (LPVOID)args, 0, NULL);
+    else
+        redir(args);
+}
+REG_CMD(0, "REDIR", cmd_redir,
+        "REDIR <filename> <command>\n"
+        "  Run <command> and send it's output to <file>")
+REG_CMD_ALT(0, "BG", cmd_redir, bg,
+            "BG <filename> <command>\n"
+            "  Run <command> in a background thread - store output in <file>")
 
 static void
 cmd_set(const char *cmd, const char *x)
@@ -703,3 +754,22 @@ void scrExecute (const char *scrfn, bool complain)
 
   fclose (f);
 }
+
+static void
+cmd_runscript(const char *cmd, const char *args)
+{
+    char *vn = _strdup(get_token(&args));
+    if (!vn) {
+        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        return;
+    }
+    uint32 ignore = 0;
+    get_expression(&args, &ignore);
+
+    scrExecute(vn, !ignore);
+    free(vn);
+}
+REG_CMD(0, "R|UNSCRIPT", cmd_runscript,
+        "RUNSCRIPT <filename> [<ignoreNotFound>]\n"
+        "  Run the commands located in the specified file.\n"
+        "  Set <ignoreNotFound> to 1 to suppress a file not found error.")

@@ -1,5 +1,7 @@
 next version <kevin@koconnor.net>
 
+  * New commands: RUNSCRIPT, BG, REDIR
+
   * The linload build support has been modified to support linking in
     a haret script.  The last line in the script should run the new
     "RAMBOOT" command.  An example build would look something like:
