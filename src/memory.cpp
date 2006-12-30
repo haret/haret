@@ -13,7 +13,7 @@
 #include "xtypes.h"
 #include "cpu.h" // cpuGetMMU
 #include "memory.h"
-#include "output.h" // Output, fnprepare
+#include "output.h" // Output
 #include "script.h" // REG_VAR_INT
 
 // RAM start physical address
@@ -531,132 +531,84 @@ static uchar dump_char (uchar c)
 
 // Dump a portion of memory to file
 static void
-memDump(const char *fn, uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
+memDump(uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
 {
-  char fnbuff [200];
-  FILE *f = NULL;
+    uint32 offs = 0;
+    char chrdump[17];
+    chrdump[16] = 0;
 
-  if (fn)
-  {
-    fnprepare (fn, fnbuff, sizeof (fnbuff));
-    f = fopen (fnbuff, "a+");
-    if (!f)
-    {
-      Output(C_ERROR "Cannot open output file\n%s", fnbuff);
-      return;
-    }
-  }
+    if (base == (uint32)-1)
+        base = (uint32)vaddr;
 
-  uint32 offs = 0;
-  char chrdump [17];
-  chrdump [16] = 0;
-
-  try
-  {
-    while (offs < size)
-    {
-      if ((offs & 15) == 0)
-      {
-        uint32 addr = (base != (uint32)-1) ? base + offs : (uint32)vaddr + offs;
-        if (f)
-        {
-          if (offs)
-            fprintf (f, " | %s\n", chrdump);
-          fprintf (f, "%08x |", addr);
+    while (offs < size) {
+        if ((offs & 15) == 0) {
+            if (offs)
+                Output(" | %s", chrdump);
+            Output("%08x |\t", base + offs);
         }
-        else
-        {
-          if (offs)
-            Output(" | %s", chrdump);
-          Output("%08x |\t", addr);
+
+        uint32 d;
+        try {
+            d = *(uint32 *)(vaddr + offs);
+        } catch (...) {
+            Output(C_ERROR "EXCEPTION while reading from address %p",
+                   vaddr + offs);
+            return;
         }
-      }
-  
-      uint32 d = *(uint32 *)(vaddr + offs);
-      if (f)
-        fprintf (f, " %08x", d);
-      else
         Output(" %08x\t", d);
-  
-      chrdump [(offs & 15) + 0] = dump_char ((d      ) & 0xff);
-      chrdump [(offs & 15) + 1] = dump_char ((d >>  8) & 0xff);
-      chrdump [(offs & 15) + 2] = dump_char ((d >> 16) & 0xff);
-      chrdump [(offs & 15) + 3] = dump_char ((d >> 24) & 0xff);
-  
-      offs += 4;
+
+        chrdump[(offs & 15) + 0] = dump_char((d      ) & 0xff);
+        chrdump[(offs & 15) + 1] = dump_char((d >>  8) & 0xff);
+        chrdump[(offs & 15) + 2] = dump_char((d >> 16) & 0xff);
+        chrdump[(offs & 15) + 3] = dump_char((d >> 24) & 0xff);
+
+        offs += 4;
     }
 
-    while (offs & 15)
-    {
-      if (f)
-        fprintf (f, "         ");
-      else
+    while (offs & 15) {
         Output("         \t");
-      chrdump [offs & 15] = 0;
-      offs += 4;
+        chrdump[offs & 15] = 0;
+        offs += 4;
     }
 
-    if (f)
-    {
-      fprintf (f, " | %s\n", chrdump);
-      fclose (f);
-    }
-    else
-      Output(" | %s", chrdump);
-  }
-  catch (...)
-  {
-    Output(C_ERROR "EXCEPTION while reading from address %p",
-      vaddr + offs);
-  }
+    Output(" | %s", chrdump);
 }
 
 // Dump a portion of physical memory to file
-static void memPhysDump (const char *fn, uint32 paddr, uint32 size)
+static void memPhysDump(uint32 paddr, uint32 size)
 {
-  while (size)
-  {
-    uint8 *vaddr = memPhysMap (paddr);
-    uint32 bytes = PHYS_CACHE_SIZE - (PHYS_CACHE_MASK & (uint32)vaddr);
-    if (bytes > size)
-      bytes = size;
-    memDump (fn, vaddr, bytes, paddr);
-    size -= bytes;
-    paddr += bytes;
-  }
+    while (size)
+    {
+        uint8 *vaddr = memPhysMap (paddr);
+        uint32 bytes = PHYS_CACHE_SIZE - (PHYS_CACHE_MASK & (uint32)vaddr);
+        if (bytes > size)
+            bytes = size;
+        memDump(vaddr, bytes, paddr);
+        size -= bytes;
+        paddr += bytes;
+    }
 }
 
 static void
-cmd_memaccess(const char *tok, const char *x)
+cmd_memaccess(const char *tok, const char *args)
 {
     bool virt = toupper(tok[0]) == 'V';
-    char *fn = NULL;
-    if (tok [2])
-        fn = get_token(&x);
-
     uint32 addr, size;
-    if (!get_expression(&x, &addr)
-        || !get_expression(&x, &size))
-    {
-        Output(C_ERROR "line %d: Expected %s<vaddr> <size>",
-                 ScriptLine, fn ? "<fname>" : "");
+    if (!get_expression(&args, &addr) || !get_expression(&args, &size)) {
+        Output(C_ERROR "line %d: Expected <addr> <size>", ScriptLine);
         return;
     }
 
     if (virt)
-        memDump(fn, (uint8 *)addr, size);
+        memDump((uint8 *)addr, size);
     else
-        memPhysDump(fn, addr, size);
+        memPhysDump(addr, size);
 }
-REG_CMD_ALT(0, "VDU|MP", cmd_memaccess, vdump, 0)
-REG_CMD_ALT(0, "PDU|MP", cmd_memaccess, pdump,
-        "[V|P]DUMP <filename> <addr> <size>\n"
-        "  Dump an area of memory in hexadecimal/char format from given [V]irtual\n"
-        "  or [P]hysical address to specified file.")
-REG_CMD_ALT(0, "VD", cmd_memaccess, vd, 0)
-REG_CMD(0, "PD", cmd_memaccess,
-        "[V|P]D <addr> <size>\n"
-        "  Same as [V|P]DUMP but outputs to screen rather than to file.")
+REG_CMD_ALT(0, "VD|UMP", cmd_memaccess, vdump, 0)
+REG_CMD(0, "PD|UMP", cmd_memaccess,
+        "[V|P]DUMP <addr> <size>\n"
+        "  Dump an area of memory in hexadecimal/char format from"
+        "  given [V]irtual or [P]hysical address.")
 
 // Fill given number of words in virtual memory with given value
 static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
