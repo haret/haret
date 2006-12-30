@@ -74,7 +74,7 @@ bool haretTerminal::Readline (const char *prompt)
     if (!buff_fill)
     {
       int x = Read (buff, sizeof (buff));
-      if (x < 0)
+      if (x <= 0)
         return false;
       buff_fill = x;
     }
