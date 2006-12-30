@@ -10,7 +10,7 @@
 #include "machines.h" // setupMachineType
 #include "linboot.h" // bootRamLinux
 #include "memory.h" // memPhysReset
-#include "script.h" // to override get_token, etc.
+#include "script.h" // REG_CMD
 #include "haret.h"
 
 // Symbols surrounding kernel code added by kernelfiles.S
