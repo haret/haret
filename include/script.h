@@ -17,9 +17,11 @@ extern void scrExecute (const char *scrfn, bool complain = true);
 // Parse the next part of the string as an expression
 bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
 // Parse the next string as a literal token
-char *get_token(const char **s, int for_expr=0);
+int get_token(const char **s, char *storage, int storesize, int for_expr=0);
 // The current line of the script being parsed
 extern uint ScriptLine;
+// Maximum command line supported
+static const int MAX_CMDLEN = 200;
 
 
 /****************************************************************

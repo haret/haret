@@ -34,12 +34,12 @@ tlhAvail(void)
 static void
 cmd_kill(const char *cmd, const char *args)
 {
-    char *name = get_token(&args);
-    if (!name) {
+    char name[MAX_CMDLEN];
+    if (get_token(&args, name, sizeof(name))) {
         Output(C_ERROR "line %d: process name expected", ScriptLine);
         return;
     }
-    wchar_t wname[200];
+    wchar_t wname[MAX_CMDLEN];
     mbstowcs(wname, name, ARRAY_SIZE(wname));
     Output("Looking to kill '%ls'", wname);
 

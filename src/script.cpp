@@ -51,49 +51,46 @@ setupCommands()
     }
 }
 
-char *
-get_token(const char **s, int for_expr)
+int
+get_token(const char **s, char *storage, int storesize, int for_expr)
 {
-  const char *x = *s;
-  static char storage [1000];
+    const char *x = *s;
 
-  // Skip spaces at the beginning
-  while (*x && isspace (*x))
-    x++;
+    // Skip spaces at the beginning
+    while (*x && isspace (*x))
+        x++;
 
-  // If at the end of string, return empty token
-  if (!*x)
-  {
-    storage [0] = 0;
-    return storage;
-  }
+    // If at the end of string, return empty token
+    if (!*x) {
+        storage[0] = 0;
+        return -1;
+    }
 
-  char quote;
-  bool has_quote = !!strchr (quotes, quote = *x);
-  if (has_quote)
-    x++;
+    char quote = 0;
+    if (strchr(quotes, *x))
+        quote = *x++;
 
-  const char *e = x;
-  if (has_quote)
-    while (*e && (*e != quote))
-      e++;
-  else if (for_expr)
-    while (*e && isalnum (*e))
-      e++;
-  else
-    while (*e && !isspace(*e))
-      e++;
+    const char *e = x;
+    if (quote)
+        while (*e && (*e != quote))
+            e++;
+    else if (for_expr)
+        while (*e && isalnum (*e))
+            e++;
+    else
+        while (*e && !isspace(*e))
+            e++;
 
-  if (e >= x + sizeof (storage))
-    e = x + sizeof (storage) - 1;
-  memcpy (storage, x, e - x);
-  storage [e - x] = 0;
+    if (e >= x + storesize)
+        e = x + storesize - 1;
+    memcpy (storage, x, e - x);
+    storage [e - x] = 0;
 
-  if (has_quote && *e)
-    e++;
-  *s = e;
+    if (quote && *e)
+        e++;
+    *s = e;
 
-  return storage;
+    return 0;
 }
 
 static char peek_char (const char **s)
@@ -221,7 +218,9 @@ bool
 get_expression(const char **s, uint32 *v, int priority, int flags)
 {
   uint32 b;
-  char *x = get_token(s, 1);
+  char store[MAX_CMDLEN];
+  get_token(s, store, sizeof(store), 1);
+  char *x = store;
 
   if (!*x)
   {
@@ -365,17 +364,14 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
     return false;
   }
 
-  // keyw gets destroyed in next call to get_expression
-  char *kw = _strdup(keyw);
-
   (*s)++;
   while (count--)
   {
     if (!get_expression (s, args, 0, count ? 0 : PAREN_EXPECT | PAREN_EAT))
     {
 error:
-      Output(C_ERROR "line %d: not enough arguments to function %s", ScriptLine, kw);
-      free(kw);
+      Output(C_ERROR "line %d: not enough arguments to function %s"
+             , ScriptLine, keyw);
       return false;
     }
 
@@ -389,7 +385,6 @@ error:
     args++;
   }
 
-  free(kw);
   return true;
 }
 
@@ -426,7 +421,8 @@ bool scrInterpret (const char *str, uint lineno)
     if (*x == '#' || !*x)
         return true;
 
-    char *tok = get_token(&x);
+    char tok[MAX_CMDLEN];
+    get_token(&x, tok, sizeof(tok));
 
     // Okay, now see what keyword is this :)
     for (int i = 0; i < commands_count; i++) {
@@ -472,9 +468,8 @@ public:
 static void
 cmd_dump(const char *cmd, const char *x)
 {
-    char *vn = get_token (&x);
-    if (!vn || !*vn)
-    {
+    char vn[MAX_CMDLEN];
+    if (get_token(&x, vn, sizeof(vn))) {
         Output("line %d: Dumper name expected", ScriptLine);
         return;
     }
@@ -487,30 +482,25 @@ cmd_dump(const char *cmd, const char *x)
             break;
         }
     }
-    if (!hwd)
-    {
-        Output("line %d: No dumper %s available, see HELP DUMP for a list", ScriptLine, vn);
+    if (!hwd) {
+        Output("line %d: No dumper %s available, see HELP DUMP for a list"
+               , ScriptLine, vn);
         return;
     }
 
-    uint32 args [50];
-    if (!get_args (&x, hwd->name, args, hwd->nargs))
+    uint32 args[50];
+    if (!get_args(&x, hwd->name, args, hwd->nargs))
         return;
 
-    vn = get_token (&x);
-    if (vn && !*vn)
-        vn = NULL;
-
-    if (vn)
-    {
+    if (get_token(&x, vn, sizeof(vn))) {
+        hwd->dump(args);
+    } else {
         fileredir redir;
         int ret = redir.init(vn);
         if (ret)
             return;
         hwd->dump(args);
         redir.done();
-    } else {
-        hwd->dump(args);
     }
 }
 REG_CMD(0, "D|UMP", cmd_dump,
@@ -521,8 +511,8 @@ REG_CMD(0, "D|UMP", cmd_dump,
 static void
 redir(const char *args)
 {
-    char *vn = get_token(&args);
-    if (!vn) {
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn))) {
         Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
@@ -563,10 +553,9 @@ REG_CMD_ALT(0, "BG", cmd_redir, bg,
 static void
 cmd_set(const char *cmd, const char *x)
 {
-    char *vn = get_token (&x);
-    if (!*vn)
-    {
-        Output(C_ERROR "line %d: Expected either <varname> or `LIST'", ScriptLine);
+    char vn[MAX_CMDLEN];
+    if (get_token(&x, vn, sizeof(vn))) {
+        Output(C_ERROR "line %d: Expected <varname>", ScriptLine);
         return;
     }
 
@@ -576,8 +565,7 @@ cmd_set(const char *cmd, const char *x)
     if (!var)
         var = NewVar (vn, varInteger);
 
-    switch (var->type)
-    {
+    switch (var->type) {
     case varInteger:
         if (!get_expression (&x, var->ival))
         {
@@ -589,7 +577,8 @@ cmd_set(const char *cmd, const char *x)
         // If val_size is zero, it means a const char* in .text segment
         if (var->val_size)
             free(*var->sval);
-        *var->sval = _strdup(get_token(&x));
+        get_token(&x, vn, sizeof(vn));
+        *var->sval = _strdup(vn);
         var->val_size = 1;
         break;
     case varBitSet:
@@ -649,10 +638,10 @@ REG_CMD(0, "S|ET", cmd_set,
 static void
 cmd_help(const char *cmd, const char *x)
 {
-    char *vn = get_token (&x);
+    char vn[MAX_CMDLEN];
+    get_token(&x, vn, sizeof(vn));
 
-    if (!strcasecmp (vn, "VARS"))
-    {
+    if (!strcasecmp(vn, "VARS")) {
         char type [9];
         char args [10];
 
@@ -707,7 +696,7 @@ cmd_help(const char *cmd, const char *x)
             Output("%s%s\t%s", hd->name, args, hd->desc);
         }
     }
-    else if (!vn || !*vn)
+    else if (!vn[0])
     {
         Output("----=====****** A summary of HaRET commands: ******=====----");
         Output("Notations used below:");
@@ -745,7 +734,7 @@ void scrExecute (const char *scrfn, bool complain)
 
   for (int line = 1; ; line++)
   {
-    char str [200];
+    char str[MAX_CMDLEN];
     if (!fgets (str, sizeof (str), f))
       break;
 
@@ -762,8 +751,8 @@ void scrExecute (const char *scrfn, bool complain)
 static void
 cmd_runscript(const char *cmd, const char *args)
 {
-    char *vn = _strdup(get_token(&args));
-    if (!vn) {
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn))) {
         Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
@@ -771,7 +760,6 @@ cmd_runscript(const char *cmd, const char *args)
     get_expression(&args, &ignore);
 
     scrExecute(vn, !ignore);
-    free(vn);
 }
 REG_CMD(0, "R|UNSCRIPT", cmd_runscript,
         "RUNSCRIPT <filename> [<ignoreNotFound>]\n"

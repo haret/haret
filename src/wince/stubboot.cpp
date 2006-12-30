@@ -51,7 +51,7 @@ runMemScript(const char *script)
         if (lineend > s && lineend[-1] == '\r')
             lineend--;
         uint len = lineend - s;
-        char str[200];
+        char str[MAX_CMDLEN];
         if (len >= sizeof(str))
             len = sizeof(str) - 1;
         memcpy(str, s, len);

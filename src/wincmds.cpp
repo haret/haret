@@ -38,12 +38,12 @@ static int LLXAvail() {
 static void
 cmd_LoadLibraryEx(const char *cmd, const char *args)
 {
-    char *name = get_token(&args);
-    if (!name) {
+    char name[MAX_CMDLEN];
+    if (get_token(&args, name, sizeof(name))) {
         Output(C_ERROR "line %d: Expected <file name>", ScriptLine);
         return;
     }
-    wchar_t wname[200];
+    wchar_t wname[MAX_CMDLEN];
     MultiByteToWideChar(CP_ACP, 0, name, -1, wname, sizeof(wname));
 
     Output("Calling LoadLibraryEx on '%ls'", wname);

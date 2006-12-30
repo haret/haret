@@ -607,7 +607,7 @@ cmd_memaccess(const char *tok, const char *args)
 REG_CMD_ALT(0, "VD|UMP", cmd_memaccess, vdump, 0)
 REG_CMD(0, "PD|UMP", cmd_memaccess,
         "[V|P]DUMP <addr> <size>\n"
-        "  Dump an area of memory in hexadecimal/char format from"
+        "  Dump an area of memory in hexadecimal/char format from\n"
         "  given [V]irtual or [P]hysical address.")
 
 // Fill given number of words in virtual memory with given value
@@ -767,19 +767,16 @@ static void
 cmd_memtofile(const char *tok, const char *args)
 {
     bool virt = toupper (tok [0]) == 'V';
-    char *fn = _strdup(get_token(&args));
-    if (!fn)
-    {
+    char fn[MAX_CMDLEN];
+    if (get_token(&args, fn, sizeof(fn))) {
         Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
 
     uint32 addr, size;
-    if (!get_expression(&args, &addr)
-        || !get_expression(&args, &size))
-    {
-        Output(C_ERROR "line %d: Expected <filename> <address> <size>", ScriptLine);
-        free(fn);
+    if (!get_expression(&args, &addr) || !get_expression(&args, &size)) {
+        Output(C_ERROR "line %d: Expected <filename> <address> <size>"
+               , ScriptLine);
         return;
     }
 
@@ -787,7 +784,6 @@ cmd_memtofile(const char *tok, const char *args)
         memVirtWriteFile (fn, addr, size);
     else
         memPhysWriteFile (fn, addr, size);
-    free(fn);
 }
 REG_CMD_ALT(0, "PWF", cmd_memtofile, pwf, 0)
 REG_CMD(0, "VWF", cmd_memtofile,

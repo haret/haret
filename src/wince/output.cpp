@@ -410,7 +410,8 @@ static void
 cmd_print(const char *tok, const char *x)
 {
     bool msg = (toupper(tok[0]) == 'M');
-    char *arg = _strdup(get_token(&x));
+    char arg[MAX_CMDLEN];
+    get_token(&x, arg, sizeof(arg));
     uint32 args[4];
     for (int i = 0; i < 4; i++)
         if (!get_expression(&x, &args[i]))
@@ -424,8 +425,6 @@ cmd_print(const char *tok, const char *x)
     }
 
     __output(!msg, fmt, args[0], args[1], args[2], args[3]);
-
-    free(arg);
 }
 REG_CMD(0, "M|ESSAGE", cmd_print,
         "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
@@ -439,8 +438,8 @@ REG_CMD_ALT(0, "P|RINT", cmd_print, print,
 static void
 cmd_log(const char *cmd, const char *args)
 {
-    char *vn = get_token(&args);
-    if (!vn) {
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn))) {
         Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
