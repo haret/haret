@@ -8,6 +8,8 @@ New features:
 
 * Document current feature set in wiki.
 
+* Possibly sort help output by command name.
+
 
 Misc cleanups:
 
@@ -32,14 +34,9 @@ Misc cleanups:
     areas from a memPhysMap reference, and this may not be true on all
     machines.
 
-* Implement a "redirect" command that can run a command and forward
-  its output to a file.
-
-  * Remove pdump/vdump in favor of pd/vd
-
-  * Remove "dump" based commands and re-implement them as regular
-    commands.  It isn't clear why "dump mmu" isn't implemented as
-    "mmudump".
+* Remove "dump" based commands and re-implement them as regular
+  commands.  It isn't clear why "dump mmu" isn't implemented as
+  "mmudump".
 
 * Move ac97 dump from cpu.c to its own (pxa specific) file.
 
@@ -59,9 +56,6 @@ Misc cleanups:
 * Possibly go back to the coprocessor accessor code that did
   code-modification.  The current code can't set opcode_1 and opcode_2
   which is useful in some situations.
-
-* Possibly change get_token to parse filenames that contain slashes
-  and periods without requiring the user place quotes around them.
 
 * Possibly allow the current machine definition (Mach) to be
   explicitly specified by a user command.
