@@ -59,6 +59,7 @@ static inline uint32 MVAddr(uint32 addr) {
     return addr;
 }
 
+void printWelcome();
 // Take control of the cpu -- don't let wince interrupt.
 void take_control();
 // Return to normal processing.

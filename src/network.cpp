@@ -6,12 +6,12 @@
     For conditions of use see file COPYING
 */
 
-#include <stdio.h> // sprintf
+#include <stdio.h> // _snprintf
 #include <windows.h>
 #include "pkfuncs.h" // SetKMode
 
 #include "xtypes.h"
-#include "cpu.h" // cpuGetPSR
+#include "cpu.h" // printWelcome
 #include "output.h" // Output, setOuptutFn
 #include "terminal.h" // haretNetworkTerminal
 #include "script.h" // scrInterpret
@@ -58,108 +58,13 @@ haretNetworkTerminal::sendMessage(const char *msg, int len)
     send(socket, msg, len, 0);
 }
 
-DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
-
-static char *cpu_id()
-{
-  static char buff [100];
-  int top = 0;
-
-  uint p15r0 = get_p15r0();
-
-#define PUTS(s) \
-  { size_t sl = strlen (s); memcpy (buff + top, s, sl); top += sl; }
-#define PUTSF(s, n) \
-  { sprintf (buff + top, s, n); top += strlen (buff + top); }
-
-  // First the vendor
-  switch (p15r0 >> 24)
-  {
-    case 'A': PUTS ("ARM "); break;
-    case 'D': PUTS ("DEC "); break;
-    case 'i': PUTS ("Intel "); break;
-    default:  PUTS ("Unknown "); break;
-  }
-
-  if ((p15r0 >> 24) == 'i'
-   && ((p15r0 >> 13) & 7) == 1)
-    PUTS ("XScale ");
-
-  PUTS ("ARM arch ");
-
-  switch ((p15r0 >> 16) & 15)
-  {
-    case 1: PUTS ("4 "); break;
-    case 2: PUTS ("4T "); break;
-    case 3: PUTS ("5 "); break;
-    case 4: PUTS ("5T "); break;
-    case 5: PUTS ("5TE "); break;
-    default: PUTSF ("unknown(%d) ", (p15r0 >> 16) & 15); break;
-  }
-
-  if ((p15r0 >> 24) == 'i')
-  {
-    PUTSF ("revision %d ", (p15r0 >> 10) & 7);
-    PUTSF ("product %d ", (p15r0 >> 4) & 63);
-  }
-
-  PUTSF ("stepping %d", p15r0 & 15);
-
-  buff [top] = 0;
-  return buff;
-}
-
-static const char *cpu_mode()
-{
-  uint mode = cpuGetPSR() & 0x1f;
-
-  switch (mode)
-  {
-    case 0x10:
-      return "user";
-    case 0x11:
-      return "FIQ";
-    case 0x12:
-      return "IRQ";
-    case 0x13:
-      return "supervisor";
-    case 0x17:
-      return "abort";
-    case 0x1b:
-      return "undefined";
-    case 0x1f:
-      return "system";
-    default:
-      return "unknown";
-  }
-}
-
 static void
 mainnetloop(int sock)
 {
     haretNetworkTerminal t(sock);
     setOutputFn(&t);
 
-    // Display some welcome message
-    SYSTEM_INFO si;
-    GetSystemInfo (&si);
-    OSVERSIONINFOW vi;
-    vi.dwOSVersionInfoSize = sizeof(vi);
-    GetVersionEx(&vi);
-
-    WCHAR bufplat[128], bufoem[128];
-    SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
-    SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
-
-    Output("Welcome, this is HaRET running on WindowsCE v%ld.%ld\n"
-           "Minimal virtual address: %p, maximal virtual address: %p",
-           vi.dwMajorVersion, vi.dwMinorVersion,
-           si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-    Output("Detected machine '%s' (Plat='%ls' OEM='%ls')\n"
-           "CPU is %s running in %s mode\n"
-           "Enter 'HELP' for a short command summary.\n",
-           Mach->name, bufplat, bufoem,
-           cpu_id(), cpu_mode());
+    printWelcome();
 
     if (t.Initialize())
         for (int line = 1; ; line++) {

@@ -18,6 +18,7 @@
 #include "resource.h" // ID_PROGRESSBAR
 #include "script.h" // REG_CMD, setupCommands
 #include "haret.h" // hInst, MainWindow
+#include "cpu.h" // printWelcome
 #include "output.h"
 
 //#define USE_WAIT_CURSOR
@@ -299,6 +300,9 @@ setupHaret()
 
     // Setup variable/command lists.
     setupCommands();
+
+    // Send banner info to log (if logging on).
+    printWelcome();
 }
 
 
