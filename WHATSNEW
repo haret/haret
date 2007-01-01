@@ -8,7 +8,7 @@ next version <kevin@koconnor.net>
 
     make linload SCRIPT=myharet.txt KERNEL=zImage INITRD=abc
 
-  * Add new machines: hermes, wizard, g500
+  * Add new machines: hermes, wizard, g500, artemis
 
   * Add mechanism to check for DMA corruption during kernel load by
     CRCing the kernel before and after the preloader relocates it.  To
