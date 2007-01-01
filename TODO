@@ -38,8 +38,6 @@ Misc cleanups:
   commands.  It isn't clear why "dump mmu" isn't implemented as
   "mmudump".
 
-* Move ac97 dump from cpu.c to its own (pxa specific) file.
-
 * Port s3c24xx based code into standard machine detection hierarchy.
 
 * Remove old Microsoft based build code.
