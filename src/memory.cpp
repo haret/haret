@@ -351,7 +351,7 @@ searchMMUforPhys(uint32 *mmu, uint32 base, int cached=0)
 {
     for (uint32 i=0; i<4096; i++) {
         uint32 l1d = mmu[i];
-        if (l1d & MMU_L1_TYPE_MASK != MMU_L1_SECTION)
+        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION)
             // Only interested in section mappings.
             continue;
         if ((l1d >> 20) != base)
@@ -841,9 +841,16 @@ static void __flags_l2(char *p, uint32 d)
     p = __flags_other(p, d);
 }
 
-static bool memDumpMMU(uint32 *args)
+DEF_GETCPR(get_p15r1, p15, 0, c1, c0, 0)
+DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
+DEF_GETCPR(get_p15r3, p15, 0, c3, c0, 0)
+DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
+
+bool memDumpMMU(uint32 *args)
 {
-  Output("----- Virtual address map -----\n");
+  Output("----- Virtual address map -----");
+  Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
+         , get_p15r1(), get_p15r2(), get_p15r3(), get_p15r13());
   Output("Descriptor flags legend:\n"
              " C: Cacheable\n"
              " B: Bufferable\n"
@@ -854,7 +861,6 @@ static bool memDumpMMU(uint32 *args)
              "       3: User mode Read/Write\n");
 
   uint32 mmu = cpuGetMMU ();
-  Output(" MMU 1st level descriptor table is at %08x", mmu);
 
   Output("  Virtual | Physical | Description |  Flags");
   Output("  address | address  |             |");
