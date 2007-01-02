@@ -8,13 +8,13 @@
 #
 
 # Program version
-VERSION=pre-0.4.6
+VERSION=pre-0.4.6-$(shell date +"%Y%m%d_%H%M")
 
 # Output directory
 OUT=out/
 
 # Default compiler flags (note -march=armv4 is needed for 16 bit insns)
-CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude -DVERSION=\"$(VERSION)\"
+CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude
 LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
@@ -65,6 +65,11 @@ $(OUT)%.lib: src/wince/%.def
 	@echo "  Building library $@"
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
+$(OUT)%-debug:
+	@echo "  Linking $@"
+	$(Q)echo 'const char *VERSION = "$(VERSION)";' > $(OUT)version.cpp
+	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.cpp $^ $(LIBS) -o $@
+
 $(OUT)%.exe: out/%-debug
 	@echo "  Stripping $^ to make $@"
 	$(Q)$(STRIP) $^ -o $@
@@ -88,8 +93,6 @@ HARETOBJS := $(COREOBJS) haret.o \
   network.o terminal.o com_port.o tlhcmds.o pxacmds.o
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
-	@echo "  Linking $@"
-	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
 ####### Stripped down linux bootloading program.
 LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
@@ -103,8 +106,6 @@ $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
 
 $(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
-	@echo "  Linking $@"
-	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
 linload: $(OUT)linload.exe
 

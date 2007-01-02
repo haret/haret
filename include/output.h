@@ -22,6 +22,8 @@ extern void Status (const wchar_t *format, ...);
 // Prepend executable source directory to file name if it does not
 // already contain a path.
 extern void fnprepare(const char *ifn, char *ofn, int ofn_max);
+// Version variable (added by make system)
+extern const char *VERSION;
 // Initialize Haret application.
 void setupHaret();
 void prepThread();
