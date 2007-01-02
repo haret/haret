@@ -7,8 +7,6 @@
 */
 
 #include <stdio.h> // _snprintf
-#include <windows.h>
-#include "pkfuncs.h" // SetKMode
 
 #include "xtypes.h"
 #include "cpu.h" // printWelcome
@@ -20,7 +18,6 @@
 
 #  include <winsock.h>
 #  define so_close	closesocket
-#  define so_ioctl	ioctlsocket
 
 // Our private haretTerminal extension that reads/writes to socket
 class haretNetworkTerminal : public haretTerminal, public outputfn
