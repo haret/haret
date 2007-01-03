@@ -335,7 +335,7 @@ static int physPageComp(const void *e1, const void *e2) {
 
 // Description of memory alocated by prepForKernel()
 struct bootmem {
-    char *imagePages[PAGES_PER_INDEX];
+    char *imagePages[PAGES_PER_INDEX * MAX_INDEX];
     char **kernelPages, **initrdPages;
     uint32 physExec;
     void *allocedRam;
