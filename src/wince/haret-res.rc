@@ -71,7 +71,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_DLGFRA
 FONT 8, "Helv"
 BEGIN
     CONTROL         "",ID_PROGRESSBAR,"msctls_trackbar32",TBS_NOTICKS | TBS_ENABLESELRANGE | TBS_NOTHUMB | WS_CLIPSIBLINGS,5,30,120,25
-    LTEXT           "Please wait patiently until operation finishes ...",202,5,5,120,20
+    LTEXT           "HaRET: Booting Linux ...",202,5,5,120,20
 END
 
 
