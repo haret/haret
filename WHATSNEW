@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>, <pmiscml@gmail.com>
+20070103 0.4.6 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * New commands: RUNSCRIPT, BG, REDIR
 
@@ -16,6 +16,8 @@ next version <kevin@koconnor.net>, <pmiscml@gmail.com>
     
   * Check that boot FB feedback wouldn't overwrite kernel/initrd
     memory. Disable it if does. This fixes booting on h3900, h4000, etc.
+    
+  * Added detection of h3900, h2200.
 
 20061205 0.4.5 <kevin@koconnor.net>
 
