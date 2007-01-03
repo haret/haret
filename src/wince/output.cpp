@@ -69,7 +69,7 @@ void Status (const wchar_t *format, ...)
     SetWindowText (sb, buffer);
 }
 
-static void
+void
 Complain(const char *msg, int len, int code)
 {
     unsigned severity = MB_ICONEXCLAMATION;
@@ -118,7 +118,7 @@ openLogFile(const char *vn)
     wchar_t wfn[200];
     mbstowcs(wfn, fn, ARRAY_SIZE(wfn));
     outputLogfile = CreateFile(wfn, GENERIC_WRITE, FILE_SHARE_READ,
-			       0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
+			       0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL /*| FILE_FLAG_WRITE_THROUGH*/, 0);
     if (!outputLogfile)
         return -1;
     // Append to log
