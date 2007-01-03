@@ -372,8 +372,9 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         Output(C_ERROR "undefined MTYPE");
         return NULL;
     }
-    Output("boot RAMADDR=%08x RAMSIZE=%08x MTYPE=%d CMDLINE='%s'"
+    Output("boot params: RAMADDR=%08x RAMSIZE=%08x MTYPE=%d CMDLINE='%s'"
            , memPhysAddr, memPhysSize, machType, bootCmdline);
+    Output("Boot FB feedback: %d", Mach->fbDuringBoot);
 
     // Allocate ram for kernel/initrd
     uint32 kernelCount = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
@@ -471,7 +472,13 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 
     if (Mach->fbDuringBoot) {
         pd->videoRam = vidGetVRAM();
-        Output("Video buffer at phys=%08x", pd->videoRam);
+	int endKernelStuff = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
+        if (pd->videoRam >= pd->startRam && pd->videoRam < endKernelStuff) {
+            Output("Boot FB feedback requested, but FB overlaps with kernel structures - feedback disabled");
+            pd->videoRam = 0;
+        } else {
+            Output("Video buffer at phys=%08x", pd->videoRam);
+        }
     }
 
     // Setup preloader code.
