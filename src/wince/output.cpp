@@ -117,10 +117,12 @@ openLogFile(const char *vn)
         CloseHandle(outputLogfile);
     wchar_t wfn[200];
     mbstowcs(wfn, fn, ARRAY_SIZE(wfn));
-    outputLogfile = CreateFile(wfn, GENERIC_WRITE, FILE_SHARE_READ
-                               , 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    outputLogfile = CreateFile(wfn, GENERIC_WRITE, FILE_SHARE_READ,
+			       0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
     if (!outputLogfile)
         return -1;
+    // Append to log
+    SetFilePointer(outputLogfile, 0, NULL, FILE_END);
     return 0;
 }
 
@@ -281,9 +283,12 @@ setupHaret()
         fclose(logfd);
         openLogFile("haretlog.txt");
     }
+    
+    outTls = TlsAlloc();
+
+    Output("\n===== HaRET %s =====", VERSION);
 
     // Prep for per-thread output function.
-    outTls = TlsAlloc();
     prepThread();
 
     Output("Finished initializing output");
