@@ -459,7 +459,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     // Setup kernel/initrd indexes
     for (uint32 i=0; i<kernelCount+initrdCount; i++) {
         uint32 *index = (uint32*)pgs_index[i/PAGES_PER_INDEX].virtLoc;
-        index[i] = pgs_kernel[i].physLoc;
+        index[i % PAGES_PER_INDEX] = pgs_kernel[i].physLoc;
         bm->imagePages[i] = pgs_kernel[i].virtLoc;
     }
     bm->kernelPages = &bm->imagePages[0];
