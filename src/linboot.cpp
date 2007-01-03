@@ -472,7 +472,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 
     if (Mach->fbDuringBoot) {
         pd->videoRam = vidGetVRAM();
-	int endKernelStuff = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
+	unsigned int endKernelStuff = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
         if (pd->videoRam >= pd->startRam && pd->videoRam < endKernelStuff) {
             Output("Boot FB feedback requested, but FB overlaps with kernel structures - feedback disabled");
             pd->videoRam = 0;
