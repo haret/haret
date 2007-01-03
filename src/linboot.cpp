@@ -348,8 +348,36 @@ cleanupBootMem(struct bootmem *bm)
 {
     if (!bm)
         return;
-    free(bm->allocedRam);
+    if (bm->allocedRam)
+        free(bm->allocedRam);
     free(bm);
+}
+
+void *allocBufferPages(struct pagedata *pages, int pageCount) 
+{
+    int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
+    void *data = calloc(bufSize, 1);
+    if (! data) {
+        Output(C_ERROR "Failed to allocate %d pages", pageCount);
+        return NULL;
+    }
+    
+    Output("Allocated load buffer at %p of size %08x", data, bufSize);
+
+    // Find all the physical locations of the pages.
+    data = (void*)PAGE_ALIGN((uint32)data);
+    for (int i = 0; i < pageCount; i++) {
+        struct pagedata *pd = &pages[i];
+        pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
+        *pd->virtLoc = 0xaa;
+        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
+        if (pd->physLoc == (uint32)-1) {
+            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
+            return NULL;
+        }
+    }
+    
+    return pages;
 }
 
 // Allocate memory for a kernel (and possibly initrd), and configure a
@@ -388,37 +416,19 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
                , MAX_INDEX * PAGES_PER_INDEX * PAGE_SIZE);
         return NULL;
     }
-    int bufSize = totalCount * PAGE_SIZE + PAGE_SIZE;
-    void *data = calloc(bufSize, 1);
-    if (! data) {
-        Output(C_ERROR "Failed to allocate %d pages", totalCount);
-        return NULL;
-    }
-    
-    Output("Allocated load buffer at %p of size %08x", data, bufSize);
 
     // Allocate data structure.
     struct bootmem *bm = (bootmem*)calloc(sizeof(bootmem), 1);
     if (!bm) {
         Output(C_ERROR "Failed to allocate bootmem struct");
-        free(data);
         return NULL;
     }
-    bm->allocedRam = data;
+//    bm->allocedRam = data;
 
-    // Find all the physical locations of the pages.
-    data = (void*)PAGE_ALIGN((uint32)data);
     struct pagedata pages[PAGES_PER_INDEX * MAX_INDEX + 4];
-    for (int i=0; i<totalCount; i++) {
-        struct pagedata *pd = &pages[i];
-        pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
-        *pd->virtLoc = 0xaa;
-        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
-        if (pd->physLoc == (uint32)-1) {
-            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
-            cleanupBootMem(bm);
-            return NULL;
-        }
+    if (!allocBufferPages(pages, totalCount)) {
+	cleanupBootMem(bm);
+	return NULL;
     }
     
     Output("Built virtual to physical page mapping");
