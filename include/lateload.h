@@ -14,6 +14,10 @@
 #define LATE_LOAD_ALT(Func, DLL) \
     __LATE_LOAD(Func, L ## #Func, L ##DLL, (void*) & alt_ ##Func )
 
+// Use this to refer to lateload defined in another module.
+#define EXTERN_LATE_LOAD(Func) \
+    extern typeof(&Func) late_ ##Func;
+
 //
 // Internal definitions.
 //
