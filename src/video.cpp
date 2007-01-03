@@ -19,6 +19,8 @@
 uint16 *vram = NULL;
 uint videoW, videoH;
 
+static int usingGapi = 0;
+
 // Is there another way to find this not involving GAPI?
 uint16 *vidGetVirtVRAM()
 {
@@ -52,7 +54,11 @@ static uint32 returnZero(void) { return 0; }
 
 __LATE_LOAD(GXOpenDisplay, L"?GXOpenDisplay@@YAHPAUHWND__@@K@Z", L"gx"
             , (void*)&returnZero)
+__LATE_LOAD(GXCloseDisplay, L"?GXCloseDisplay@@YAHXZ", L"gx"
+            , (void*)&returnZero)
 __LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx"
+            , (void*)&returnZero)
+__LATE_LOAD(GXEndDraw, L"?GXEndDraw@@YAHXZ", L"gx"
             , (void*)&returnZero)
 
 bool videoBeginDraw ()
@@ -73,8 +79,11 @@ bool videoBeginDraw ()
     } 
     else
     {
-      if (late_GXOpenDisplay(GetDesktopWindow (), 0) == 0)
+      if (late_GXOpenDisplay(GetDesktopWindow (), 0) == 0) {
+        Output("GXOpenDisplay: error");
         return FALSE;
+      }
+      usingGapi = 1;
       vram = (uint16 *)late_GXBeginDraw();
       videoW = GetSystemMetrics(SM_CXSCREEN);
       videoH = GetSystemMetrics(SM_CYSCREEN);
@@ -84,6 +93,11 @@ bool videoBeginDraw ()
 
 void videoEndDraw ()
 {
+  if (usingGapi) {
+    late_GXEndDraw();
+    late_GXCloseDisplay();
+    usingGapi = 0;
+  }
   if (vram)
     vram = NULL;
 }
