@@ -383,16 +383,19 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
                                 * sizeof(char*)) / PAGE_SIZE;
     int totalCount = kernelCount + initrdCount + indexCount + 4;
     if (indexCount > MAX_INDEX) {
-        Output(C_ERROR "Image too large (%d/%d) - largest size is %d"
+        Output(C_ERROR "Image too large (%d+%d) - largest size is %d"
                , kernelSize, initrdSize
                , MAX_INDEX * PAGES_PER_INDEX * PAGE_SIZE);
         return NULL;
     }
-    void *data = calloc(totalCount * PAGE_SIZE + PAGE_SIZE - 1, 1);
+    int bufSize = totalCount * PAGE_SIZE + PAGE_SIZE;
+    void *data = calloc(bufSize, 1);
     if (! data) {
         Output(C_ERROR "Failed to allocate %d pages", totalCount);
         return NULL;
     }
+    
+    Output("Allocated load buffer at %p of size %08x", data, bufSize);
 
     // Allocate data structure.
     struct bootmem *bm = (bootmem*)calloc(sizeof(bootmem), 1);
@@ -409,6 +412,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     for (int i=0; i<totalCount; i++) {
         struct pagedata *pd = &pages[i];
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
+        *pd->virtLoc = 0xaa;
         pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
         if (pd->physLoc == (uint32)-1) {
             Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
@@ -416,6 +420,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
             return NULL;
         }
     }
+    
+    Output("Built virtual to physical page mapping");
 
     // Sort the pages by physical location.
     qsort(pages, totalCount, sizeof(pages[0]), physPageComp);
@@ -448,6 +454,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     // Setup linux tags.
     setup_linux_params(pg_tag->virtLoc, memPhysAddr + PHYSOFFSET_INITRD
                        , initrdSize);
+    Output("Built kernel tags area");
 
     // Setup kernel/initrd indexes
     for (uint32 i=0; i<kernelCount+initrdCount; i++) {
@@ -457,6 +464,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     }
     bm->kernelPages = &bm->imagePages[0];
     bm->initrdPages = &bm->imagePages[kernelCount];
+    Output("Built page index");
 
     // Setup preloader data.
     struct preloadData *pd = (struct preloadData *)pg_data->virtLoc;
