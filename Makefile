@@ -81,8 +81,8 @@ $(OUT)%.exe: out/%-debug
 MACHOBJS := machines.o \
   arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o \
   mach-alpine.o mach-apache.o mach-beetles.o mach-blueangel.o \
-  mach-himalya.o mach-magician.o mach-universal.o mach-h4000.o \
-  mach-h4700.o mach-sable.o mach-jornada820.o mach-wizard.o \
+  mach-himalya.o mach-magician.o mach-universal.o mach-h3900.o \
+  mach-h4000.o mach-h4700.o mach-sable.o mach-jornada820.o mach-wizard.o \
   mach-hermes.o mach-g500.o mach-artemis.o
 
 COREOBJS := $(MACHOBJS) haret-res.o \
