@@ -10,6 +10,9 @@ New features:
 
 * Possibly sort help output by command name.
 
+* Try to run "startup-<mach#>.txt" at haret startup.  This may be
+  useful for launching linux on multiple PDAs from a single SD card.
+
 
 Misc cleanups:
 
