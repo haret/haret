@@ -14,20 +14,27 @@ VERSION=pre-0.4.7-$(shell date +"%Y%m%d_%H%M")
 OUT=out/
 
 # Default compiler flags (note -march=armv4 is needed for 16 bit insns)
-CXXFLAGS = -MD -Wall -MD -O -march=armv4 -g -Iinclude
+CXXFLAGS = -Wall -O -g -MD -march=armv4 -Iinclude
 LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
 
 LIBS = -lwinsock
 
-vpath %.cpp src src/wince src/mach
-vpath %.S src src/wince
-vpath %.rc src/wince
+all: $(OUT) $(OUT)haret.exe
+
+# Run with "make V=1" to see the actual compile commands
+ifdef V
+Q=
+else
+Q=@
+endif
 
 .PHONY : all FORCE
 
-all: $(OUT) $(OUT)haret.exe
+vpath %.cpp src src/wince src/mach
+vpath %.S src src/wince
+vpath %.rc src/wince
 
 ################ cegcc settings
 
@@ -41,13 +48,6 @@ STRIP = $(BASE)/bin/arm-wince-mingw32ce-strip
 
 DLLTOOL = $(BASE)/bin/arm-wince-mingw32ce-dlltool
 DLLTOOLFLAGS =
-
-# Run with "make V=1" to see the actual compile commands
-ifdef V
-Q=
-else
-Q=@
-endif
 
 $(OUT)%.o: %.cpp
 	@echo "  Compiling $<"
@@ -70,7 +70,7 @@ $(OUT)%-debug:
 	$(Q)echo 'const char *VERSION = "$(VERSION)";' > $(OUT)version.cpp
 	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.cpp $^ $(LIBS) -o $@
 
-$(OUT)%.exe: out/%-debug
+$(OUT)%.exe: $(OUT)%-debug
 	@echo "  Stripping $^ to make $@"
 	$(Q)$(STRIP) $^ -o $@
 
