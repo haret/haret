@@ -348,24 +348,23 @@ cleanupBootMem(struct bootmem *bm)
 {
     if (!bm)
         return;
-    if (bm->allocedRam)
-        free(bm->allocedRam);
+    free(bm->allocedRam);
     free(bm);
 }
 
-void *allocBufferPages(struct pagedata *pages, int pageCount) 
+void *allocBufferPages(struct pagedata *pages, int pageCount)
 {
     int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
-    void *data = calloc(bufSize, 1);
-    if (! data) {
+    void *allocdata = calloc(bufSize, 1);
+    if (! allocdata) {
         Output(C_ERROR "Failed to allocate %d pages", pageCount);
         return NULL;
     }
-    
-    Output("Allocated load buffer at %p of size %08x", data, bufSize);
+
+    Output("Allocated load buffer at %p of size %08x", allocdata, bufSize);
 
     // Find all the physical locations of the pages.
-    data = (void*)PAGE_ALIGN((uint32)data);
+    void *data = (void*)PAGE_ALIGN((uint32)allocdata);
     for (int i = 0; i < pageCount; i++) {
         struct pagedata *pd = &pages[i];
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
@@ -376,8 +375,11 @@ void *allocBufferPages(struct pagedata *pages, int pageCount)
             return NULL;
         }
     }
-    
-    return pages;
+
+    // Sort the pages by physical location.
+    qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
+
+    return allocdata;
 }
 
 // Allocate memory for a kernel (and possibly initrd), and configure a
@@ -423,18 +425,15 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         Output(C_ERROR "Failed to allocate bootmem struct");
         return NULL;
     }
-//    bm->allocedRam = data;
 
     struct pagedata pages[PAGES_PER_INDEX * MAX_INDEX + 4];
-    if (!allocBufferPages(pages, totalCount)) {
+    bm->allocedRam = allocBufferPages(pages, totalCount);
+    if (! bm->allocedRam) {
 	cleanupBootMem(bm);
 	return NULL;
     }
-    
-    Output("Built virtual to physical page mapping");
 
-    // Sort the pages by physical location.
-    qsort(pages, totalCount, sizeof(pages[0]), physPageComp);
+    Output("Built virtual to physical page mapping");
 
     struct pagedata *pg_tag = &pages[0];
     struct pagedata *pgs_kernel = &pages[1];
