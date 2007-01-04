@@ -1,5 +1,6 @@
 #include <windows.h> // SystemParametersInfo
 
+#include "script.h" // REG_VAR_ROFUNC
 #include "output.h" // Output
 #include "machines.h"
 
@@ -53,6 +54,25 @@ Machine::detect()
 }
 
 static Machine RefMachine;
+
+
+/****************************************************************
+ * Misc. commands
+ ****************************************************************/
+
+static uint32
+cpuGetFamily(bool setval, uint32 *args, uint32 val)
+{
+    return (uint32)Mach->name;
+}
+REG_VAR_ROFUNC(0, "MACHNAME", cpuGetFamily, 0, "Autodetected machine name")
+
+static uint32
+machmtype(bool setval, uint32 *args, uint32 val)
+{
+    return Mach->machType;
+}
+REG_VAR_ROFUNC(0, "MACHMTYPE", machmtype, 0, "Autodetected machine mtype")
 
 
 /****************************************************************

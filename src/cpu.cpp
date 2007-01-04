@@ -118,13 +118,6 @@ printWelcome()
 
 REG_VAR_ROFUNC(0, "PSR", cpuGetPSR, 0, "Program Status Register")
 
-static uint32
-cpuGetFamily(bool setval, uint32 *args, uint32 val)
-{
-  return (uint32)Mach->name;
-}
-REG_VAR_ROFUNC(0, "CPU", cpuGetFamily, 0, "Autodetected CPU family")
-
 DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 
 // Returns the address of 1st level descriptor table
