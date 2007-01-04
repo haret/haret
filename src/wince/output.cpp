@@ -69,7 +69,7 @@ void Status (const wchar_t *format, ...)
     SetWindowText (sb, buffer);
 }
 
-void
+static void
 Complain(const char *msg, int len, int code)
 {
     unsigned severity = MB_ICONEXCLAMATION;
@@ -283,8 +283,9 @@ setupHaret()
         fclose(logfd);
         openLogFile("haretlog.txt");
     }
-    
+
     outTls = TlsAlloc();
+    TlsSetValue(outTls, 0);
 
     Output("\n===== HaRET %s =====", VERSION);
 
