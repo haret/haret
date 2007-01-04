@@ -7,7 +7,7 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
-
+#include <windows.h> // Sleep
 #include <stdio.h> // FILE, fopen, fseek, ftell
 #include <ctype.h> // toupper
 

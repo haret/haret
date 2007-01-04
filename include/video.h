@@ -8,8 +8,6 @@
 #ifndef _VIDEO_H
 #define _VIDEO_H
 
-#include <windows.h>
-
 // This class can be used to load a bitmap from a resource and display it
 class videoBitmap
 {
