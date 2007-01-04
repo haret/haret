@@ -246,6 +246,13 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
         *v = (uint32)-(int32)*v;
         break;
 
+      case '!':
+        (*s)++;
+        if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
+          return false;
+        *v = !*v;
+        break;
+
       case '~':
         (*s)++;
         if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
@@ -765,3 +772,18 @@ REG_CMD(0, "R|UNSCRIPT", cmd_runscript,
         "RUNSCRIPT <filename> [<ignoreNotFound>]\n"
         "  Run the commands located in the specified file.\n"
         "  Set <ignoreNotFound> to 1 to suppress a file not found error.")
+
+static void
+cmd_test(const char *cmd, const char *args)
+{
+    uint32 val;
+    if (!get_expression(&args, &val)) {
+        Output(C_ERROR "line %d: expected <expr>", ScriptLine);
+        return;
+    }
+    if (val)
+        scrInterpret(args, ScriptLine);
+}
+REG_CMD(0, "IF", cmd_test,
+        "IF <expr> <command>\n"
+        "  Run <command> iff <expr> is non-zero.")

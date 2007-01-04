@@ -1,3 +1,10 @@
+<next version> <kevin@koconnor.net>
+
+  * Implement new command: IF
+
+  * Implement new variable MACHMTYPE (contains the auto detected
+    mtype).
+
 20070103 0.4.6 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * New commands: RUNSCRIPT, BG, REDIR
@@ -13,10 +20,10 @@
   * Add mechanism to check for DMA corruption during kernel load by
     CRCing the kernel before and after the preloader relocates it.  To
     enable, send the command "set kernelcrc 1" before booting.
-    
+
   * Check that boot FB feedback wouldn't overwrite kernel/initrd
     memory. Disable it if does. This fixes booting on h3900, h4000, etc.
-    
+
   * Added detection of h3900, h2200.
 
 20061205 0.4.5 <kevin@koconnor.net>
