@@ -22,6 +22,7 @@
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
 #include "linboot.h"
+#include "resource.h"
 
 // Kernel file name
 static char *bootKernel = "zimage";
@@ -686,7 +687,7 @@ loadDiskKernel()
     if (!bm)
         goto abort;
 
-    InitProgress(kernelSize + initrdSize);
+    InitProgress(DLG_PROGRESS_BOOT, kernelSize + initrdSize);
 
     // Load kernel
     ret = file_read(kernelFile, bm->kernelPages, kernelSize);
@@ -866,7 +867,7 @@ bootRamLinux(const char *kernel, uint32 kernelSize
         return;
 
     // Copy kernel / initrd.
-    InitProgress(kernelSize + initrdSize);
+    InitProgress(DLG_PROGRESS_BOOT, kernelSize + initrdSize);
     copy_pages(bm->kernelPages, kernel, kernelSize);
     copy_pages(bm->initrdPages, initrd, initrdSize);
     DoneProgress();

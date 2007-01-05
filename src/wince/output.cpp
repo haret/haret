@@ -316,9 +316,12 @@ setupHaret()
  * Progress bar functions
  ****************************************************************/
 
-static HWND pb;
+static struct ProgressFeedback {
+    HWND pb;
+    int dialogId;
+    HCURSOR oldCursor;
+} progressFeedback;
 #ifdef USE_WAIT_CURSOR
-static HCURSOR OldCursor;
 #endif
 
 static BOOL CALLBACK pbDialogFunc (HWND hWnd, UINT message, WPARAM wParam,
@@ -344,28 +347,29 @@ static BOOL CALLBACK pbDialogFunc (HWND hWnd, UINT message, WPARAM wParam,
 
 static uint LastProgress;
 
-bool InitProgress (uint Max)
+bool InitProgress(int dialogId, uint Max)
 {
 #ifdef USE_WAIT_CURSOR
-  OldCursor = (HCURSOR)-1;
+  progressFeedback.oldCursor = (HCURSOR)-1;
 #endif
 
-  pb = CreateDialog (hInst, MAKEINTRESOURCE (DLG_PROGRESS), MainWindow,
+  progressFeedback.dialogId = dialogId;
+  progressFeedback.pb = CreateDialog(hInst, MAKEINTRESOURCE(dialogId), MainWindow,
                      pbDialogFunc);
-  if (!pb)
+  if (!progressFeedback.pb)
     return false;
 
-  HWND slider = GetDlgItem (pb, ID_PROGRESSBAR);
+  HWND slider = GetDlgItem(progressFeedback.pb, dialogId + 1);
   if (!slider)
   {
     DoneProgress ();
-    pb = NULL;
+    progressFeedback.pb = NULL;
     return false;
   }
 
 #ifdef USE_WAIT_CURSOR
   ShowCursor (TRUE);
-  OldCursor = GetCursor ();
+  progressFeedback.oldCursor = GetCursor();
   SetCursor (LoadCursor (NULL, IDC_WAIT));
 #endif
 
@@ -377,10 +381,10 @@ bool InitProgress (uint Max)
 
 bool SetProgress (uint Value)
 {
-  if (!pb)
+  if (!progressFeedback.pb)
     return false;
 
-  HWND slider = GetDlgItem (pb, ID_PROGRESSBAR);
+  HWND slider = GetDlgItem(progressFeedback.pb, progressFeedback.dialogId + 1);
   if (!slider)
     return false;
 
@@ -396,17 +400,17 @@ bool AddProgress(int add)
 
 void DoneProgress ()
 {
-  if (pb)
+  if (progressFeedback.pb)
   {
-    DestroyWindow (pb);
-    pb = NULL;
+    DestroyWindow(progressFeedback.pb);
+    progressFeedback.pb = NULL;
   }
 
 #ifdef USE_WAIT_CURSOR
-  if (OldCursor != (HCURSOR)-1)
+  if (progressFeedback.oldCursor != (HCURSOR)-1)
   {
-    SetCursor (OldCursor);
-    OldCursor = (HCURSOR)-1;
+    SetCursor(progressFeedback.oldCursor);
+    progressFeedback.oldCursor = (HCURSOR)-1;
   }
 #endif
 }

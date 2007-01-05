@@ -15,6 +15,7 @@
 #include "memory.h"
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
+#include "resource.h"
 
 // RAM start physical address
 uint32 memPhysAddr = 0xa0000000;
@@ -872,7 +873,7 @@ bool memDumpMMU(uint32 *args)
   uint mb;
 
   // Walk down the 1st level descriptor table
-  InitProgress (0x1000);
+  InitProgress(DLG_PROGRESS, 0x1000);
   try
   {
     for (mb = 0; mb < 0x1000; mb++)

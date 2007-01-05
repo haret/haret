@@ -26,7 +26,7 @@
 #define ID_HELP_ABOUT		4
 
 #define	DLG_PROGRESS		10
-#define	ID_PROGRESSBAR		11
+#define	DLG_PROGRESS_BOOT	12
 
 #define	DLG_HaRET		20
 #define	BT_LISTEN		21

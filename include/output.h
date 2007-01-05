@@ -40,10 +40,10 @@ void closeLogFile();
 // Flush log file writes to disk.
 void flushLogFile();
 
-extern bool InitProgress (uint Max);
-extern bool SetProgress (uint Value);
+extern bool InitProgress(int dialogId, uint Max);
+extern bool SetProgress(uint Value);
 extern bool AddProgress(int add);
-extern void DoneProgress ();
+extern void DoneProgress();
 
 // Class used to direct output to listeners.
 class outputfn {
