@@ -8,7 +8,7 @@ DEF_GETCPR(get_p15r0, 15, 0, c0, c0, 0)
 
 MachinePXA27x::MachinePXA27x()
 {
-    name = "Generic PXA27x";
+    name = "Generic Intel PXA27x";
     dcsr_count = 32;
 }
 
