@@ -3,10 +3,10 @@
 #include "memory.h" // memPhysSize
 //#include "asic3.h"
 
-class MachH4700 : public MachinePXA27x {
+class MachHX4700 : public MachinePXA27x {
 public:
-    MachH4700() {
-        name = "H4700";
+    MachHX4700() {
+        name = "HX4700";
         OEMInfo[0] = L"hp iPAQ hx47";
         machType = MACH_TYPE_H4700;
     }
@@ -20,4 +20,4 @@ public:
     }
 };
 
-REGMACHINE(MachH4700)
+REGMACHINE(MachHX4700)
