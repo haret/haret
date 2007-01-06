@@ -40,7 +40,7 @@ static BOOL CALLBACK DialogFunc (HWND hWnd, UINT message, WPARAM wParam,
       Output("In initdialog");
       MainWindow = hWnd;
 
-      wchar_t title [30];
+      wchar_t title[200];
       _snwprintf(title, ARRAY_SIZE(title), L"HaRET Version %hs", VERSION);
       SetWindowText (hWnd, title);
       SetWindowText (GetDlgItem (hWnd, ID_SCRIPTNAME), L"default.txt");
