@@ -52,24 +52,27 @@ bool cpuSetCP (uint cp, uint regno, uint32 val)
   return rc;
 }
 
-static bool
-cpuDumpCP(uint32 *args)
+static void
+cpuDumpCP(const char *tok, const char *args)
 {
-  uint cp = args [0];
+    uint32 cp;
+    if (!get_expression(&args, &cp)) {
+        Output(C_ERROR "line %d: Expected <cp>", ScriptLine);
+        return;
+    }
 
-  if (cp > 15)
-  {
-    Output(C_ERROR "Coprocessor number is a number in range 0..15");
-    return false;
-  }
+    if (cp > 15) {
+        Output(C_ERROR "Coprocessor number is a number in range 0..15");
+        return;
+    }
 
-  for (int i = 0; i < 8; i++)
-    Output("c%02d: %08x | c%02d: %08x",
-         i, cpuGetCP (cp, i), i + 8, cpuGetCP (cp, i + 8));
-  return true;
+    for (int i = 0; i < 8; i++)
+        Output("c%02d: %08x | c%02d: %08x",
+               i, cpuGetCP (cp, i), i + 8, cpuGetCP (cp, i + 8));
 }
-REG_DUMP(0, "CP", cpuDumpCP, 1,
-         "Value of 16 coprocessor registers (arg = coproc number)")
+REG_DUMP(0, "CP", cpuDumpCP,
+         "CP <cp>\n"
+         "  Show the value of 16 coprocessor registers (arg = coproc number)")
 
 static uint32 cpuScrCP (bool setval, uint32 *args, uint32 val)
 {

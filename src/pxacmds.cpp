@@ -12,22 +12,26 @@
 #include "cpu.h" // take_control
 #include "arch-pxa.h" // testPXA
 
-static bool
-cpuDumpAC97(uint32 *args)
+static void
+cpuDumpAC97(const char *tok, const char *args)
 {
-  uint unit = args [0];
+    uint32 unit;
+    if (!get_expression(&args, &unit)) {
+        Output(C_ERROR "line %d: Expected <id>", ScriptLine);
+        return;
+    }
 
   if (unit > 3)
   {
     Output(C_ERROR "AC97 unit number must be between 0 or 3");
-    return false;
+    return;
   }
 
   pxaAC97 volatile *ac97 = (pxaAC97 *)memPhysMap (AC97_BASE);
   if (!ac97)
   {
     Output(C_ERROR "Cannot map AC97 controller's physical memory");
-    return false;
+    return;
   }
 
   uint16 regs [64];
@@ -110,7 +114,7 @@ cpuDumpAC97(uint32 *args)
     Output("r%02x: %04x | r%02x: %04x | r%02x: %04x | r%02x: %04x",
           i       * 2, regs [i     ], (i + 16) * 2, regs [i + 16],
          (i + 32) * 2, regs [i + 32], (i + 48) * 2, regs [i + 48]);
-  return true;
 }
-REG_DUMP(testPXA, "AC97", cpuDumpAC97, 1,
-         "PXA AC97 ctrl (64x16-bit regs) (arg = ctrl number, 0..3).")
+REG_DUMP(testPXA, "AC97", cpuDumpAC97,
+         "AC97(id)\n"
+         "  Dump AC97 registers (id = ctrl number, 0..3).")

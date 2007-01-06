@@ -35,6 +35,10 @@ static const int MAX_CMDLEN = 200;
 #define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)                        \
     __REG_CMD(Func ##Alt, Pred, 0, Name, Desc, cmdFunc, {0}, 0, Func)
 
+// Registration of script dump commands
+#define REG_DUMP(Pred, Name, Func, Desc)      \
+    __REG_CMD(Func, Pred, 0, Name, Desc, cmdDump, {0}, 0, Func)
+
 // Registration of variables
 #define REG_VAR_STR(Pred, Name, Var, Desc)                      \
     __REG_CMD(Var, Pred, 0, Name, Desc, varString, { (uint32*)&Var } )
@@ -53,10 +57,6 @@ static const int MAX_CMDLEN = 200;
 
 #define REG_VAR_RWFUNC(Pred, Name, Func, ArgCount, Desc)                \
     __REG_CMD(Func, Pred, 0, Name, Desc, varRWFunc, { (uint32*)&Func }, ArgCount)
-
-// Registration of script dump commands
-#define REG_DUMP(Pred, Name, Func, ArgCount, Desc)      \
-    __REG_CMD(Func, Pred, 0, Name, Desc, cmdDump, {0}, 0, 0, ArgCount, Func)
 
 
 /****************************************************************
@@ -114,14 +114,6 @@ struct haret_cmd_s {
    * Fields for normal commands
    */
   void (*func)(const char *cmd, const char *args);
-
-  /*
-   * Fields for dump commands
-   */
-  // Number of arguments
-  int nargs;
-  // The function that does the dump
-  bool (*dump)(uint32 *args);
 };
 
 void setupCommands();

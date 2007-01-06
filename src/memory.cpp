@@ -847,7 +847,8 @@ DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 DEF_GETCPR(get_p15r3, p15, 0, c3, c0, 0)
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
-bool memDumpMMU(uint32 *args)
+static void
+memDumpMMU(const char *tok, const char *args)
 {
   Output("----- Virtual address map -----");
   Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
@@ -964,10 +965,10 @@ bool memDumpMMU(uint32 *args)
 
   Output(" ffffffff |          |             | End of virtual address space");
   DoneProgress ();
-  return true;
 }
-REG_DUMP(0, "MMU", memDumpMMU, 0,
-         "Virtual memory map (4Gb address space).")
+REG_DUMP(0, "MMU", memDumpMMU,
+         "MMU\n"
+         "  Show virtual memory map (4Gb address space).")
 
 static uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
 {

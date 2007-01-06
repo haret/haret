@@ -267,7 +267,8 @@ REG_VAR_RWFUNC(testPXA, "GAFR", gpioScrGAFR, 1
                , "General Purpose I/O Alternate Function Select Register")
 
 // Dump the overall GPIO state
-static bool gpioDump(uint32 *args)
+static void
+gpioDump(const char *tok, const char *args)
 {
   const uint rows = 84/4;
   uint32 *grer = (uint32 *)memPhysMap (GRER0);
@@ -286,16 +287,17 @@ static bool gpioDump(uint32 *args)
       Output("%3d   %c %d %d %s%s%s", gpio, gpioGetDir (gpio) ? 'O' : 'I',
            gpioGetState (gpio), gpioGetAlt (gpio),
            re ? "RE " : "   ", fe ? "FE" : "  ",
-           j < 3 ? " | " : "");
+           j < 3 ? " | \t" : "");
     }
   }
-  return true;
 }
-REG_DUMP(testPXA, "GPIO", gpioDump, 0,
-         "GPIO machinery state in a human-readable format.")
+REG_DUMP(testPXA, "GPIO", gpioDump,
+         "GPIO\n"
+         "  Show GPIO machinery state in a human-readable format.")
 
 // Dump GPIO state in a linux-specific format
-static bool gpioDumpState(uint32 *args)
+static void
+gpioDumpState(const char *tok, const char *args)
 {
   int i;
   Output("/* GPIO pin direction setup */");
@@ -314,7 +316,7 @@ static bool gpioDumpState(uint32 *args)
   for (i = 0; i < 81; i++)
     Output("#define GPIO%02d_Sleep_Level\t%d",
          i, gpioGetSleepState (i));
-  return true;
 }
-REG_DUMP(testPXA, "GPIOST", gpioDumpState, 0,
-         "GPIO state suitable for include/asm/arch/xxx-init.h")
+REG_DUMP(testPXA, "GPIOST", gpioDumpState,
+         "GPIOST\n"
+         "  Show GPIO state suitable for include/asm/arch/xxx-init.h")

@@ -429,7 +429,7 @@ bool scrInterpret (const char *str, uint lineno)
         return true;
 
     char tok[MAX_CMDLEN];
-    get_token(&x, tok, sizeof(tok));
+    get_token(&x, tok, sizeof(tok), 1);
 
     // Okay, now see what keyword is this :)
     for (int i = 0; i < commands_count; i++) {
@@ -473,10 +473,10 @@ public:
 };
 
 static void
-cmd_dump(const char *cmd, const char *x)
+cmd_dump(const char *cmd, const char *args)
 {
     char vn[MAX_CMDLEN];
-    if (get_token(&x, vn, sizeof(vn))) {
+    if (get_token(&args, vn, sizeof(vn), 1)) {
         Output("line %d: Dumper name expected", ScriptLine);
         return;
     }
@@ -495,25 +495,12 @@ cmd_dump(const char *cmd, const char *x)
         return;
     }
 
-    uint32 args[50];
-    if (!get_args(&x, hwd->name, args, hwd->nargs))
-        return;
-
-    if (get_token(&x, vn, sizeof(vn))) {
-        hwd->dump(args);
-    } else {
-        fileredir redir;
-        int ret = redir.init(vn);
-        if (ret)
-            return;
-        hwd->dump(args);
-        redir.done();
-    }
+    hwd->func(vn, args);
 }
 REG_CMD(0, "D|UMP", cmd_dump,
-        "DUMP <hardware>[(args...)] [filename]\n"
-        "  Dump the state of given hardware to given file (or to connection if\n"
-        "  no filename specified). Use HELP DUMP to see available dumpers.")
+        "DUMP <hardware>[(args...)]\n"
+        "  Dump the state of given hardware.\n"
+        "  Use HELP DUMP to see available dumpers.")
 
 static void
 redir(const char *args)
@@ -691,16 +678,10 @@ cmd_help(const char *cmd, const char *x)
     }
     else if (!strcasecmp (vn, "DUMP"))
     {
-        char args [10];
         for (int i = 0; i < commands_count; i++) {
-            haret_cmd_s *hd = &commands_start[i];
-            if (!hd->isAvail || hd->type != cmdDump)
-                continue;
-            if (hd->nargs)
-                sprintf (args, "(%d)", hd->nargs);
-            else
-                args [0] = 0;
-            Output("%s%s\t%s", hd->name, args, hd->desc);
+            haret_cmd_s *hc = &commands_start[i];
+            if (hc->isAvail && hc->type == cmdDump && hc->desc)
+                Output("%s", hc->desc);
         }
     }
     else if (!vn[0])

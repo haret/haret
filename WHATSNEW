@@ -1,5 +1,9 @@
 <next version> <kevin@koconnor.net>
 
+  * DUMP no longer takes a filename parameter.  Use the REDIR command
+    instead.  (For example, "DUMP GPIO out.txt" is now "REDIR out.txt
+    DUMP GPIO".)
+
   * Implement new command: IF
 
   * Implement new variable MACHMTYPE (contains the auto detected

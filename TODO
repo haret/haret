@@ -37,9 +37,9 @@ Misc cleanups:
     areas from a memPhysMap reference, and this may not be true on all
     machines.
 
-* Remove "dump" based commands and re-implement them as regular
-  commands.  It isn't clear why "dump mmu" isn't implemented as
-  "mmudump".
+* Possibly remove "dump" based commands and re-implement them as
+  regular commands.  It isn't clear why "dump mmu" isn't implemented
+  as "mmudump".
 
 * Port s3c24xx based code into standard machine detection hierarchy.
 
