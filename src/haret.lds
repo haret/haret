@@ -19,8 +19,10 @@ SECTIONS
     *(.text.preload)
     preload_end = .;
 
-    /* Make sure the trampline is aligned to the start of a page. */
-    . = ALIGN(4096);
+    /* Make sure the trampline is on one page (if it would span to a
+     * second page, align it to the start of a page). */
+    . = ((. + mmu_trampoline_end - mmu_trampoline) > ALIGN(4096))
+         ? ALIGN(4096) : .;
     *(.text.trampoline)
   }
   .rdata : {
