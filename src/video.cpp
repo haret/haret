@@ -46,7 +46,10 @@ uint16 *vidGetVirtVRAM()
 // This is the way to find the framebuffer information not involving GAPI.
 uint32 vidGetVRAM()
 {
-    return memVirtToPhys((uint32)vidGetVirtVRAM());
+    uint32 res = memVirtToPhys((uint32)vidGetVirtVRAM());
+    if (res == (uint32)-1)
+        return 0;
+    return res;
 }
 REG_VAR_ROFUNC(0, "VRAM", vidGetVRAM, 0, "Video Memory physical address")
 
