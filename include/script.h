@@ -21,7 +21,7 @@ int get_token(const char **s, char *storage, int storesize, int for_expr=0);
 // The current line of the script being parsed
 extern uint ScriptLine;
 // Maximum command line supported
-static const int MAX_CMDLEN = 200;
+static const int MAX_CMDLEN = 512;
 
 
 /****************************************************************
