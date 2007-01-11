@@ -353,7 +353,8 @@ cleanupBootMem(struct bootmem *bm)
     free(bm);
 }
 
-void *allocBufferPages(struct pagedata *pages, int pageCount)
+static void *
+allocBufferPages(struct pagedata *pages, int pageCount)
 {
     int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
     void *allocdata = calloc(bufSize, 1);
@@ -373,6 +374,7 @@ void *allocBufferPages(struct pagedata *pages, int pageCount)
         pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
         if (pd->physLoc == (uint32)-1) {
             Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
+            free(allocdata);
             return NULL;
         }
     }
