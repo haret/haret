@@ -7,7 +7,7 @@ public:
     MachAximX50() {
         name = "AximX50/51";
         OEMInfo[0] = L"Dell Axim X50";
-        OEMInfo[0] = L"Dell Axim X51";
+        OEMInfo[1] = L"Dell Axim X51";
         machType = MACH_TYPE_X50;
     }
     void init() {
