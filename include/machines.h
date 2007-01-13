@@ -33,7 +33,6 @@ public:
     const wchar_t *OEMInfo[16];
     const wchar_t *PlatformType;
     int machType;
-    int fbDuringBoot;
 
     virtual void init();
     virtual int preHardwareShutdown();

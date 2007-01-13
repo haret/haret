@@ -32,12 +32,16 @@ static char *bootInitrd = "initrd";
 static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
 // ARM machine type (see linux/arch/arm/tools/mach-types)
 static uint32 bootMachineType = 0;
+// Enable framebuffer writes during bootup.
+static uint32 FBDuringBoot = 1;
 
 REG_VAR_STR(0, "KERNEL", bootKernel, "Linux kernel file name")
 REG_VAR_STR(0, "INITRD", bootInitrd, "Initial Ram Disk file name")
 REG_VAR_STR(0, "CMDLINE", bootCmdline, "Kernel command line")
 REG_VAR_INT(0, "MTYPE", bootMachineType
             , "ARM machine type (see linux/arch/arm/tools/mach-types)")
+REG_VAR_INT(0, "FBDURINGBOOT", FBDuringBoot
+            , "Enable/disable writing status lines to screen during boot")
 
 // Color codes useful when writing to framebuffer.
 enum {
@@ -407,7 +411,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     }
     Output("boot params: RAMADDR=%08x RAMSIZE=%08x MTYPE=%d CMDLINE='%s'"
            , memPhysAddr, memPhysSize, machType, bootCmdline);
-    Output("Boot FB feedback: %d", Mach->fbDuringBoot);
+    Output("Boot FB feedback: %d", FBDuringBoot);
 
     // Allocate ram for kernel/initrd
     uint32 kernelCount = PAGE_ALIGN(kernelSize) / PAGE_SIZE;
@@ -490,7 +494,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     pd->videoRam = 0;
     bm->pd = pd;
 
-    if (Mach->fbDuringBoot) {
+    if (FBDuringBoot) {
         pd->videoRam = vidGetVRAM();
 	unsigned int endKernelStuff = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
         if (pd->videoRam >= pd->startRam && pd->videoRam < endKernelStuff) {
@@ -579,7 +583,7 @@ launchKernel(uint32 physExec)
 
     // Lookup framebuffer address (if in use).
     uint32 vidRam = 0;
-    if (Mach->fbDuringBoot) {
+    if (FBDuringBoot) {
         vidRam = (uint32)vidGetVirtVRAM();
         Output("Video buffer at virt=%08x", vidRam);
     }

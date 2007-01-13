@@ -93,8 +93,6 @@ Possible features for "wi":
 
 Possible features for Linux booting:
 
-* Make fbDuringBoot a script variable instead of a machine variable.
-
 * Verify linux booting from resume code.
 
 * Possibly add fonts to write to framebuffer during linux boot.

@@ -14,7 +14,7 @@ class Machine *Mach;
 
 Machine::Machine()
     : name("Default"), PlatformType(L"PocketPC")
-    , machType(0), fbDuringBoot(1)
+    , machType(0)
 {
     memset(OEMInfo, 0, sizeof(OEMInfo));
 }
