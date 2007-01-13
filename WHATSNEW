@@ -1,5 +1,7 @@
 <next version> <kevin@koconnor.net>
 
+  * Add new machines: rx3715, Axim X50
+
   * New variable: FBDURINGBOOT
 
   * DUMP no longer takes a filename parameter.  Use the REDIR command
