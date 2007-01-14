@@ -5,7 +5,7 @@
 class MachRX3000 : public MachineS3 {
 public:
     MachRX3000() {
-        name = "RX3xxx";
+        name = "RX3000";
         OEMInfo[0] = L"HP iPAQ rx3";
         machType = MACH_TYPE_RX3715;
     }
