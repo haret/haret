@@ -94,6 +94,7 @@ MACHOBJS := machines.o \
   mach-h3900.o \
   mach-h4000.o \
   mach-h5000.o \
+  mach-hx2000.o \
   mach-hx4700.o \
   mach-sable.o \
   mach-jornada820.o \
