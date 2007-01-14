@@ -6,7 +6,7 @@ class MachHX2000 : public MachinePXA27x {
 public:
     MachHX2000() {
         name = "HX2000";
-        OEMInfo[0] = L"hp iPAQ hx2";
+        OEMInfo[0] = L"HP iPAQ hx2";
         machType = MACH_TYPE_HX2750;
     }
     void init() {
