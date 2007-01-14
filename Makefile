@@ -88,6 +88,8 @@ MACHOBJS := machines.o \
   mach-himalya.o \
   mach-magician.o \
   mach-universal.o \
+  mach-h1910.o \
+  mach-h1940.o \
   mach-h2200.o \
   mach-h3900.o \
   mach-h4000.o \
