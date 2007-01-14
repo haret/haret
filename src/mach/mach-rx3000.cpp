@@ -2,11 +2,11 @@
 #include "mach-types.h"
 #include "memory.h" // memPhysSize
 
-class MachRX3715 : public MachineS3 {
+class MachRX3000 : public MachineS3 {
 public:
-    MachRX3715() {
-        name = "RX3715";
-        OEMInfo[0] = L"HP iPAQ rx3700";
+    MachRX3000() {
+        name = "RX3xxx";
+        OEMInfo[0] = L"HP iPAQ rx3";
         machType = MACH_TYPE_RX3715;
     }
     void init() {
@@ -20,4 +20,4 @@ public:
     }
 };
 
-REGMACHINE(MachRX3715)
+REGMACHINE(MachRX3000)

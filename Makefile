@@ -99,7 +99,7 @@ MACHOBJS := machines.o \
   mach-hermes.o \
   mach-g500.o \
   mach-artemis.o \
-  mach-rx3715.o
+  mach-rx3000.o
 
 COREOBJS := $(MACHOBJS) haret-res.o \
   script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
