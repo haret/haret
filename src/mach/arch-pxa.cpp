@@ -42,9 +42,10 @@ pxaResetDMA(volatile pxaDMA *dma, int chancount)
         dma->DCSR[i] = DCSR_NODESC | DCSR_ENDINTR | DCSR_STARTINTR | DCSR_BUSERR;
 
     // Wait for DMAs to complete
-    for (int i = 0; i < chancount; i++)
-        while ((dma->DCSR[i] & DCSR_STOPSTATE) == 0)
-            ;
+    for (int i = 0; i < chancount; i++) {
+	int timeout = 100000;
+        while ((dma->DCSR[i] & DCSR_STOPSTATE) == 0 && timeout--) ;
+    }
 }
 
 static void
