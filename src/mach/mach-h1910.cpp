@@ -5,7 +5,7 @@ class MachH1910 : public MachinePXA {
 public:
     MachH1910() {
         name = "H1910";
-        OEMInfo[0] = L"hp iPAQ h19";
+        OEMInfo[0] = L"hp iPAQ h191";
         machType = MACH_TYPE_H1900;
     }
 };
