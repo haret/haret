@@ -66,7 +66,7 @@ $(OUT)%.lib: src/wince/%.def
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
 $(OUT)%-debug:
-	@echo "  Linking $@"
+	@echo "  Linking $@ (Version \"$(VERSION)\")"
 	$(Q)echo 'const char *VERSION = "$(VERSION)";' > $(OUT)version.cpp
 	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.cpp $^ $(LIBS) -o $@
 
