@@ -54,7 +54,7 @@ cmd_kill(const char *cmd, const char *args)
 
     if (late_Process32First(hts, &pe)) {
         do {
-            if (wcsicmp(wname, pe.szExeFile) == 0) {
+            if (_wcsicmp(wname, pe.szExeFile) == 0) {
                 HANDLE hproc = OpenProcess(0, 0, pe.th32ProcessID);
                 Output("Found '%ls' with pid %08lx / handle %p"
                        , pe.szExeFile, pe.th32ProcessID, hproc);
