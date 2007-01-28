@@ -530,6 +530,16 @@ static uchar dump_char (uchar c)
     return c;
 }
 
+static bool alignMemAddr(uint32 *addrLoc)
+{
+    if (*addrLoc & 3) {
+	Output(C_ERROR "line %d: Unaligned memory address, rounding up", ScriptLine);
+	*addrLoc &= ~3;
+	return true;
+    }
+    return false;
+}
+
 // Dump a portion of memory to file
 static void
 memDump(uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
@@ -599,6 +609,8 @@ cmd_memaccess(const char *tok, const char *args)
         Output(C_ERROR "line %d: Expected <addr> <size>", ScriptLine);
         return;
     }
+
+    alignMemAddr(&addr);
 
     if (virt)
         memDump((uint8 *)addr, size);
