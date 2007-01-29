@@ -83,6 +83,7 @@ MACHOBJS := machines.o \
   mach-alpine.o \
   mach-apache.o \
   mach-aximx50.o \
+  mach-aximx5.o \
   mach-beetles.o \
   mach-blueangel.o \
   mach-himalya.o \
