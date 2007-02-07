@@ -8,6 +8,7 @@ public:
     MachHX4700() {
         name = "HX4700";
         OEMInfo[0] = L"hp iPAQ hx47";
+        OEMInfo[1] = L"HP iPAQ hx47";
         machType = MACH_TYPE_H4700;
     }
     void init() {
