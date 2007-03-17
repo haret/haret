@@ -1,7 +1,6 @@
 #include "arch-s3.h"
 #include "s3c24xx.h"
 #include "memory.h" // memPhysAddr
-#include "output.h" // Output
 
 MachineS3::MachineS3()
 {
@@ -35,19 +34,15 @@ int
 MachineS3::preHardwareShutdown()
 {
     channels = (uint32*)memPhysMap(S3C2410_PA_DMA);
-    if (! channels)
+    uhcmap = (uint32 *)memPhysMap(S3C2410_PA_USBHOST);
+    if (! channels || ! uhcmap)
         return -1;
     return 0;
-}
-
-static void s3c24xxShutdownIIS (void)
-{
 }
 
 static void
 s3c24xxShutdownDMA(volatile uint32 *channels)
 {
-#if 0
     int dma_ch;
     volatile uint32 *ch;
     uint32 dmasktrig;
@@ -72,12 +67,18 @@ s3c24xxShutdownDMA(volatile uint32 *channels)
             }
         }
     }
-#endif
+}
+
+// Reset USB host.
+static void
+ResetUHC(volatile uint32 *uhcmap)
+{
+    uhcmap[2] = 1;
 }
 
 void
 MachineS3::hardwareShutdown()
 {
-    s3c24xxShutdownIIS();
     s3c24xxShutdownDMA(channels);
+    ResetUHC(uhcmap);
 }

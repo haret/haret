@@ -9,5 +9,5 @@ public:
     int preHardwareShutdown();
     void hardwareShutdown();
 
-    uint32 *channels;
+    uint32 *channels, *uhcmap;
 };
