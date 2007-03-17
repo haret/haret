@@ -1,7 +1,7 @@
 // Definitions for Samsung s3c24xx chips.
-#include "machines.h" // Machine
+#include "arch-920t.h" // Machine920t
 
-class MachineS3 : public Machine {
+class MachineS3 : public Machine920t {
 public:
     MachineS3();
     int detect();

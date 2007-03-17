@@ -79,7 +79,7 @@ $(OUT)%.exe: $(OUT)%-debug
 # List of machines supported - note order is important - it determines
 # which machines are checked first.
 MACHOBJS := machines.o \
-  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o \
+  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-920t.o \
   mach-alpine.o \
   mach-apache.o \
   mach-aximx50.o \

@@ -39,8 +39,6 @@ static inline void Attr Name (uint32 val) {                     \
 
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
-// Flush all CPU data caches (must be in supervisor mode)
-extern "C" void cpuFlushCache ();
 // Get Program Status Register value
 static inline uint32 cpuGetPSR(void) {
     uint32 val;

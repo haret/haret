@@ -14,7 +14,7 @@
 #include "watch.h" // memcheck
 #include "output.h" // Output
 #include "memory.h" // memPhysMap
-#include "cpu.h" // cpuFlushCache
+#include "cpu.h" // DEF_GETCPRATTR
 #include "script.h" // REG_CMD
 #include "cbitmap.h" // BITMAPSIZE
 #include "machines.h" // getIrqNames
@@ -893,7 +893,7 @@ cmd_wirq(const char *cmd, const char *args)
     Output("Replacing windows exception handlers...");
     take_control();
     start_traps(data);
-    cpuFlushCache();
+    Mach->flushCache();
     *irq_loc = newIrqHandler;
     *abort_loc = newAbortHandler;
     *prefetch_loc = newPrefetchHandler;
@@ -907,7 +907,7 @@ cmd_wirq(const char *cmd, const char *args)
     Output("Restoring windows exception handlers...");
     take_control();
     stop_traps();
-    cpuFlushCache();
+    Mach->flushCache();
     *irq_loc = code->winceIrqHandler;
     *abort_loc = code->winceAbortHandler;
     *prefetch_loc = code->wincePrefetchHandler;

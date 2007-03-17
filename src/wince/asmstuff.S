@@ -37,6 +37,26 @@ cpuFlushCache:
 
 		mov	pc, lr
 
+@ Flush CPU caches on arm920 - this MUST be called between
+@ take_control()/return_control()
+@
+@ Dirties r0, r1, r2
+		.global	cpuFlushCache_arm920
+cpuFlushCache_arm920:
+		mov	r0, #0
+		mov	r1, #(8-1) << 5			@ 8 segments
+1:		orr	r2, r1,#(64-1)<<26		@ 64 entries
+2:		mcr	p15, 0, r2, c7, c14, 2	@ clean+invalidate D index
+		subs	r2, r2, #1<<26			@
+		bcs	2b				@
+		subs	r1, r1, #1<<5			@
+		bcs	1b				@
+
+		mcr	p15, 0, r0, c7, c5, 0		@ invalidate I cache
+		mcr	p15, 0, r0, c7, c10, 4		@ drain WB
+		mcr	p15, 0, r0, c8, c7, 0		@ drain I+D TLBs
+		mov	pc, r14
+
 @ Assembler stub that (when relocated) can store the location of a
 @ stack and C executable function to jump to.
         .section .text.preload
@@ -54,6 +74,7 @@ asm_handler:
 @ In:   r0 = Physical address of this function
 @       r1 = Virtual address of MMU in non-cached ram.
 @       r2 = Physical address of code to jump to
+@       r3 = cpu flush cache function
         .section .text.trampoline
         .global mmu_trampoline, mmu_trampoline_end
 mmu_trampoline:
@@ -64,7 +85,8 @@ mmu_trampoline:
         mov     r4, r0
         mov     r5, r1
         mov     r6, r2
-        bl      cpuFlushCache
+        mov     lr, pc
+        mov     pc, r3
 
         @ Turn off mapping for this code
         mov     r1, r4, lsr #20

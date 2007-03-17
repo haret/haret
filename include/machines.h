@@ -40,6 +40,7 @@ public:
     virtual int getBoardID();
     virtual const char *getIrqName(uint);
     virtual int detect();
+    void (*flushCache)(void);
 };
 
 // Register a machine class to be scanned during haret start.

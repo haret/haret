@@ -12,9 +12,14 @@ class Machine *Mach;
  * Machine base class
  ****************************************************************/
 
+// Assembler functions
+extern "C" {
+    void cpuFlushCache();
+}
+
 Machine::Machine()
     : name("Default"), PlatformType(L"PocketPC")
-    , machType(0)
+    , machType(0), flushCache(cpuFlushCache)
 {
     memset(OEMInfo, 0, sizeof(OEMInfo));
 }

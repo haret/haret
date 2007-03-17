@@ -530,7 +530,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 
 extern "C" {
     // Assembler code
-    void mmu_trampoline(uint32 phys, uint8 *mmu, uint32 code);
+    void mmu_trampoline(uint32 phys, uint8 *mmu, uint32 code, void (*)(void));
     void mmu_trampoline_end();
 }
 
@@ -608,7 +608,7 @@ launchKernel(uint32 physExec)
     drawLine(&vidRam, COLOR_MAGENTA);
 
     // Disable MMU and launch linux.
-    mmu_trampoline(physAddrTram, virtAddrMmu, physExec);
+    mmu_trampoline(physAddrTram, virtAddrMmu, physExec, Mach->flushCache);
 
     // The above should not ever return, but we attempt recovery here.
     return_control();
@@ -752,7 +752,7 @@ resumeIntoBoot(uint32 physExec)
 
     // Overwrite the resume vector.
     take_control();
-    cpuFlushCache();
+    Mach->flushCache();
     resume[0] = 0xe51ff004; // ldr pc, [pc, #-4]
     resume[1] = physExec;
     return_control();
@@ -764,7 +764,7 @@ resumeIntoBoot(uint32 physExec)
     // Cleanup (if boot failed somehow).
     Output("Timeout. Restoring original resume vector");
     take_control();
-    cpuFlushCache();
+    Mach->flushCache();
     resume[0] = old1;
     resume[1] = old2;
     return_control();
