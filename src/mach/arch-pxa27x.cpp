@@ -35,7 +35,7 @@ MachinePXA27x::preHardwareShutdown()
 }
 
 // disable USB host.
-void
+static void
 Reset27xUHC(volatile uint32 *uhccoms)
 {
     // Reset usb host
