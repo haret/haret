@@ -15,7 +15,9 @@ Magician,   PXA27x  ,PM10,                        MAGICIAN
 H1910,      PXA     ,hp iPAQ h191,                H1900
 H1940,      S3      ,HP iPAQ h193;HP iPAQ h194,   H1940,    64*1024*1024
 H2200,      PXA     ,hp iPAQ h22,                 H2200
-H3870,              ,Compaq iPAQ H3800
+H3600b,     SA      ,Compaq iPAQ H3600
+H3700,      SA      ,Compaq iPAQ H3700
+H3870,      SA      ,Compaq iPAQ H3800
 H3900,      PXA     ,Compaq iPAQ H39,             H3900
 H4000,      PXA     ,hp iPAQ h41;hp iPAQ h43,     H4000
 H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
@@ -28,10 +30,16 @@ G500,       S3      ,G50V,                        G500,     64*1024*1024
 Artemis,    OMAP    ,ARTE
 RX3000,     S3      ,HP iPAQ rx3,                 RX3715,   64*1024*1024
 Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   64*1024*1024
+e310,       SA      ,Toshiba e310
 e740,       PXA     ,TOSHIBA e740
 Acer_n30,           ,Acer n30 Handheld,           N30
 
 PLATFORM=Jupiter
-Jornada820, SA      ,"HP, Jornada 820",             JORNADA820
+Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
 
-#Compaq iPAQ H3700
+PLATFORM=Palm PC2
+H3100,      SA      ,Compaq iPAQ H3100
+H3600a,     SA      ,Compaq iPAQ H3600
+
+PLATFORM=SmartPhone
+Tornado,    OMAP    ,Vodafone v1240,              OMAP_TORNADO
