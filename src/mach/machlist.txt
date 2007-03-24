@@ -1,0 +1,29 @@
+# This file allows one to auto generate a list of "machine" detection
+# classes to be built into HaRET.
+
+# The order of lines is important - it determines the order in which
+# each machine will be checked.
+
+# classname, archtype, oeminfos, machtype, memsize
+Alpine,     PXA27x  ,PH10C;PH10D,                 HTCALPINE
+Apache,     PXA27x  ,PA10,                        HTCAPACHE,64*1024*1024
+AximX5,     PXA     ,Dell Axim X5,                AXIM
+Beetles,    PXA27x  ,hp iPAQ hw65,                HTCBEETLES
+Blueangel,  PXA     ,PH20,                        BLUEANGEL,128*1024*1024
+Himalaya,   PXA     ,PH10A;PH10B,                 HIMALAYA
+Magician,   PXA27x  ,PM10,                        MAGICIAN
+H1910,      PXA     ,hp iPAQ h191,                H1900
+H1940,      S3      ,HP iPAQ h193;HP iPAQ h194,   H1940,    64*1024*1024
+H2200,      PXA     ,hp iPAQ h22,                 H2200
+H3900,      PXA     ,Compaq iPAQ H39,             H3900
+H4000,      PXA     ,hp iPAQ h41;hp iPAQ h43,     H4000
+H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
+HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   64*1024*1024
+HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    64*1024*1024
+Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   64*1024*1024
+Wizard,     OMAP    ,WIZA100;WIZA200
+Hermes,     S3      ,HERM100;HERM200;HERM300,     HTCHERMES
+G500,       S3      ,G50V,                        G500,     64*1024*1024
+Artemis,    OMAP    ,ARTE
+RX3000,     S3      ,HP iPAQ rx3,                 RX3715,   64*1024*1024
+Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   64*1024*1024

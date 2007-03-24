@@ -49,13 +49,13 @@ STRIP = $(BASE)/bin/arm-wince-mingw32ce-strip
 DLLTOOL = $(BASE)/bin/arm-wince-mingw32ce-dlltool
 DLLTOOLFLAGS =
 
-$(OUT)%.o: %.cpp
-	@echo "  Compiling $<"
-	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+define compile
+@echo "  Compiling $1"
+$(Q)$(CXX) $(CXXFLAGS) -c $1 -o $2
+endef
 
-$(OUT)%.o: %.S
-	@echo "  Assembling $<"
-	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OUT)%.o: %.cpp ; $(call compile,$<,$@)
+$(OUT)%.o: %.S ; $(call compile,$<,$@)
 
 $(OUT)%.o: %.rc
 	@echo "  Building resource file from $<"
@@ -66,9 +66,10 @@ $(OUT)%.lib: src/wince/%.def
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
 $(OUT)%-debug:
-	@echo "  Linking $@ (Version \"$(VERSION)\")"
 	$(Q)echo 'const char *VERSION = "$(VERSION)";' > $(OUT)version.cpp
-	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.cpp $^ $(LIBS) -o $@
+	$(call compile,$(OUT)version.cpp,$(OUT)version.o)
+	@echo "  Linking $@ (Version \"$(VERSION)\")"
+	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.o $^ $(LIBS) -o $@
 
 $(OUT)%.exe: $(OUT)%-debug
 	@echo "  Stripping $^ to make $@"
@@ -79,32 +80,14 @@ $(OUT)%.exe: $(OUT)%-debug
 # List of machines supported - note order is important - it determines
 # which machines are checked first.
 MACHOBJS := machines.o \
-  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-920t.o \
-  mach-alpine.o \
-  mach-apache.o \
-  mach-aximx50.o \
-  mach-aximx5.o \
-  mach-beetles.o \
-  mach-blueangel.o \
-  mach-himalya.o \
-  mach-magician.o \
-  mach-universal.o \
-  mach-h1910.o \
-  mach-h1940.o \
-  mach-h2200.o \
-  mach-h3900.o \
-  mach-h4000.o \
-  mach-h5000.o \
-  mach-hx2000.o \
-  mach-hx4700.o \
-  mach-sable.o \
-  mach-jornada820.o \
-  mach-wizard.o \
-  mach-hermes.o \
-  mach-g500.o \
-  mach-artemis.o \
-  mach-rx3000.o \
-  mach-t700wx.o
+  mach-aximx50.o mach-universal.o mach-jornada820.o \
+  mach-autogen.o \
+  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-920t.o
+
+$(OUT)mach-autogen.o: src/mach/machlist.txt
+	@echo "  Building machine list"
+	$(Q)tools/buildmachs.py < $^ > $(OUT)mach-autogen.cpp
+	$(call compile,$(OUT)mach-autogen.cpp,$@)
 
 COREOBJS := $(MACHOBJS) haret-res.o \
   script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
