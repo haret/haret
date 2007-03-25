@@ -90,7 +90,8 @@ $(OUT)mach-autogen.o: src/mach/machlist.txt
 	$(call compile,$(OUT)mach-autogen.cpp,$@)
 
 COREOBJS := $(MACHOBJS) haret-res.o \
-  script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o linboot.o
+  script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o \
+  linboot.o fbwrite.o font_mini_4x6.o
 
 HARETOBJS := $(COREOBJS) haret.o \
   s-cpu.o gpio.o uart.o wincmds.o irqchain.o getsetcp.o watch.o irq.o \

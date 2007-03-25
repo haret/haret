@@ -21,6 +21,7 @@
 #include "cpu.h" // take_control, return_control, touchAppPages
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
+#include "fbwrite.h" // fb_puts
 #include "linboot.h"
 #include "resource.h"
 
@@ -42,18 +43,6 @@ REG_VAR_INT(0, "MTYPE", bootMachineType
             , "ARM machine type (see linux/arch/arm/tools/mach-types)")
 REG_VAR_INT(0, "FBDURINGBOOT", FBDuringBoot
             , "Enable/disable writing status lines to screen during boot")
-
-// Color codes useful when writing to framebuffer.
-enum {
-    COLOR_BLACK   = 0x0000,
-    COLOR_WHITE   = 0xFFFF,
-    COLOR_RED     = 0xf800,
-    COLOR_GREEN   = 0x07e0,
-    COLOR_BLUE    = 0x001f,
-    COLOR_YELLOW  = COLOR_RED | COLOR_GREEN,
-    COLOR_CYAN    = COLOR_GREEN | COLOR_BLUE,
-    COLOR_MAGENTA = COLOR_RED | COLOR_BLUE,
-};
 
 /*
  * Theory of operation:
@@ -87,19 +76,7 @@ enum {
  * pages (indexPages) that contain pointers to pages of the kernel.
  *
  * Because the preloader and hardware shutdown can be complicated, the
- * code will try to write a status indicator to the video screen to
- * indicate its progress.  This can be used to help diagnose failures
- * during the boot.  A green line is written after disabling
- * interrupts, a magenta line is written after disabling hardware
- * (Mach->hardwareShutdown), a blue line after starting the preloader
- * function, a red line after copying the "linux tags" structure, a
- * cyan line after copying the kernel, a yellow line after copying the
- * initrd (if any), and finally a black line right before jumping to
- * the kernel.  If CRC checking is enabled (via the variable
- * KERNELCRC) then the kernel and CRC are checked between the yellow
- * and black lines - a red line is written if the kernel crc
- * mismatches and a magenta line is written if the initrd crc
- * mismatches.
+ * code will try to write status messages directly to the framebuffer.
  */
 
 
@@ -166,13 +143,6 @@ setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
  * Preloader
  ****************************************************************/
 
-// Mark a function that is used in the C preloader.  Note all
-// functions marked this way will be copied to physical ram for the
-// preloading and are run with the MMU disabled.  These functions must
-// be careful to not call functions that aren't also marked this way.
-// They must also not use any global variables.
-#define __preload __attribute__ ((__section__ (".text.preload")))
-
 // Maximum number of index pages.
 #define MAX_INDEX 5
 #define PAGES_PER_INDEX (PAGE_SIZE / sizeof(uint32))
@@ -180,7 +150,6 @@ setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
 // Data Shared between normal haret code and C preload code.
 struct preloadData {
     uint32 machtype;
-    uint32 videoRam;
     uint32 startRam;
 
     char *tags;
@@ -191,6 +160,11 @@ struct preloadData {
     // Optional CRC check
     uint32 doCRC;
     uint32 kernelCRC, initrdCRC;
+
+    // Framebuffer info
+    fbinfo fbi;
+    uint32 physFB, physFonts;
+    unsigned char fonts[FONTDATAMAX];
 };
 
 // CRC a block of ram (from linux/lib/crc32.c)
@@ -218,7 +192,7 @@ crc32_be_finish(uint32 crc, uint32 len)
 }
 
 // Copy memory (need a memcpy with __preload tag).
-static void __preload
+void __preload
 do_copy(char *dest, const char *src, int count)
 {
     uint32 *d = (uint32*)dest, *s = (uint32*)src, *e = (uint32*)&src[count];
@@ -236,61 +210,66 @@ do_copyPages(char *dest, const char ***pages, int start, int pagecount)
     }
 }
 
-// Draw a line directly onto the frame buffer.
-static void __preload
-drawLine(uint32 *pvideoRam, uint16 color)
-{
-    enum { LINELENGTH = 2500 };
-    uint32 videoRam = *pvideoRam;
-    if (! videoRam)
-        return;
-    uint16 *pix = (uint16*)videoRam;
-    for (int i = 0; i < LINELENGTH; i++)
-        pix[32768+i] = color;
-    *pvideoRam += LINELENGTH * sizeof(uint16);
-}
+// Must define strings in __preload section.
+#define FB_PUTS(fbi,str) do {                           \
+    const char *__msg;                                  \
+    asm(".section .text.preload, 1\n"                   \
+        "1:      .asciz \"" str "\"\n"                  \
+        "        .balign 4\n"                           \
+        "        .section .text.preload, 0\n"           \
+        "2:      add %0, pc, #( 1b - 2b - 8 )\n"        \
+        : "=r" (__msg));                                \
+    fb_puts((fbi), __msg);                              \
+} while (0)
 
 // Code to launch kernel.
 static void __preload
 preloader(struct preloadData *data)
 {
-    drawLine(&data->videoRam, COLOR_BLUE);
+    data->fbi.fb = (uint16 *)data->physFB;
+    data->fbi.fonts = (unsigned char *)data->physFonts;
+    FB_PUTS(&data->fbi, "In preloader\\n");
 
     // Copy tags to beginning of ram.
     char *destTags = (char *)data->startRam + PHYSOFFSET_TAGS;
     do_copy(destTags, data->tags, TAGSIZE);
 
-    drawLine(&data->videoRam, COLOR_RED);
+    FB_PUTS(&data->fbi, "Tags relocated\\n");
 
     // Copy kernel image
     char *destKernel = (char *)data->startRam + PHYSOFFSET_KERNEL;
     int kernelCount = PAGE_ALIGN(data->kernelSize) / PAGE_SIZE;
     do_copyPages((char *)destKernel, data->indexPages, 0, kernelCount);
 
-    drawLine(&data->videoRam, COLOR_CYAN);
+    FB_PUTS(&data->fbi, "Kernel relocated\\n");
 
     // Copy initrd (if applicable)
     char *destInitrd = (char *)data->startRam + PHYSOFFSET_INITRD;
     int initrdCount = PAGE_ALIGN(data->initrdSize) / PAGE_SIZE;
     do_copyPages(destInitrd, data->indexPages, kernelCount, initrdCount);
 
-    drawLine(&data->videoRam, COLOR_YELLOW);
+    FB_PUTS(&data->fbi, "Initrd relocated\\n");
 
     // Do CRC check (if enabled).
     if (data->doCRC) {
+        FB_PUTS(&data->fbi, "Checking crc...");
         uint32 crc = crc32_be(0, destKernel, data->kernelSize);
         crc = crc32_be_finish(crc, data->kernelSize);
         if (crc != data->kernelCRC)
-            drawLine(&data->videoRam, COLOR_RED);
+            FB_PUTS(&data->fbi, " KERNEL CRC FAIL FAIL FAIL");
         if (data->initrdSize) {
             crc = crc32_be(0, destInitrd, data->initrdSize);
             crc = crc32_be_finish(crc, data->initrdSize);
             if (crc != data->initrdCRC)
-                drawLine(&data->videoRam, COLOR_MAGENTA);
+                FB_PUTS(&data->fbi, " INITRD CRC FAIL FAIL FAIL");
         }
+        FB_PUTS(&data->fbi, "\\n");
     }
 
-    drawLine(&data->videoRam, COLOR_BLACK);
+    if ((cpuGetPSR() & 0xc0) != 0xc0)
+        FB_PUTS(&data->fbi, "ERROR: IRQS not off\\n");
+
+    FB_PUTS(&data->fbi, "Jumping to Kernel...\\n");
 
     // Boot
     typedef void (*lin_t)(uint32 zero, uint32 mach, char *tags);
@@ -491,17 +470,18 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     for (int i=0; i<indexCount; i++)
         pd->indexPages[i] = (const char **)pgs_index[i].physLoc;
     pd->startRam = memPhysAddr;
-    pd->videoRam = 0;
     bm->pd = pd;
 
     if (FBDuringBoot) {
-        pd->videoRam = vidGetVRAM();
-	unsigned int endKernelStuff = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
-        if (pd->videoRam >= pd->startRam && pd->videoRam < endKernelStuff) {
+        fb_init(&pd->fbi);
+        memcpy(&pd->fonts, fontdata_mini_4x6, sizeof(fontdata_mini_4x6));
+        pd->physFonts = pg_data->physLoc + offsetof(struct preloadData, fonts);
+        pd->physFB = vidGetVRAM();
+        Output("Video Phys FB=%08x Fonts=%08x", pd->physFB, pd->physFonts);
+	uint end = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
+        if (pd->physFB >= pd->startRam && pd->physFB < end) {
             Output("Boot FB feedback requested, but FB overlaps with kernel structures - feedback disabled");
-            pd->videoRam = 0;
-        } else {
-            Output("Video buffer at phys=%08x", pd->videoRam);
+            pd->physFB = 0;
         }
     }
 
@@ -566,7 +546,7 @@ setupTrampoline()
 
 // Launch a kernel loaded in memory.
 static void
-launchKernel(uint32 physExec)
+launchKernel(struct bootmem *bm)
 {
     // Make sure trampoline and "Mach->hardwareShutdown" functions are
     // loaded into memory.
@@ -581,13 +561,6 @@ launchKernel(uint32 physExec)
     uint8 *virtAddrMmu = memPhysMap(cpuGetMMU());
     Output("MMU setup: mmu=%p/%08x", virtAddrMmu, cpuGetMMU());
 
-    // Lookup framebuffer address (if in use).
-    uint32 vidRam = 0;
-    if (FBDuringBoot) {
-        vidRam = (uint32)vidGetVirtVRAM();
-        Output("Video buffer at virt=%08x", vidRam);
-    }
-
     // Call per-arch setup.
     int ret = Mach->preHardwareShutdown();
     if (ret) {
@@ -600,15 +573,16 @@ launchKernel(uint32 physExec)
     // Disable interrupts
     take_control();
 
-    drawLine(&vidRam, COLOR_GREEN);
+    fb_clear(&bm->pd->fbi);
+    fb_puts(&bm->pd->fbi, "HaRET boot\nShutting down hardware\n");
 
     // Call per-arch boot prep function.
     Mach->hardwareShutdown();
 
-    drawLine(&vidRam, COLOR_MAGENTA);
+    fb_puts(&bm->pd->fbi, "Turning off MMU...\n");
 
     // Disable MMU and launch linux.
-    mmu_trampoline(physAddrTram, virtAddrMmu, physExec, Mach->flushCache);
+    mmu_trampoline(physAddrTram, virtAddrMmu, bm->physExec, Mach->flushCache);
 
     // The above should not ever return, but we attempt recovery here.
     return_control();
@@ -812,7 +786,7 @@ tryLaunch(struct bootmem *bm, int bootViaResume)
     if (bootViaResume)
         resumeIntoBoot(bm->physExec);
     else
-        launchKernel(bm->physExec);
+        launchKernel(bm);
 
     // Cleanup (if boot failed somehow).
     cleanupBootMem(bm);
