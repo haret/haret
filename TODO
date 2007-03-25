@@ -13,6 +13,8 @@ New features:
 * Try to run "startup-<mach#>.txt" at haret startup.  This may be
   useful for launching linux on multiple PDAs from a single SD card.
 
+* Possibly link in a "debug.wav" file and provide a mechanism to play
+  that file.  This may be useful for tracing the sound system.
 
 Misc cleanups:
 
@@ -40,8 +42,6 @@ Misc cleanups:
 * Possibly remove "dump" based commands and re-implement them as
   regular commands.  It isn't clear why "dump mmu" isn't implemented
   as "mmudump".
-
-* Port s3c24xx based code into standard machine detection hierarchy.
 
 * Remove old Microsoft based build code.
 
@@ -94,11 +94,6 @@ Possible features for "wi":
 Possible features for Linux booting:
 
 * Verify linux booting from resume code.
-
-* Possibly add fonts to write to framebuffer during linux boot.
-
-* Determine if arm-920t needs its own cpuFlushCache, and if so define
-  a Mach->cpuFlushCache() call that implements the necessary code.
 
 * Possibly allow PHYSOFFSET_KERNEL (et al.) be set via commands.  It
   may also be necessary to handle the "overwriting memory" case -

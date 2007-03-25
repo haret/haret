@@ -1,6 +1,13 @@
 <next version> <kevin@koconnor.net>
 
-  * Add new machine: treo700wx
+  * Status messages can now be written directly to the frame buffer
+    during the linux boot (when fbduringboot is enabled).
+
+  * New machine list file (src/mach/machlist.txt) allows one to easily
+    define simple machine types.  (More complicated machines can still
+    use the existing infrastructure.)
+
+  * Several new machines were added.
 
 20070116 0.4.7 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
