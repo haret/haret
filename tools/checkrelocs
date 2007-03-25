@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Usage: checkrelocs <haret-final.o>
+
+# This script checks for any outstanding relocations in the
+# .text.preload and .text.irq sections.  Since these sections are
+# moved to new areas in memory during the haret runtime, the code can
+# not reliably access other parts of the haret system.  (Having an
+# external relocation will result in a mysterious runtime error.)
+
+$BASE/bin/arm-wince-mingw32ce-objdump -C -r -j .text.preload -j .text.irq $1 | grep -vw ARM_26D | grep '^0'
+
+if [ $? != 0 ]; then
+    exit 0
+fi
+
+echo "ERROR:"
+echo "ERROR: There is an external reference (listed above) from a"
+echo "ERROR: standalone haret section."
+echo "ERROR:"
+
+exit 1
