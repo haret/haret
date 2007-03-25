@@ -54,10 +54,6 @@ Misc cleanups:
 
 * Get linux penguin logo working or remove it.
 
-* Possibly go back to the coprocessor accessor code that did
-  code-modification.  The current code can't set opcode_1 and opcode_2
-  which is useful in some situations.
-
 * Possibly allow the current machine definition (Mach) to be
   explicitly specified by a user command.
 
