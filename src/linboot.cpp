@@ -217,7 +217,7 @@ do_copyPages(char *dest, const char ***pages, int start, int pagecount)
         "1:      .asciz \"" str "\"\n"                  \
         "        .balign 4\n"                           \
         "        .section .text.preload, 0\n"           \
-        "2:      add %0, pc, #( 1b - 2b - 8 )\n"        \
+        "        add %0, pc, #( 1b - . - 8 )\n"         \
         : "=r" (__msg));                                \
     fb_puts((fbi), __msg);                              \
 } while (0)
