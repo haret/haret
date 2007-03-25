@@ -26,18 +26,19 @@ uint16 *vidGetVirtVRAM()
 {
     uint16 *vaddr = 0; // virtual address
     RawFrameBufferInfo frameBufferInfo;
-    
-    HDC hdc = GetDC (NULL);
-    int result = ExtEscape (hdc, GETRAWFRAMEBUFFER, 0, NULL,
-                            sizeof (RawFrameBufferInfo), (char*)&frameBufferInfo);
-    ReleaseDC (NULL, hdc);
-    
-    if (result > 0)
-      vaddr = (uint16*)frameBufferInfo.pFramePointer;
-    else if (videoBeginDraw ())
-    {
-      vaddr = vram;
-      videoEndDraw ();
+
+    HDC hdc = GetDC(NULL);
+    int result = ExtEscape(hdc, GETRAWFRAMEBUFFER, 0, NULL,
+                           sizeof(RawFrameBufferInfo), (char*)&frameBufferInfo);
+    ReleaseDC(NULL, hdc);
+
+    if (result > 0) {
+        vaddr = (uint16*)frameBufferInfo.pFramePointer;
+        videoW = frameBufferInfo.cxPixels;
+        videoH = frameBufferInfo.cyPixels;
+    } else if (videoBeginDraw()) {
+        vaddr = vram;
+        videoEndDraw();
     }
 
     return vaddr;
