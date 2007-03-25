@@ -81,6 +81,12 @@ mmu_trampoline:
 	@ Store previous registers on stack.
         stmdb   sp, {r4-r14}
 
+        @ Disable I and D caches
+        mrc	p15, 0, r7, c1, c0, 0
+        bic	r7, r7, #4		@ Dcache off
+        bic	r7, r7, #0x1000         @ Icache off
+        mcr	p15, 0, r7, c1, c0, 0
+
         @ Write back all cpu caches
         mov     r4, r0
         mov     r5, r1
@@ -95,11 +101,9 @@ mmu_trampoline:
         orr     r0, r0, #0x00000002     @ r0 |= 0xC02
         str     r0, [r5, r1, asl #2]    @ mmu[funcaddr>>20] = r0
 
-        @ Force MMU update and invalidate I cache
+        @ Clear any TLBs
         mov	r0, #0
-        mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
         mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
-        mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
         CPWAIT
 
         @ Jump to code with shared virtual/physical mapping
@@ -107,16 +111,12 @@ mmu_trampoline:
 
 1:      @ Code is running at a vm address that is the same as its
         @ physical address.  Now disable the MMU.
-        mrc	p15, 0, r0, c1, c0, 0
-        bic	r0, r0, #5		@ MMU & Dcache off
-        bic	r0, r0, #0x1000         @ Icache off
-        mcr	p15, 0, r0, c1, c0, 0	@ disable the MMU & caches
+        bic	r7, r7, #1              @ MMU off
+        mcr	p15, 0, r7, c1, c0, 0	@ disable the MMU & caches
         CPWAIT
 
-        mov	r0, #0
         mcr	p15, 0, r0, c13, c0, 0	@ clear PID
         mcr	p15, 0, r0, c8, c7, 0	@ invalidate I+D TLB
-        mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
         CPWAIT
 
         @ MMU is now disabled.  Call function.
