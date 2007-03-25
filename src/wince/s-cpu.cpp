@@ -28,7 +28,6 @@ getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
     uint32 insn = 0xee100010;  // MRC
     if (setval)
         insn = 0xee000010; // MCR
-
     selfmod[0] = (insn | (op1<<21) | (CRn<<16) | (cp << 8) | (op2<<5) | CRm);
 
     // Flush the CPU caches.
@@ -39,10 +38,7 @@ getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
     // Run the instruction
     uint32 ret = 0xffffffff;
     try {
-        if (setval)
-            ((void (*)(uint32))&selfmod)(val);
-        else
-            ret = ((uint32 (*)())&selfmod)();
+        ret = ((uint32 (*)(uint32))&selfmod)(val);
     } catch (...) {
         Output(C_ERROR "EXCEPTION on access to coprocessor %d register %d"
                , cp, CRn);

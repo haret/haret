@@ -112,8 +112,7 @@ mmu_trampoline:
 1:      @ Code is running at a vm address that is the same as its
         @ physical address.  Now disable the MMU.
         bic	r7, r7, #1              @ MMU off
-        mcr	p15, 0, r7, c1, c0, 0	@ disable the MMU & caches
-        CPWAIT
+        mcr	p15, 0, r7, c1, c0, 0
 
         mcr	p15, 0, r0, c13, c0, 0	@ clear PID
         mcr	p15, 0, r0, c8, c7, 0	@ invalidate I+D TLB
