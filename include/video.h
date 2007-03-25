@@ -8,6 +8,9 @@
 #ifndef _VIDEO_H
 #define _VIDEO_H
 
+#include <windows.h> // HRSRC
+#include "xtypes.h" // uint8
+
 // This class can be used to load a bitmap from a resource and display it
 class videoBitmap
 {
