@@ -17,7 +17,7 @@
 
 // Older versions of wince don't have SleepTillTick - use Sleep(1)
 // instead.
-void
+static void
 alt_SleepTillTick()
 {
     Sleep(1);
@@ -68,7 +68,7 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
  * Helper for registering watched memory
  ****************************************************************/
 
-void
+static void
 r_basic(uint32 msecs, uint32 clock, struct memcheck *mc
         , uint32 newval, uint32 maskval)
 {
