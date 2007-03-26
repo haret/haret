@@ -21,7 +21,7 @@ LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 
 LIBS = -lwinsock
 
-all: $(OUT) $(OUT)haret.exe $(OUT)haret-debug
+all: $(OUT) $(OUT)haret.exe
 
 # Run with "make V=1" to see the actual compile commands
 ifdef V
@@ -45,7 +45,6 @@ RC = $(BASE)/bin/arm-wince-mingw32ce-windres
 RCFLAGS = -r -l 0x409 -Iinclude
 
 CXX = $(BASE)/bin/arm-wince-mingw32ce-g++
-LD = $(BASE)/bin/arm-wince-mingw32ce-ld
 STRIP = $(BASE)/bin/arm-wince-mingw32ce-strip
 
 DLLTOOL = $(BASE)/bin/arm-wince-mingw32ce-dlltool
@@ -67,17 +66,13 @@ $(OUT)%.lib: src/wince/%.def
 	@echo "  Building library $@"
 	$(Q)$(DLLTOOL) $(DLLTOOLFLAGS) -d $< -l $@
 
-$(OUT)%-final.o:
+$(OUT)%-debug:
 	$(Q)echo 'const char *VERSION = "$(VERSION)";' > $(OUT)version.cpp
 	$(call compile,$(OUT)version.cpp,$(OUT)version.o)
-	@echo "  Linking $@ (Version \"$(VERSION)\")"
-	$(Q)$(LD) -r $(OUT)version.o $^ -o $@
-
-$(OUT)%-debug: $(OUT)%-final.o src/haret.lds
 	@echo "  Checking for relocations"
-	$(Q)tools/checkrelocs $^
-	@echo "  Linking $@"
-	$(Q)$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
+	$(Q)tools/checkrelocs $(filter %.o,$^)
+	@echo "  Linking $@ (Version \"$(VERSION)\")"
+	$(Q)$(CXX) $(LDFLAGS) $(OUT)version.o $^ $(LIBS) -o $@
 
 $(OUT)%.exe: $(OUT)%-debug
 	@echo "  Stripping $^ to make $@"
@@ -105,7 +100,7 @@ HARETOBJS := $(COREOBJS) haret.o \
   s-cpu.o gpio.o uart.o wincmds.o irqchain.o watch.o irq.o \
   network.o terminal.o com_port.o tlhcmds.o pxacmds.o aticmds.o
 
-$(OUT)haret-final.o: $(addprefix $(OUT),$(HARETOBJS))
+$(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 
 ####### Stripped down linux bootloading program.
 LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
@@ -118,9 +113,9 @@ $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	@echo "  Building $@"
 	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
 
-$(OUT)linload-final.o: $(addprefix $(OUT), $(LINLOADOBJS))
+$(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
 
-linload: $(OUT)linload.exe $(OUT)linload-debug
+linload: $(OUT)linload.exe
 
 ####### Generic rules
 clean:

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Usage: checkrelocs <haret-final.o>
+# Usage: checkrelocs <objs.o> [...]
 
 # This script checks for any outstanding relocations in the
 # .text.preload and .text.irq sections.  Since these sections are
@@ -8,15 +8,24 @@
 # not reliably access other parts of the haret system.  (Having an
 # external relocation will result in a mysterious runtime error.)
 
-$BASE/bin/arm-wince-mingw32ce-objdump -C -r -j .text.preload -j .text.irq $1 | grep -vw ARM_26D | grep '^0'
+LD=$BASE/bin/arm-wince-mingw32ce-ld
+OBJDUMP=$BASE/bin/arm-wince-mingw32ce-objdump
+TMP=tmp_link.o
 
-if [ $? != 0 ]; then
+$LD -r "$@" -o $TMP
+$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | grep -vw ARM_26D | grep -q '^0'
+STATUS=$?
+
+if [ $STATUS != 0 ]; then
+    rm -f $TMP
     exit 0
 fi
 
 echo "ERROR:"
-echo "ERROR: There is an external reference (listed above) from a"
-echo "ERROR: standalone haret section."
+echo "ERROR: There is an external reference from a standalone haret section."
 echo "ERROR:"
+
+$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | grep -vw ARM_26D
+rm -f $TMP
 
 exit 1
