@@ -23,6 +23,9 @@
 // Clear bit <pos> in bitmap <bitset>
 #define CLEARBIT(bitset,pos) do {BITMAPPOS(bitset,pos) &= ~BITMAPMASK(pos);} while (0)
 
+// Set/Clear the bit at <pos> in bitmap <bitset>
+#define ASSIGNBIT(bitset,pos,val) do {BITMAPPOS(bitset,pos) = (BITMAPPOS(bitset,pos) & ~BITMAPMASK(pos)) | ((!!(val)) << ((pos) & (LONGBITS-1)));} while (0)
+
 // Test the bit <pos> in bitmap <bitset>
 #define TESTBIT(bitset,pos) (!!(BITMAPPOS(bitset,pos) & BITMAPMASK(pos)))
 
