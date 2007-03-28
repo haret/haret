@@ -48,7 +48,7 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
         break;
     }
 
-    uint32 maskedval = -1;
+    uint32 maskedval = 0;
     if (mc->trySuppress) {
         maskedval = (curval ^ mc->cmpVal) & mc->mask;
         if (maskedval == 0)
@@ -101,11 +101,6 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
 
     // Add a new item to the list.
 
-    if (total >= max) {
-        Output("Already at max (%d)", max);
-        return;
-    }
-
     // Parse args
     uint32 addr;
     if (!get_expression(&args, &addr)) {
@@ -125,8 +120,21 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
         return;
     }
 
-    // Update structure.
+    // See if this address is already in the list.
     struct memcheck *mc = &list[total];
+    for (uint i=0; i<total; i++)
+        if (list[i].addr == (char *)addr) {
+            // In list already - just replace existing one.
+            total--;
+            mc = &list[i];
+        }
+
+    if (mc >= &list[max]) {
+        Output("Already at max (%d)", max);
+        return;
+    }
+
+    // Update structure.
     *ptotal = total + 1;
     memset(mc, 0, sizeof(*mc));
     mc->reporter = r_basic;
