@@ -548,7 +548,7 @@ static void
 cmd_set(const char *cmd, const char *x)
 {
     char vn[MAX_CMDLEN];
-    if (get_token(&x, vn, sizeof(vn))) {
+    if (get_token(&x, vn, sizeof(vn), 1)) {
         Output(C_ERROR "line %d: Expected <varname>", ScriptLine);
         return;
     }
@@ -590,10 +590,7 @@ cmd_set(const char *cmd, const char *x)
                       ScriptLine, var->val_size);
             return;
         }
-        if (val)
-            SETBIT(var->bsval, idx);
-        else
-            CLEARBIT(var->bsval, idx);
+        ASSIGNBIT(var->bsval, idx, val);
         break;
     }
     case varIntList:
