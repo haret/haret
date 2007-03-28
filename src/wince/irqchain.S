@@ -34,8 +34,8 @@ irq_chained_handler:
         ldmia   sp!, {r0-r12, r14}
         ldr     pc, [pc, #(winceIrqHandler - . - 8)]
 
-        .global abort_chained_handler
-abort_chained_handler:
+        .global PXA_abort_chained_handler
+PXA_abort_chained_handler:
         @ Store r14 on wince stack
         stmdb   sp!, {r14}
 
@@ -60,15 +60,15 @@ abort_chained_handler:
         sub     sp, r0, #4096
 
         @ Call C code
-        bl      abort_handler
+        bl      PXA_abort_handler
 
         @ Return to user code
         mov     sp, r4
         ldmia   sp!, {r0-r12, r14}
         subs    pc, lr, #4
 
-        .global prefetch_chained_handler
-prefetch_chained_handler:
+        .global PXA_prefetch_chained_handler
+PXA_prefetch_chained_handler:
         @ Store r14 on wince stack
         stmdb   sp!, {r14}
 
@@ -93,7 +93,7 @@ prefetch_chained_handler:
         sub     sp, r0, #(2 * 4096)
 
         @ Call C code
-        bl      prefetch_handler
+        bl      PXA_prefetch_handler
 
         @ Return to user code
         mov     sp, r4
