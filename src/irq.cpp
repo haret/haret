@@ -230,7 +230,7 @@ start_traps(struct irqData *data)
 // Handler for interrupt events.  Note that this is running in
 // "Modified Virtual Address" mode, so avoid reading any global
 // variables or calling any non local functions.
-static void __irq
+extern "C" void __irq
 irq_handler(struct irqData *data, struct irqregs *regs)
 {
     uint32 clock = get_CCNT();
@@ -329,7 +329,7 @@ getReg(struct irqregs *regs, struct extraregs *er, uint32 nr)
 #define mask_Rd(insn) (((insn)>>12) & 0xf)
 
 // Code that handles memory access events.
-static void __irq
+extern "C" void __irq
 abort_handler(struct irqData *data, struct irqregs *regs)
 {
     uint32 clock = get_CCNT();
@@ -360,7 +360,7 @@ abort_handler(struct irqData *data, struct irqregs *regs)
 }
 
 // Code that handles instruction breakpoint events.
-static void __irq
+extern "C" void __irq
 prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
     uint32 clock = get_CCNT();
@@ -634,7 +634,7 @@ REG_CMD_ALT(testAvail, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
 
 
 /****************************************************************
- * Binding of "chained" irq handler
+ * Intel PXA specific memory tracing
  ****************************************************************/
 
 // Externally modifiable settings for software debug
@@ -678,10 +678,58 @@ REG_VAR_INT(testAvail, "INSN2REG1", insnTrace2Reg1,
 REG_VAR_INT(testAvail, "INSN2REG2", insnTrace2Reg2,
             "Second register to report during INSN2 breakpoint")
 
+#define mask_DBCON_E0(val) (((val) & (0x3))<<0)
+#define mask_DBCON_E1(val) (((val) & (0x3))<<2)
+#define DBCON_MASKBIT (1<<8)
 
-// Low level information to be passed to the assembler part of the
-// chained exception handler.  DO NOT CHANGE HERE without also
-// upgrading the assembler code.
+static void
+setupPXAtrace(struct irqData *data)
+{
+    // Check for software debug data watch points.
+    if (irqTrace != 0xFFFFFFFF) {
+        data->dbr0 = irqTrace;
+        data->dbcon |= mask_DBCON_E0(irqTraceType);
+        if (irqTraceMask) {
+            data->dbr1 = irqTraceMask;
+            data->dbcon |= DBCON_MASKBIT;
+        } else if (irqTrace2 != 0xFFFFFFFF) {
+            data->dbr1 = irqTrace2;
+            data->dbcon |= mask_DBCON_E1(irqTrace2Type);
+        }
+    }
+
+    // Setup instruction trace registers
+    data->insns[0].addr1 = insnTrace;
+    if (insnTraceReenable == 0xffffffff)
+        data->insns[0].addr2 = insnTrace+4;
+    else
+        data->insns[0].addr2 = insnTraceReenable;
+    data->insns[0].reg1 = insnTraceReg1;
+    data->insns[0].reg2 = insnTraceReg2;
+    data->insns[1].addr1 = insnTrace2;
+    if (insnTrace2Reenable == 0xffffffff)
+        data->insns[1].addr2 = insnTrace2+4;
+    else
+        data->insns[1].addr2 = insnTrace2Reenable;
+    data->insns[1].reg1 = insnTrace2Reg1;
+    data->insns[1].reg2 = insnTrace2Reg2;
+
+    if (insnTrace != 0xFFFFFFFF || irqTrace != 0xFFFFFFFF) {
+        Output("Will set memory tracing to:%08x %08x %08x %08x %08x"
+               , data->dbr0, data->dbr1, data->dbcon
+               , irqTrace, irqTrace2);
+        Output("Will set software debug to:%08x->%08x %08x->%08x"
+               , data->insns[0].addr1, data->insns[0].addr2
+               , data->insns[1].addr1, data->insns[1].addr2);
+    }
+}
+
+
+/****************************************************************
+ * Binding of "chained" irq handler
+ ****************************************************************/
+
+// Layout of memory in physically continuous ram.
 static const int IRQ_STACK_SIZE = 4096;
 struct irqChainCode {
     // Stack for C prefetch code.
@@ -693,58 +741,47 @@ struct irqChainCode {
     // Data for C code.
     struct irqData data;
 
-    // Force immutable code and variables onto their own page
-    uint32 dummy PAGE_ALIGNED;
+    // Variable length array storing asm/C exception handler code.
+    char cCode[1] PAGE_ALIGNED;
+};
 
+// Low level information to be passed to the assembler part of the
+// chained exception handler.  DO NOT CHANGE HERE without also
+// upgrading the assembler code.
+struct irqAsmVars {
     // Modified Virtual Address of irqData data.
     uint32 dataMVA;
-    // Modified Virtual Address of C irq handler code.
-    uint32 cIrqCodeMVA;
-    // Modified Virtual Address of C abort handler code.
-    uint32 cAbortCodeMVA;
-    // Modified Virtual Address of C prefetch handler code.
-    uint32 cPrefetchCodeMVA;
     // Standard WinCE interrupt handler.
     uint32 winceIrqHandler;
     // Standard WinCE abort handler.
     uint32 winceAbortHandler;
     // Standard WinCE prefetch handler.
     uint32 wincePrefetchHandler;
-    // Variable length array storing asm/C exception handler code.
-    char asm_handlers[1];
 };
 
-// Symbols added by linker.
 extern "C" {
+    // Symbols added by linker.
     extern char irq_start;
     extern char irq_end;
-}
 
-// Assembler linkage.
-extern "C" {
+    // Assembler linkage.
+    extern char asmIrqVars;
     extern void irq_chained_handler();
     extern void abort_chained_handler();
     extern void prefetch_chained_handler();
-    extern void end_chained_handlers();
 }
-#define size_asmHandlers() ((char *)end_chained_handlers - (char *)irq_chained_handler)
-#define offset_asmAbortHandler() ((char *)abort_chained_handler - (char *)irq_chained_handler)
-#define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - (char *)irq_chained_handler)
-#define offset_cIrqHandler() ((char*)irq_handler - &irq_start)
-#define offset_cAbortHandler() ((char*)abort_handler - &irq_start)
-#define offset_cPrefetchHandler() ((char *)prefetch_handler - &irq_start)
+#define offset_asmIrqVars() (&asmIrqVars - &irq_start)
+#define offset_asmIrqHandler() ((char *)irq_chained_handler - &irq_start)
+#define offset_asmAbortHandler() ((char *)abort_chained_handler - &irq_start)
+#define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - &irq_start)
 #define size_cHandlers() (&irq_end - &irq_start)
-#define size_handlerCode() (uint)(&((irqChainCode*)0)->asm_handlers[size_asmHandlers() + size_cHandlers()])
+#define size_handlerCode() (uint)(&((irqChainCode*)0)->cCode[size_cHandlers()])
 
 // The virtual address of the irq vector
 static const uint32 VADDR_IRQTABLE=0xffff0000;
 static const uint32 VADDR_PREFETCHOFFSET=0x0C;
 static const uint32 VADDR_ABORTOFFSET=0x10;
 static const uint32 VADDR_IRQOFFSET=0x18;
-
-#define mask_DBCON_E0(val) (((val) & (0x3))<<0)
-#define mask_DBCON_E1(val) (((val) & (0x3))<<2)
-#define DBCON_MASKBIT (1<<8)
 
 // Locate a WinCE exception handler.  This assumes the handler is
 // setup in a manor that wince has been observed to do in the past.
@@ -762,6 +799,7 @@ findWinCEirq(uint8 *irq_table, uint32 offset)
     return (uint32 *)(&irq_table[offset + ins_offset]);
 }
 
+// Main "watch irq" command entry point.
 static void
 cmd_wirq(const char *cmd, const char *args)
 {
@@ -793,7 +831,8 @@ cmd_wirq(const char *cmd, const char *args)
     rawCode = late_AllocPhysMem(size_handlerCode()
                                 , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
     irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
-    struct irqData *data;
+    struct irqData *data = &code->data;
+    struct irqAsmVars *asmVars = (irqAsmVars*)&code->cCode[offset_asmIrqVars()];
     if (!rawCode) {
         Output(C_INFO "Can't allocate memory for irq code");
         goto abort;
@@ -804,60 +843,28 @@ cmd_wirq(const char *cmd, const char *args)
     }
     memset(code, 0, size_handlerCode());
 
-    // Copy the asm handlers to alloc'd space.
-    memcpy(code->asm_handlers, (void *)irq_chained_handler
-           , size_asmHandlers());
     // Copy the C handlers to alloc'd space.
-    memcpy(&code->asm_handlers[size_asmHandlers()]
-           , &irq_start, size_cHandlers());
+    memcpy(code->cCode, &irq_start, size_cHandlers());
 
-    // Locate the code handlers in long-lived virtual addresses.
-    code->cIrqCodeMVA = (uint32)&code->asm_handlers[size_asmHandlers()
-                                                    + offset_cIrqHandler()];
-    code->cAbortCodeMVA = (uint32)&code->asm_handlers[
-        size_asmHandlers() + offset_cAbortHandler()];
-    code->cPrefetchCodeMVA = (uint32)&code->asm_handlers[
-        size_asmHandlers() + offset_cPrefetchHandler()];
-    code->dataMVA = (uint32)&code->data;
-    newIrqHandler = (uint32)&code->asm_handlers[0];
-    newAbortHandler = (uint32)&code->asm_handlers[offset_asmAbortHandler()];
-    newPrefetchHandler = (uint32)&code->asm_handlers[
-        offset_asmPrefetchHandler()];
+    // Setup the assembler links
+    asmVars->dataMVA = (uint32)data;
+    asmVars->winceIrqHandler = *irq_loc;
+    asmVars->winceAbortHandler = *abort_loc;
+    asmVars->wincePrefetchHandler = *prefetch_loc;
+    newIrqHandler = (uint32)&code->cCode[offset_asmIrqHandler()];
+    newAbortHandler = (uint32)&code->cCode[offset_asmAbortHandler()];
+    newPrefetchHandler = (uint32)&code->cCode[offset_asmPrefetchHandler()];
 
-    // Check for software debug data watch points.
-    data = (irqData *)code->dataMVA;
-    if (irqTrace != 0xFFFFFFFF) {
-        data->dbr0 = irqTrace;
-        data->dbcon |= mask_DBCON_E0(irqTraceType);
-        if (irqTraceMask) {
-            data->dbr1 = irqTraceMask;
-            data->dbcon |= DBCON_MASKBIT;
-        } else if (irqTrace2 != 0xFFFFFFFF) {
-            data->dbr1 = irqTrace2;
-            data->dbcon |= mask_DBCON_E1(irqTrace2Type);
-        }
-    }
-
-    // Setup instruction trace registers
-    data->insns[0].addr1 = insnTrace;
-    if (insnTraceReenable == 0xffffffff)
-        data->insns[0].addr2 = insnTrace+4;
-    else
-        data->insns[0].addr2 = insnTraceReenable;
-    data->insns[0].reg1 = insnTraceReg1;
-    data->insns[0].reg2 = insnTraceReg2;
-    data->insns[1].addr1 = insnTrace2;
-    if (insnTrace2Reenable == 0xffffffff)
-        data->insns[1].addr2 = insnTrace2+4;
-    else
-        data->insns[1].addr2 = insnTrace2Reenable;
-    data->insns[1].reg1 = insnTrace2Reg1;
-    data->insns[1].reg2 = insnTrace2Reg2;
-
-    // Store existing wince handler address.
-    code->winceIrqHandler = *irq_loc;
-    code->winceAbortHandler = *abort_loc;
-    code->wincePrefetchHandler = *prefetch_loc;
+#if 1
+    Output("irq:%08x@%p=%08x abort:%08x@%p=%08x"
+           " prefetch:%08x@%p=%08x"
+           " data=%08x sizes=c:%08x,t:%08x"
+           , asmVars->winceIrqHandler, irq_loc, newIrqHandler
+           , asmVars->winceAbortHandler, abort_loc, newAbortHandler
+           , asmVars->wincePrefetchHandler, prefetch_loc, newPrefetchHandler
+           , asmVars->dataMVA
+           , size_cHandlers(), size_handlerCode());
+#endif
 
     // Setup memory tracing.
     memcpy(data->irqpolls, watchirqpolls, sizeof(data->irqpolls));
@@ -865,27 +872,7 @@ cmd_wirq(const char *cmd, const char *args)
     memcpy(data->tracepolls, watchtracepolls, sizeof(data->tracepolls));
     data->tracepollcount = watchtracecount;
 
-    if (insnTrace != 0xFFFFFFFF || irqTrace != 0xFFFFFFFF) {
-        Output("Will set memory tracing to:%08x %08x %08x %08x %08x"
-               , data->dbr0, data->dbr1, data->dbcon
-               , irqTrace, irqTrace2);
-        Output("Will set software debug to:%08x->%08x %08x->%08x"
-               , data->insns[0].addr1, data->insns[0].addr2
-               , data->insns[1].addr1, data->insns[1].addr2);
-    }
-
-#if 1
-    Output("irq:%08x@%p=%08x abort:%08x@%p=%08x"
-           " prefetch:%08x@%p=%08x"
-           " data=%08x C=%08x,%08x,%08x sizes=a:%08x,c:%08x,t:%08x"
-           , code->winceIrqHandler, irq_loc, newIrqHandler
-           , code->winceAbortHandler, abort_loc, newAbortHandler
-           , code->wincePrefetchHandler, prefetch_loc, newPrefetchHandler
-           , code->dataMVA
-           , code->cIrqCodeMVA, code->cAbortCodeMVA
-           , code->cPrefetchCodeMVA
-           , size_asmHandlers(), size_cHandlers(), size_handlerCode());
-#endif
+    setupPXAtrace(data);
 
     preLoop(data);
 
@@ -908,9 +895,9 @@ cmd_wirq(const char *cmd, const char *args)
     take_control();
     stop_traps();
     Mach->flushCache();
-    *irq_loc = code->winceIrqHandler;
-    *abort_loc = code->winceAbortHandler;
-    *prefetch_loc = code->wincePrefetchHandler;
+    *irq_loc = asmVars->winceIrqHandler;
+    *abort_loc = asmVars->winceAbortHandler;
+    *prefetch_loc = asmVars->wincePrefetchHandler;
     return_control();
     Output("Finished restoring windows exception handlers.");
 

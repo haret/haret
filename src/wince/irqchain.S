@@ -4,15 +4,14 @@
 @
 @ This file may be distributed under the terms of the GNU GPL license.
 
-        .text
+        .section .text.irq
 
 @ This handler is copied to a malloc'd memory area in the irq.c C
 @ code.  The following variables are designed to overlap with the
 @ struct defined in the C code.
+        .global asmIrqVars
+asmIrqVars:
 dataMVA:                .long 0
-cIrqCodeMVA:            .long 0
-cAbortCodeMVA:          .long 0
-cPrefetchCodeMVA:       .long 0
 winceIrqHandler:        .long 0
 winceAbortHandler:      .long 0
 wincePrefetchHandler:   .long 0
@@ -28,8 +27,7 @@ irq_chained_handler:
         mov     sp, r0
 
         @ Call C code
-        mov     r14, pc
-        ldr     pc, [pc, #(cIrqCodeMVA - . - 8)]
+        bl      irq_handler
 
         @ Restore registers from WinCE stack and call WinCE handler.
         mov     sp, r4
@@ -62,8 +60,7 @@ abort_chained_handler:
         sub     sp, r0, #4096
 
         @ Call C code
-        mov     r14, pc
-        ldr     pc, [pc, #(cAbortCodeMVA - . - 8)]
+        bl      abort_handler
 
         @ Return to user code
         mov     sp, r4
@@ -96,14 +93,11 @@ prefetch_chained_handler:
         sub     sp, r0, #(2 * 4096)
 
         @ Call C code
-        mov     r14, pc
-        ldr     pc, [pc, #(cPrefetchCodeMVA - . - 8)]
+        bl      prefetch_handler
 
         @ Return to user code
         mov     sp, r4
         ldmia   sp!, {r0-r12, r14}
         subs    pc, lr, #4
 
-        .global end_chained_handlers
-end_chained_handlers:
         .end
