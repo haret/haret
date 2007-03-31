@@ -3,6 +3,7 @@
 # classname, archtype, oeminfos, machtype, memsize
 
 import sys
+import string
 
 def error(msg):
     sys.stderr.write(msg + "\n")
@@ -36,13 +37,11 @@ def main():
                 'platform': platform,
                 'arch': line[1].strip(),
                 'oems': line[2].split(';'),
-                'machtype': None, 'memsize': None}
+                'machtype': None, 'cmds': None}
         if len(line) > 3 and line[3].strip():
             data['machtype'] = line[3].strip()
-        if len(line) > 4 and line[4].strip():
-            data['memsize'] = line[4].strip()
-        if len(line) > 5:
-            error("Too many items for mach %s" % line[0].strip())
+        if len(line) > 4:
+            data['cmds'] = line[4:]
         machs.append(data)
     # Build output file
     sys.stdout.write("""// !!! This file is auto generated !!!
@@ -54,18 +53,20 @@ def main():
 #include "arch-sa.h"
 
 #include "mach-types.h"
-#include "memory.h" // memPhysSize
+#include "script.h" // runMemScript
 """)
 
     for mach in machs:
         # Optional init function
         initfunc = ""
-        if mach['memsize'] is not None:
+        if mach['cmds'] is not None:
+            cmds = map(string.strip, mach['cmds'])
+            cmds = '"' + '\\n"\n                     "'.join(cmds) + '\\n"'
             initfunc = """
     void init() {
         Machine%s::init();
-        memPhysSize = %s;
-    }""" % (mach['arch'], mach['memsize'])
+        runMemScript(%s);
+    }""" % (mach['arch'], cmds)
 
         # Build oemstrings
         oems = ""
