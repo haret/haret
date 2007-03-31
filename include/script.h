@@ -14,6 +14,7 @@
 bool scrInterpret (const char *str, uint lineno);
 // Execute the script from given file
 extern void scrExecute (const char *scrfn, bool complain = true);
+void runMemScript(const char *script);
 // Parse the next part of the string as an expression
 bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
 // Parse the next string as a literal token

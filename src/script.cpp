@@ -704,6 +704,33 @@ REG_CMD(0, "H|ELP", cmd_help,
         "HELP [VARS|DUMP]\n"
         "  Display a description of either commands, variables or dumpers.")
 
+// Run a haret script that is compiled into the exe.
+void
+runMemScript(const char *script)
+{
+    const char *s = script;
+    for (int line = 1; *s; line++) {
+        const char *lineend = strchr(s, '\n');
+        const char *nexts;
+        if (! lineend) {
+            lineend = s + strlen(s);
+            nexts = lineend;
+        } else {
+            nexts = lineend + 1;
+        }
+        if (lineend > s && lineend[-1] == '\r')
+            lineend--;
+        uint len = lineend - s;
+        char str[MAX_CMDLEN];
+        if (len >= sizeof(str))
+            len = sizeof(str) - 1;
+        memcpy(str, s, len);
+        str[len] = 0;
+        scrInterpret(str, line);
+        s = nexts;
+    }
+}
+
 void scrExecute (const char *scrfn, bool complain)
 {
   char fn [100];

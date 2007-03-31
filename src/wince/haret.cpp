@@ -104,10 +104,10 @@ WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance,
     Output("Starting gui");
     DialogBox(hInstance, MAKEINTRESOURCE(DLG_HaRET), HWND_DESKTOP, DialogFunc);
 
-    Output("Shutting down");
-    memPhysReset();
+    Output("Calling WSACleanup");
     WSACleanup();
-    closeLogFile();
+
+    shutdownHaret();
 
     return 0;
 }

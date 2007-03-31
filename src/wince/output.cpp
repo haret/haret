@@ -307,8 +307,21 @@ setupHaret()
     // Setup variable/command lists.
     setupCommands();
 
+    // Initialize the machine found earlier.
+    Output("Initializing for machine '%s'", Mach->name);
+    Mach->init();
+
     // Send banner info to log (if logging on).
     printWelcome();
+}
+
+// Final steps to run on haret shutdown.
+void
+shutdownHaret()
+{
+    Output("Shutting down");
+    memPhysReset();
+    closeLogFile();
 }
 
 

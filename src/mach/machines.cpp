@@ -145,6 +145,4 @@ setupMachineType()
     // Determine what the current machine type is.
     Output("Detecting current machine");
     Mach = findMachineType();
-    Output("Initializing for machine '%s'", Mach->name);
-    Mach->init();
 }

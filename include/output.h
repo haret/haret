@@ -26,6 +26,7 @@ extern void fnprepare(const char *ifn, char *ofn, int ofn_max);
 extern const char *VERSION;
 // Initialize Haret application.
 void setupHaret();
+void shutdownHaret();
 void prepThread();
 // Internal function for outputing to screen/logs/socket.
 void __output(int sendScreen, const char *fmt, ...)
