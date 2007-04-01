@@ -38,8 +38,8 @@ vpath %.rc src/wince
 
 ################ cegcc settings
 
-export BASE
 BASE ?= /opt/mingw32ce
+export BASE
 
 RC = $(BASE)/bin/arm-wince-mingw32ce-windres
 RCFLAGS = -r -l 0x409 -Iinclude
