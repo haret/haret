@@ -159,7 +159,7 @@ struct preloadData {
 
     // Optional CRC check
     uint32 doCRC;
-    uint32 kernelCRC, initrdCRC;
+    uint32 tagsCRC, kernelCRC, initrdCRC;
 
     // Framebuffer info
     fbinfo fbi;
@@ -252,18 +252,31 @@ preloader(struct preloadData *data)
 
     // Do CRC check (if enabled).
     if (data->doCRC) {
-        FB_PUTS(&data->fbi, "Checking crc...");
-        uint32 crc = crc32_be(0, destKernel, data->kernelSize);
+        FB_PUTS(&data->fbi, "Checking tags crc...");
+        uint32 crc = crc32_be(0, destTags, TAGSIZE);
+        crc = crc32_be_finish(crc, TAGSIZE);
+        if (crc == data->tagsCRC)
+            FB_PUTS(&data->fbi, "okay\\n");
+        else
+            FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
+
+        FB_PUTS(&data->fbi, "Checking kernel crc...");
+        crc = crc32_be(0, destKernel, data->kernelSize);
         crc = crc32_be_finish(crc, data->kernelSize);
-        if (crc != data->kernelCRC)
-            FB_PUTS(&data->fbi, " KERNEL CRC FAIL FAIL FAIL");
+        if (crc == data->kernelCRC)
+            FB_PUTS(&data->fbi, "okay\\n");
+        else
+            FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
+
         if (data->initrdSize) {
+            FB_PUTS(&data->fbi, "Checking initrd crc...");
             crc = crc32_be(0, destInitrd, data->initrdSize);
             crc = crc32_be_finish(crc, data->initrdSize);
-            if (crc != data->initrdCRC)
-                FB_PUTS(&data->fbi, " INITRD CRC FAIL FAIL FAIL");
+            if (crc == data->initrdCRC)
+                FB_PUTS(&data->fbi, "okay\\n");
+            else
+                FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
         }
-        FB_PUTS(&data->fbi, "\\n");
     }
 
     if ((cpuGetPSR() & 0xc0) != 0xc0)
@@ -321,6 +334,7 @@ static int physPageComp(const void *e1, const void *e2) {
 struct bootmem {
     char *imagePages[PAGES_PER_INDEX * MAX_INDEX];
     char **kernelPages, **initrdPages;
+    char *tagsPage;
     uint32 physExec;
     void *allocedRam;
     struct preloadData *pd;
@@ -459,6 +473,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     }
     bm->kernelPages = &bm->imagePages[0];
     bm->initrdPages = &bm->imagePages[kernelCount];
+    bm->tagsPage = pg_tag->virtLoc;
     Output("Built page index");
 
     // Setup preloader data.
@@ -774,12 +789,13 @@ tryLaunch(struct bootmem *bm, int bootViaResume)
 {
     // Setup CRC (if enabled).
     if (KernelCRC) {
+        bm->pd->tagsCRC = crc_pages(&bm->tagsPage, TAGSIZE);
         bm->pd->kernelCRC = crc_pages(bm->kernelPages, bm->pd->kernelSize);
         if (bm->pd->initrdSize)
             bm->pd->initrdCRC = crc_pages(bm->initrdPages, bm->pd->initrdSize);
         bm->pd->doCRC = 1;
-        Output("CRC test complete.  kernel=%u initrd=%u"
-               , bm->pd->kernelCRC, bm->pd->initrdCRC);
+        Output("CRC test complete.  tags=%u kernel=%u initrd=%u"
+               , bm->pd->tagsCRC, bm->pd->kernelCRC, bm->pd->initrdCRC);
     }
 
     Output("Launching to physical address %08x", bm->physExec);
