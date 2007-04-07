@@ -107,7 +107,7 @@ LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
 
 KERNEL := zImage
 INITRD := /dev/null
-SCRIPT := docs/linboot.txt
+SCRIPT := docs/linload.txt
 
 $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	@echo "  Building $@"
