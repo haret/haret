@@ -27,7 +27,7 @@ HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   set ramsize 64*1024*
 HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*1024
 Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024
 Wizard,     OMAP    ,WIZA100;WIZA200
-Hermes,     S3      ,HERM100;HERM200;HERM300,     HTCHERMES
+Hermes,     S3      ,HERM100;HERM200;HERM300,     HTCHERMES,set ramsize 64*1024*1024
 G500,       S3      ,G50V,                        G500,     set ramsize 64*1024*1024
 Artemis,    OMAP    ,ARTE
 RX3000,     S3      ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
