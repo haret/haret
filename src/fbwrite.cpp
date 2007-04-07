@@ -48,23 +48,119 @@ goNewLine(fbinfo *fbi)
             , (fbi->scrx * fbi->scry - linebytes) * BPP);
 }
 
+// Write a charcter to the framebuffer.
+static void __preload
+fb_putc(fbinfo *fbi, char c)
+{
+    if (c == '\n') {
+        goNewLine(fbi);
+        return;
+    }
+    blit_char(fbi, c);
+    fbi->x++;
+    if (fbi->x >= fbi->maxx)
+        goNewLine(fbi);
+}
+
+// Write a string to the framebuffer.
+static void __preload
+fb_puts(fbinfo *fbi, const char *s)
+{
+    for (; *s; s++)
+        fb_putc(fbi, *s);
+}
+
+// Write an unsigned integer to the screen.
+static void __preload
+fb_putuint(fbinfo *fbi, uint32 val)
+{
+    char buf[12];
+    char *d = &buf[sizeof(buf) - 1];
+    *d-- = '\0';
+    for (;;) {
+        *d = val % 10;
+        val /= 10;
+        if (!val)
+            break;
+        d--;
+    }
+    fb_puts(fbi, d);
+}
+
+// Write a single digit hex character to the screen.
+static inline void __preload
+fb_putsinglehex(fbinfo *fbi, uint32 val)
+{
+    if (val <= 9)
+        val = '0' + val;
+    else
+        val = 'a' + val - 10;
+    fb_putc(fbi, val);
+}
+
+// Write an integer in hexadecimal to the screen.
+static void __preload
+fb_puthex(fbinfo *fbi, uint32 val)
+{
+    fb_putsinglehex(fbi, (val >> 28) & 0xf);
+    fb_putsinglehex(fbi, (val >> 24) & 0xf);
+    fb_putsinglehex(fbi, (val >> 20) & 0xf);
+    fb_putsinglehex(fbi, (val >> 16) & 0xf);
+    fb_putsinglehex(fbi, (val >> 12) & 0xf);
+    fb_putsinglehex(fbi, (val >> 8) & 0xf);
+    fb_putsinglehex(fbi, (val >> 4) & 0xf);
+    fb_putsinglehex(fbi, (val >> 0) & 0xf);
+}
+
 // Write a string to the framebuffer.
 void __preload
-fb_puts(fbinfo *fbi, const char *s)
+fb_printf(fbinfo *fbi, const char *fmt, ...)
 {
     if (!fbi->fb)
         return;
 
+    va_list args;
+    va_start(args, fmt);
+    const char *s = fmt;
     for (; *s; s++) {
-        if (*s == '\n') {
-            goNewLine(fbi);
+        if (*s != '%') {
+            fb_putc(fbi, *s);
             continue;
         }
-        blit_char(fbi, *s);
-        fbi->x++;
-        if (fbi->x >= fbi->maxx)
-            goNewLine(fbi);
+        const char *n = s+1;
+        int32 val;
+        const char *sarg;
+        switch (*n) {
+        case '%':
+            fb_putc(fbi, '%');
+            break;
+        case 'd':
+            val = va_arg(args, int32);
+            if (val < 0) {
+                fb_putc(fbi, '-');
+                val = -val;
+            }
+            fb_putuint(fbi, val);
+            break;
+        case 'u':
+            val = va_arg(args, int32);
+            fb_putuint(fbi, val);
+            break;
+        case 'x':
+            val = va_arg(args, int32);
+            fb_puthex(fbi, val);
+            break;
+        case 's':
+            sarg = va_arg(args, const char *);
+            fb_puts(fbi, sarg);
+            break;
+        default:
+            fb_putc(fbi, *s);
+            n = s;
+        }
+        s = n;
     }
+    va_end(args);
 }
 
 // Clear the screen.

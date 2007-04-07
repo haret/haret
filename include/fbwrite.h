@@ -11,7 +11,8 @@ struct fbinfo {
     int x, y;
 };
 
-void fb_puts(fbinfo *fbi, const char *s);
+void fb_printf(fbinfo *fbi, const char *fmt, ...)
+    __attribute__ ((format (printf, 2, 3)));
 void fb_clear(fbinfo *fbi);
 void fb_init(fbinfo *fbi);
 

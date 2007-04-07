@@ -210,17 +210,29 @@ do_copyPages(char *dest, const char ***pages, int start, int pagecount)
     }
 }
 
-// Must define strings in __preload section.
-#define FB_PUTS(fbi,str) do {                           \
-    const char *__msg;                                  \
-    asm(".section .text.preload, 1\n"                   \
-        "1:      .asciz \"" str "\"\n"                  \
-        "        .balign 4\n"                           \
-        "        .section .text.preload, 0\n"           \
-        "        add %0, pc, #( 1b - . - 8 )\n"         \
-        : "=r" (__msg));                                \
-    fb_puts((fbi), __msg);                              \
-} while (0)
+// Get Program Status Register value (in __preload section)
+static inline uint32 __preload do_cpuGetPSR(void) {
+    uint32 val;
+    asm volatile("mrs %0, cpsr" : "=r" (val));
+    return val;
+}
+
+// GCC really wants to put constant strings into the .rtext section -
+// this can break relocated code that can't see the .rtext section.
+// This macro will force a string into a code section.  Note backslash
+// and percent characters must be double escaped.
+#define STR_IN_CODE(sec,str) ({                 \
+    const char *__str;                          \
+    asm(".section " #sec ", 1\n"                \
+        "1:      .asciz \"" str "\"\n"          \
+        "        .balign 4\n"                   \
+        "        .section " #sec ", 0\n"        \
+        "        add %0, pc, #( 1b - . - 8 )\n" \
+        : "=r" (__str));                        \
+    __str;                                      \
+})
+
+#define FB_PRINTF(fbi,fmt,args...) fb_printf((fbi), STR_IN_CODE(.text.preload, fmt) , ##args )
 
 // Code to launch kernel.
 static void __preload
@@ -228,61 +240,63 @@ preloader(struct preloadData *data)
 {
     data->fbi.fb = (uint16 *)data->physFB;
     data->fbi.fonts = (unsigned char *)data->physFonts;
-    FB_PUTS(&data->fbi, "In preloader\\n");
+    FB_PRINTF(&data->fbi, "In preloader\\n");
 
     // Copy tags to beginning of ram.
     char *destTags = (char *)data->startRam + PHYSOFFSET_TAGS;
     do_copy(destTags, data->tags, TAGSIZE);
 
-    FB_PUTS(&data->fbi, "Tags relocated\\n");
+    FB_PRINTF(&data->fbi, "Tags relocated\\n");
 
     // Copy kernel image
     char *destKernel = (char *)data->startRam + PHYSOFFSET_KERNEL;
     int kernelCount = PAGE_ALIGN(data->kernelSize) / PAGE_SIZE;
     do_copyPages((char *)destKernel, data->indexPages, 0, kernelCount);
 
-    FB_PUTS(&data->fbi, "Kernel relocated\\n");
+    FB_PRINTF(&data->fbi, "Kernel relocated\\n");
 
     // Copy initrd (if applicable)
     char *destInitrd = (char *)data->startRam + PHYSOFFSET_INITRD;
     int initrdCount = PAGE_ALIGN(data->initrdSize) / PAGE_SIZE;
     do_copyPages(destInitrd, data->indexPages, kernelCount, initrdCount);
 
-    FB_PUTS(&data->fbi, "Initrd relocated\\n");
+    FB_PRINTF(&data->fbi, "Initrd relocated\\n");
 
     // Do CRC check (if enabled).
     if (data->doCRC) {
-        FB_PUTS(&data->fbi, "Checking tags crc...");
+        FB_PRINTF(&data->fbi, "Checking tags crc...");
         uint32 crc = crc32_be(0, destTags, TAGSIZE);
         crc = crc32_be_finish(crc, TAGSIZE);
         if (crc == data->tagsCRC)
-            FB_PUTS(&data->fbi, "okay\\n");
+            FB_PRINTF(&data->fbi, "okay\\n");
         else
-            FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
+            FB_PRINTF(&data->fbi, "FAIL FAIL FAIL\\n");
 
-        FB_PUTS(&data->fbi, "Checking kernel crc...");
+        FB_PRINTF(&data->fbi, "Checking kernel crc...");
         crc = crc32_be(0, destKernel, data->kernelSize);
         crc = crc32_be_finish(crc, data->kernelSize);
         if (crc == data->kernelCRC)
-            FB_PUTS(&data->fbi, "okay\\n");
+            FB_PRINTF(&data->fbi, "okay\\n");
         else
-            FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
+            FB_PRINTF(&data->fbi, "FAIL FAIL FAIL\\n");
 
         if (data->initrdSize) {
-            FB_PUTS(&data->fbi, "Checking initrd crc...");
+            FB_PRINTF(&data->fbi, "Checking initrd crc...");
             crc = crc32_be(0, destInitrd, data->initrdSize);
             crc = crc32_be_finish(crc, data->initrdSize);
             if (crc == data->initrdCRC)
-                FB_PUTS(&data->fbi, "okay\\n");
+                FB_PRINTF(&data->fbi, "okay\\n");
             else
-                FB_PUTS(&data->fbi, "FAIL FAIL FAIL\\n");
+                FB_PRINTF(&data->fbi, "FAIL FAIL FAIL\\n");
         }
     }
 
-    if ((cpuGetPSR() & 0xc0) != 0xc0)
-        FB_PUTS(&data->fbi, "ERROR: IRQS not off\\n");
+    uint32 psr = do_cpuGetPSR();
+    FB_PRINTF(&data->fbi, "PSR=%%x\\n", psr);
+    if ((psr & 0xc0) != 0xc0)
+        FB_PRINTF(&data->fbi, "ERROR: IRQS not off\\n");
 
-    FB_PUTS(&data->fbi, "Jumping to Kernel...\\n");
+    FB_PRINTF(&data->fbi, "Jumping to Kernel...\\n");
 
     // Boot
     typedef void (*lin_t)(uint32 zero, uint32 mach, char *tags);
@@ -589,12 +603,12 @@ launchKernel(struct bootmem *bm)
     take_control();
 
     fb_clear(&bm->pd->fbi);
-    fb_puts(&bm->pd->fbi, "HaRET boot\nShutting down hardware\n");
+    fb_printf(&bm->pd->fbi, "HaRET boot\nShutting down hardware\n");
 
     // Call per-arch boot prep function.
     Mach->hardwareShutdown();
 
-    fb_puts(&bm->pd->fbi, "Turning off MMU...\n");
+    fb_printf(&bm->pd->fbi, "Turning off MMU...\n");
 
     // Disable MMU and launch linux.
     mmu_trampoline(physAddrTram, virtAddrMmu, bm->physExec, Mach->flushCache);
