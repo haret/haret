@@ -20,13 +20,11 @@ irq_chained_handler:
 	@ Store registers on WINCE stack.
         stmdb   sp!, {r0-r12, r14}
 
-        @ Setup params to C code (sp=stack, r0=data, r1=saved regs)
+        @ Call into C code (sp=stack, r0=data, r1=saved regs)
         mov     r1, sp
         mov     r4, sp
         ldr     r0, [pc, #(dataMVA - . - 8)]
         mov     sp, r0
-
-        @ Call C code
         bl      irq_handler
 
         @ Restore registers from WinCE stack and call WinCE handler.
@@ -34,70 +32,46 @@ irq_chained_handler:
         ldmia   sp!, {r0-r12, r14}
         ldr     pc, [pc, #(winceIrqHandler - . - 8)]
 
-        .global PXA_abort_chained_handler
-PXA_abort_chained_handler:
-        @ Store r14 on wince stack
-        stmdb   sp!, {r14}
+        .global abort_chained_handler
+abort_chained_handler:
+	@ Store registers on WINCE stack.
+        stmdb   sp!, {r0-r12, r14}
 
-        @ Check if this is a debug event.
-        mrc     p15, 0, r14, c5, c0, 0  @ FSR register
-        ands    r14, r14, #(1<<9)       @ Debug event flag
-        bne     1f
-
-        @ Not a debug event; restore r14 and call wince handler
-        ldmia   sp!, {r14}
-        ldr     pc, [pc, #(winceAbortHandler - . - 8)]
-
-1:      @ This is a debug event.  Call into C code.
-
-        @ Place remaining registers on wince stack
-        stmdb   sp!, {r0-r12}
-
-        @ Setup params to C code (sp=stack, r0=data, r1=saved regs)
+        @ Call into C code (sp=stack, r0=data, r1=saved regs)
         mov     r1, sp
         mov     r4, sp
         ldr     r0, [pc, #(dataMVA - . - 8)]
         sub     sp, r0, #4096
+        bl      abort_handler
 
-        @ Call C code
-        bl      PXA_abort_handler
-
-        @ Return to user code
+        @ Restore registers from WinCE stack.
+        teq     r0, #0
         mov     sp, r4
         ldmia   sp!, {r0-r12, r14}
+
+        @ Return to user code or call wince handler depending if r0 was 0
+        ldreq   pc, [pc, #(winceAbortHandler - . - 8)]
         subs    pc, lr, #4
 
-        .global PXA_prefetch_chained_handler
-PXA_prefetch_chained_handler:
-        @ Store r14 on wince stack
-        stmdb   sp!, {r14}
+        .global prefetch_chained_handler
+prefetch_chained_handler:
+	@ Store registers on WINCE stack.
+        stmdb   sp!, {r0-r12, r14}
 
-        @ Check if this is a debug event.
-        mrc     p15, 0, r14, c5, c0, 0  @ FSR register
-        ands    r14, r14, #(1<<9)       @ Debug event flag
-        bne     1f
-
-        @ Not a debug event; restore r14 and call wince handler
-        ldmia   sp!, {r14}
-        ldr     pc, [pc, #(wincePrefetchHandler - . - 8)]
-
-1:      @ This is a debug event.  Call into C code.
-
-        @ Place remaining registers on wince stack
-        stmdb   sp!, {r0-r12}
-
-        @ Setup params to C code (sp=stack, r0=data, r1=saved regs)
+        @ Call into C code (sp=stack, r0=data, r1=saved regs)
         mov     r1, sp
         mov     r4, sp
         ldr     r0, [pc, #(dataMVA - . - 8)]
         sub     sp, r0, #(2 * 4096)
+        bl      prefetch_handler
 
-        @ Call C code
-        bl      PXA_prefetch_handler
-
-        @ Return to user code
+        @ Restore registers from WinCE stack.
+        teq     r0, #0
         mov     sp, r4
         ldmia   sp!, {r0-r12, r14}
+
+        @ Return to user code or call wince handler depending if r0 was 0
+        ldreq   pc, [pc, #(wincePrefetchHandler - . - 8)]
         subs    pc, lr, #4
 
         .end

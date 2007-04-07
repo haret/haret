@@ -228,6 +228,8 @@ checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
 }
 
 static void __irq PXA_irq_handler(struct irqData *data, struct irqregs *regs);
+static int __irq PXA_abort_handler(struct irqData *data, struct irqregs *regs);
+static int __irq PXA_prefetch_handler(struct irqData *data, struct irqregs *regs);
 
 // Handler for interrupt events.  Note that this is running in
 // "Modified Virtual Address" mode, so avoid reading any global
@@ -246,6 +248,26 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     checkPolls(data, 0, data->irqpolls, data->irqpollcount);
     // Trace time memory polling.
     checkPolls(data, 0, data->tracepolls, data->tracepollcount);
+}
+
+extern "C" int __irq
+abort_handler(struct irqData *data, struct irqregs *regs)
+{
+    data->abortCount++;
+    if (data->isPXA)
+        // Separate routine for PXA chips
+        return PXA_abort_handler(data, regs);
+    return 0;
+}
+
+extern "C" int __irq
+prefetch_handler(struct irqData *data, struct irqregs *regs)
+{
+    data->prefetchCount++;
+    if (data->isPXA)
+        // Separate routine for PXA chips
+        return PXA_prefetch_handler(data, regs);
+    return 0;
 }
 
 
@@ -321,7 +343,7 @@ get_trace(struct irqData *data)
     return &data->traces[data->readPos % NR_TRACE];
 }
 
-// Lookup an assembler name for an instrution - this is incomplete.
+// Lookup an assembler name for an instruction - this is incomplete.
 static const char *
 getInsnName(uint32 insn)
 {
@@ -503,6 +525,8 @@ DEF_SETIRQCPR(set_DBR0, p15, 0, c14, c0, 0)
 DEF_SETIRQCPR(set_DBR1, p15, 0, c14, c3, 0)
 // Set the DCSR software debug register
 DEF_SETIRQCPR(set_DCSR, p14, 0, c10, c0, 0)
+// Get the FSR software debug register
+DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
 
 // Enable CPU registers to catch insns and memory accesses
 static void __irq
@@ -570,9 +594,13 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 }
 
 // Code that handles memory access events.
-extern "C" void __irq
+static int __irq
 PXA_abort_handler(struct irqData *data, struct irqregs *regs)
 {
+    if ((get_FSR() & (1<<9)) == 0)
+        // Not a debug trace event
+        return 0;
+
     uint32 clock = get_CCNT();
     data->abortCount++;
 
@@ -582,14 +610,14 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
     set_DBCON(data->dbcon);
 
     if (data->traceForWatch && !count)
-        return;
+        return 1;
 
     uint32 old_pc = transPC(regs->old_pc - 8);
     uint32 ignoreCount = data->ignoreAddr[0];
     for (uint32 i=1; i<ignoreCount; i++) {
         if (old_pc == data->ignoreAddr[i])
             // This address is being ignored.
-            return;
+            return 1;
     }
 
     extraregs er;
@@ -598,12 +626,17 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
     add_trace(data, clock, old_pc, insn
               , getReg(regs, &er, mask_Rd(insn))
               , getReg(regs, &er, mask_Rn(insn)));
+    return 1;
 }
 
 // Code that handles instruction breakpoint events.
-extern "C" void __irq
+static int __irq
 PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
+    if ((get_FSR() & (1<<9)) == 0)
+        // Not a debug trace event
+        return 0;
+
     uint32 clock = get_CCNT();
     data->prefetchCount++;
 
@@ -640,6 +673,7 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
     set_DBCON(0);
     checkPolls(data, clock, data->tracepolls, data->tracepollcount);
     set_DBCON(data->dbcon);
+    return 1;
 }
 
 // Reset CPU registers that conrol software debug / performance monitoring
@@ -818,13 +852,13 @@ extern "C" {
     // Assembler linkage.
     extern char asmIrqVars;
     extern void irq_chained_handler();
-    extern void PXA_abort_chained_handler();
-    extern void PXA_prefetch_chained_handler();
+    extern void abort_chained_handler();
+    extern void prefetch_chained_handler();
 }
 #define offset_asmIrqVars() (&asmIrqVars - &irq_start)
 #define offset_asmIrqHandler() ((char *)irq_chained_handler - &irq_start)
-#define offset_asmAbortHandler() ((char *)PXA_abort_chained_handler - &irq_start)
-#define offset_asmPrefetchHandler() ((char *)PXA_prefetch_chained_handler - &irq_start)
+#define offset_asmAbortHandler() ((char *)abort_chained_handler - &irq_start)
+#define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - &irq_start)
 #define size_cHandlers() (&irq_end - &irq_start)
 #define size_handlerCode() (uint)(&((irqChainCode*)0)->cCode[size_cHandlers()])
 
@@ -903,13 +937,8 @@ cmd_wirq(const char *cmd, const char *args)
     asmVars->winceAbortHandler = *abort_loc;
     asmVars->wincePrefetchHandler = *prefetch_loc;
     newIrqHandler = (uint32)&code->cCode[offset_asmIrqHandler()];
-    if (testPXA()) {
-        newAbortHandler = (uint32)&code->cCode[offset_asmAbortHandler()];
-        newPrefetchHandler = (uint32)&code->cCode[offset_asmPrefetchHandler()];
-    } else {
-        newAbortHandler = *abort_loc;
-        newPrefetchHandler = *prefetch_loc;
-    }
+    newAbortHandler = (uint32)&code->cCode[offset_asmAbortHandler()];
+    newPrefetchHandler = (uint32)&code->cCode[offset_asmPrefetchHandler()];
 
     Output("irq:%08x@%p=%08x abort:%08x@%p=%08x"
            " prefetch:%08x@%p=%08x"
