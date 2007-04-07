@@ -1,0 +1,8 @@
+# This is a sample file for use with the "linload" feature of haret.
+#
+# To use linload, run:
+#     make linload KERNEL=my-zImage INITRD=my-rootfs.cgz SCRIPT=my-script.txt
+#
+# The special command "ramboot" will cause the linload.exe version of
+# haret to load the kernel/initrd linked into it.
+ramboot

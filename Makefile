@@ -105,13 +105,13 @@ $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 ####### Stripped down linux bootloading program.
 LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
 
-INITRD := /dev/null
 KERNEL := zImage
-SCRIPT :=
+INITRD := /dev/null
+SCRIPT := docs/linboot.txt
 
 $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	@echo "  Building $@"
-	$(Q)$(CXX) -c -DLIN_INITRD=\"$(INITRD)\" -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
+	$(Q)$(CXX) -c -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_INITRD=\"$(INITRD)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
 
 $(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
 
