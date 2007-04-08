@@ -29,27 +29,16 @@ LATE_LOAD(FreePhysMem, "coredll")
  * Shared storage between irq handlers and reporting code
  ****************************************************************/
 
+struct traceitem;
+typedef void (*tracereporter)(uint32 msecs, traceitem *);
+
 // The layout of each item in the "trace buffer" shared between the
 // exception handlers and the monitoring code.
 struct traceitem {
-    // Clock counter at the time of the event
-    uint32 clock;
-    // Modified virtual address of the 'pc' that got trapped.
-    uint32 mvaloc;
-    // Instruction that caused the trap (or an id field; see below)
-    uint32 insn;
-    // The value read/written.
-    uint32 value;
-    // The location read/written to.
-    uint32 addr;
-};
-
-// Special insn codes for marking non software debug events.
-enum {
-    FI_IRQ    = 0xffffffff,
-    FI_INSN   = 0xfffffffe,
-    FI_RESUME = 0xfffffffd,
-    FI_MEMPOLL= 0xfffffffc,
+    // Event specific reporter
+    tracereporter reporter;
+    // Data
+    uint32 d0, d1, d2, d3, d4;
 };
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;
@@ -96,6 +85,49 @@ struct irqData {
     // Summary counters.
     uint32 irqCount, abortCount, prefetchCount;
 };
+
+// Add an item to the trace buffer.
+static inline int __irq
+add_trace(struct irqData *data, tracereporter reporter
+          , uint32 d0=0, uint32 d1=0, uint32 d2=0, uint32 d3=0, uint32 d4=0)
+{
+    if (data->writePos - data->readPos >= NR_TRACE) {
+        // No more space in trace buffer.
+        data->overflows++;
+        return -1;
+    }
+    struct traceitem *pos = &data->traces[data->writePos % NR_TRACE];
+    pos->reporter = reporter;
+    pos->d0 = d0;
+    pos->d1 = d1;
+    pos->d2 = d2;
+    pos->d3 = d3;
+    pos->d4 = d4;
+    data->writePos++;
+    return 0;
+}
+
+static uint32 LastOverflowReport;
+
+// Pull a trace event from the trace buffer and print it out.  Returns
+// 0 if nothing was available.
+static int
+printTrace(uint32 msecs, struct irqData *data)
+{
+    uint32 writePos = data->writePos;
+    if (data->readPos == writePos)
+        return 0;
+    uint32 tmpoverflow = data->overflows;
+    if (tmpoverflow != LastOverflowReport) {
+        Output("overflowed %d traces"
+               , tmpoverflow - LastOverflowReport);
+        LastOverflowReport = tmpoverflow;
+    }
+    struct traceitem *cur = &data->traces[data->readPos % NR_TRACE];
+    cur->reporter(msecs, cur);
+    data->readPos++;
+    return 1;
+}
 
 
 /****************************************************************
@@ -181,30 +213,55 @@ getReg(struct irqregs *regs, struct extraregs *er, uint32 nr)
 #define mask_Rn(insn) (((insn)>>16) & 0xf)
 #define mask_Rd(insn) (((insn)>>12) & 0xf)
 
+// Lookup an assembler name for an instruction - this is incomplete.
+static const char *
+getInsnName(uint32 insn)
+{
+    const char *iname = "?";
+    int isLoad = insn & 0x00100000;
+    if ((insn & 0x0C000000) == 0x04000000) {
+        if (isLoad) {
+            if (insn & (1<<22))
+                iname = "ldrb";
+            else
+                iname = "ldr";
+        } else {
+            if (insn & (1<<22))
+                iname = "strb";
+            else
+                iname = "str";
+        }
+    } else if ((insn & 0x0E000000) == 0x00000000) {
+        int lowbyte = insn & 0xF0;
+        if (isLoad) {
+            if (lowbyte == 0xb0)
+                iname = "ldrh";
+            else if (lowbyte == 0xd0)
+                iname = "ldrsb";
+            else if (lowbyte == 0xf0)
+                iname = "ldrsh";
+        } else {
+            if (lowbyte == 0xb0)
+                iname = "strh";
+            else if (lowbyte == 0x90)
+                iname = "swp?";
+        }
+    }
+
+    return iname;
+}
+
 
 /****************************************************************
  * C part of exception handlers
  ****************************************************************/
 
-// Add an item to the trace buffer.
-static inline int __irq
-add_trace(struct irqData *data
-          , uint32 clock, uint32 loc, uint32 insn
-          , uint32 val, uint32 addr)
+static void
+report_memPoll(uint32 msecs, traceitem *item)
 {
-    if (data->writePos - data->readPos >= NR_TRACE) {
-        // No more space in trace buffer.
-        data->overflows++;
-        return -1;
-    }
-    struct traceitem *pos = &data->traces[data->writePos % NR_TRACE];
-    pos->clock = clock;
-    pos->mvaloc = loc;
-    pos->insn = insn;
-    pos->value = val;
-    pos->addr = addr;
-    data->writePos++;
-    return 0;
+    memcheck *mc = (memcheck*)item->d0;
+    uint32 clock=item->d1, val=item->d2, mask=item->d3;
+    mc->reporter(msecs, clock, mc, val, mask);
 }
 
 // Perform a set of memory polls and add to trace buffer.
@@ -219,7 +276,7 @@ checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
         if (!ret)
             continue;
         foundcount++;
-        ret = add_trace(data, clock, (uint32)mc, FI_MEMPOLL, val, maskval);
+        ret = add_trace(data, report_memPoll, (uint32)mc, clock, val, maskval);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
@@ -318,8 +375,6 @@ REG_CMD_ALT(testAvail, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
  * Code to report feedback from exception handlers
  ****************************************************************/
 
-static uint32 LastOverflowReport;
-
 // Called before exceptions are taken over.
 static void
 preLoop(struct irqData *data)
@@ -331,102 +386,6 @@ preLoop(struct irqData *data)
     data->irqpollcount = watchirqcount;
     memcpy(data->tracepolls, watchtracepolls, sizeof(data->tracepolls));
     data->tracepollcount = watchtracecount;
-}
-
-// Return a pointer to the next available trace buffer entry.
-static struct traceitem *
-get_trace(struct irqData *data)
-{
-    uint32 writePos = data->writePos;
-    if (data->readPos == writePos)
-        return NULL;
-    return &data->traces[data->readPos % NR_TRACE];
-}
-
-// Lookup an assembler name for an instruction - this is incomplete.
-static const char *
-getInsnName(uint32 insn)
-{
-    const char *iname = "?";
-    int isLoad = insn & 0x00100000;
-    if ((insn & 0x0C000000) == 0x04000000) {
-        if (isLoad) {
-            if (insn & (1<<22))
-                iname = "ldrb";
-            else
-                iname = "ldr";
-        } else {
-            if (insn & (1<<22))
-                iname = "strb";
-            else
-                iname = "str";
-        }
-    } else if ((insn & 0x0E000000) == 0x00000000) {
-        int lowbyte = insn & 0xF0;
-        if (isLoad) {
-            if (lowbyte == 0xb0)
-                iname = "ldrh";
-            else if (lowbyte == 0xd0)
-                iname = "ldrsb";
-            else if (lowbyte == 0xf0)
-                iname = "ldrsh";
-        } else {
-            if (lowbyte == 0xb0)
-                iname = "strh";
-            else if (lowbyte == 0x90)
-                iname = "swp?";
-        }
-    }
-
-    return iname;
-}
-
-enum { START_GPIO_IRQS = 34 };
-
-// Pull a trace event from the trace buffer and print it out.  Returns
-// 0 if nothing was available.
-static int
-printTrace(uint32 msecs, struct irqData *data)
-{
-    struct traceitem *cur = get_trace(data);
-    if (! cur)
-        // No event pending.
-        return 0;
-    uint32 tmpoverflow = data->overflows;
-    if (tmpoverflow != LastOverflowReport) {
-        Output("overflowed %d traces"
-               , tmpoverflow - LastOverflowReport);
-        LastOverflowReport = tmpoverflow;
-    }
-    uint32 insn = cur->insn;
-    uint32 value = cur->value;
-    if (insn == FI_IRQ) {
-        // Irq event
-        if (value >= START_GPIO_IRQS)
-            Output("%06d: %08x: irq %d(gpio %d)"
-                   , msecs, cur->clock, value, value-START_GPIO_IRQS);
-        else
-            Output("%06d: %08x: irq %d(%s)"
-                   , msecs, cur->clock, value, Mach->getIrqName(value));
-    } else if (insn == FI_INSN) {
-        // Instruction trace event
-        Output("%06d: %08x: insn %08x: %08x %08x"
-               , msecs, cur->clock, cur->mvaloc, value, cur->addr);
-    } else if (insn == FI_RESUME) {
-        // WinCE CPU resume event
-        Output("%06d: %08x: cpu resumed", msecs, cur->clock);
-    } else if (insn == FI_MEMPOLL) {
-        // Memory trace event
-        memcheck *mc = (memcheck*)cur->mvaloc;
-        mc->reporter(msecs, cur->clock, mc, value, cur->addr);
-    } else {
-        // Software debug event
-        Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
-               , msecs, cur->clock
-               , cur->mvaloc, insn, getInsnName(insn), value, cur->addr);
-    }
-    data->readPos++;
-    return 1;
 }
 
 // Code called while exceptions are rerouted - should return after
@@ -482,6 +441,7 @@ postLoop(struct irqData *data)
 enum {
     ICHP_VAL_IRQ = 1<<31,
 
+    START_GPIO_IRQS = 34,
     NR_GPIOx_IRQ = 10,
 
     IRQ_OFFSET = 0x40D00000,
@@ -552,6 +512,24 @@ startPXAtraps(struct irqData *data)
     }
 }
 
+static void
+report_winceResume(uint32 msecs, traceitem *item)
+{
+    Output("%06d: %08x: cpu resumed", msecs, 0);
+}
+
+static void
+report_irq(uint32 msecs, traceitem *item)
+{
+    uint32 clock = item->d0, irq = item->d1;
+    if (irq >= START_GPIO_IRQS)
+        Output("%06d: %08x: irq %d(gpio %d)"
+               , msecs, clock, irq, irq-START_GPIO_IRQS);
+    else
+        Output("%06d: %08x: irq %d(%s)"
+               , msecs, clock, irq, Mach->getIrqName(irq));
+}
+
 static void __irq
 PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 {
@@ -559,7 +537,7 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 
     if (get_DBCON() != data->dbcon) {
         // Performance counter not running - reenable.
-        add_trace(data, 0, 0, FI_RESUME, 0, 0);
+        add_trace(data, report_winceResume);
         startPXAtraps(data);
         clock = 0;
     }
@@ -572,7 +550,7 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
          & *(uint32*)&data->irq_ctrl[IRQ_ICMR2_OFFSET])};
     for (int i=0; i<START_GPIO_IRQS; i++)
         if (TESTBIT(irqs, i) && !TESTBIT(data->ignoredIrqs, i))
-            add_trace(data, clock, 0, FI_IRQ, i, 0);
+            add_trace(data, report_irq, clock, i);
     if (irqs[0] & 0x400 && data->demuxGPIOirq) {
         // Gpio activity
         uint32 gpio_irqs[4] = {
@@ -583,7 +561,7 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
         for (int i=0; i<120; i++)
             if (TESTBIT(gpio_irqs, i) && !TESTBIT(data->ignoredIrqs
                                                   , START_GPIO_IRQS+i))
-                add_trace(data, clock, 0, FI_IRQ, START_GPIO_IRQS+i, 0);
+                add_trace(data, report_irq, clock, START_GPIO_IRQS+i);
     }
 
     // Irq time memory polling.
@@ -591,6 +569,15 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
     // Trace time memory polling.
     checkPolls(data, clock, data->tracepolls, data->tracepollcount);
     set_DBCON(data->dbcon);
+}
+
+
+static void
+report_memAccess(uint32 msecs, traceitem *item)
+{
+    uint32 clock=item->d0, pc=item->d1, insn=item->d2, Rd=item->d3, Rn=item->d4;
+    Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
+           , msecs, clock, pc, insn, getInsnName(insn), Rd, Rn);
 }
 
 // Code that handles memory access events.
@@ -623,10 +610,18 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
     extraregs er;
     er.didfetch = 0;
     uint32 insn = *(uint32*)old_pc;
-    add_trace(data, clock, old_pc, insn
+    add_trace(data, report_memAccess, clock, old_pc, insn
               , getReg(regs, &er, mask_Rd(insn))
               , getReg(regs, &er, mask_Rn(insn)));
     return 1;
+}
+
+static void
+report_insnTrace(uint32 msecs, traceitem *item)
+{
+    uint32 clock=item->d0, pc=item->d1, reg1=item->d2, reg2=item->d3;
+    Output("%06d: %08x: insn %08x: %08x %08x"
+           , msecs, clock, pc, reg1, reg2);
 }
 
 // Code that handles instruction breakpoint events.
@@ -665,7 +660,7 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
     }
     extraregs er;
     er.didfetch = 0;
-    add_trace(data, clock, old_pc, FI_INSN
+    add_trace(data, report_insnTrace, clock, old_pc
               , getReg(regs, &er, idata->reg1)
               , getReg(regs, &er, idata->reg2));
 
