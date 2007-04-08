@@ -1,10 +1,6 @@
 #ifndef __WATCH_H
 #define __WATCH_H
 
-// Mark a function to be available during interrupt handling.  (See
-// irq.cpp for more details.)
-#define __irq __attribute__ ((__section__ (".text.irq")))
-
 // Function callback definition to report the results of a memory
 // check.
 typedef void (*reporter_t)(uint32 msecs, uint32 clock, struct memcheck *
@@ -14,7 +10,7 @@ typedef void (*reporter_t)(uint32 msecs, uint32 clock, struct memcheck *
 struct memcheck {
     reporter_t reporter;
     void *data;
-    uint32 readSize : 3;
+    uint32 readSize : 2;
     uint32 trySuppress : 1, setCmp : 1, trySuppressNext : 1;
     char *addr;
     uint32 cmpVal;
@@ -22,7 +18,7 @@ struct memcheck {
 };
 
 // Read a memory area and check for a change.
-int __irq testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
+int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
 
 // Helper for handling memory poll haret commands.
 void watchCmdHelper(memcheck *list, uint32 max, uint32 *total

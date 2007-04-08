@@ -97,8 +97,8 @@ COREOBJS := $(MACHOBJS) haret-res.o \
   linboot.o fbwrite.o font_mini_4x6.o
 
 HARETOBJS := $(COREOBJS) haret.o \
-  s-cpu.o gpio.o uart.o wincmds.o irqchain.o watch.o irq.o \
-  network.o terminal.o com_port.o tlhcmds.o pxacmds.o aticmds.o
+  gpio.o uart.o wincmds.o watch.o irqchain.o irq.o pxatrace.o arminsns.o \
+  network.o terminal.o com_port.o tlhcmds.o pxacmds.o aticmds.o \
 
 $(OUT)haret-debug: $(addprefix $(OUT),$(HARETOBJS)) src/haret.lds
 

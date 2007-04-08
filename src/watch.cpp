@@ -13,6 +13,7 @@
 #include "output.h" // Output
 #include "lateload.h" // LATE_LOAD
 #include "script.h" // REG_CMD
+#include "irq.h" // __irq
 #include "watch.h"
 
 // Older versions of wince don't have SleepTillTick - use Sleep(1)
