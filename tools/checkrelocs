@@ -11,9 +11,10 @@
 LD=$BASE/bin/arm-wince-mingw32ce-ld
 OBJDUMP=$BASE/bin/arm-wince-mingw32ce-objdump
 TMP=tmp_link.o
+IGNORE=" ARM_26D | ARM_32[ ]*\.text\+"
 
 $LD -r "$@" -o $TMP
-$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | grep -vw ARM_26D | grep -q '^0'
+$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | egrep -v "$IGNORE" | grep -q '^0'
 STATUS=$?
 
 if [ $STATUS != 0 ]; then
@@ -25,7 +26,7 @@ echo "ERROR:"
 echo "ERROR: There is an external reference from a standalone haret section."
 echo "ERROR:"
 
-$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | grep -vw ARM_26D
+$OBJDUMP -C -r -j .text.preload -j .text.irq $TMP | egrep -v "$IGNORE"
 rm -f $TMP
 
 exit 1
