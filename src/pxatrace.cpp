@@ -183,12 +183,10 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
             return 1;
     }
 
-    extraregs er;
-    er.didfetch = 0;
     uint32 insn = *(uint32*)old_pc;
     add_trace(data, report_memAccess, clock, old_pc, insn
-              , getReg(regs, &er, mask_Rd(insn))
-              , getReg(regs, &er, mask_Rn(insn)));
+              , getReg(regs, mask_Rd(insn))
+              , getReg(regs, mask_Rn(insn)));
     return 1;
 }
 
@@ -234,11 +232,10 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
             set_IBCR1(0);
         }
     }
-    extraregs er;
-    er.didfetch = 0;
+
     add_trace(data, report_insnTrace, clock, old_pc
-              , getReg(regs, &er, idata->reg1)
-              , getReg(regs, &er, idata->reg2));
+              , getReg(regs, idata->reg1)
+              , getReg(regs, idata->reg2));
 
     // Trace time memory polling.
     set_DBCON(0);
@@ -328,12 +325,12 @@ REG_VAR_INT(testPXAAvail, "INSN2REG2", insnTrace2Reg2,
 #define mask_DBCON_E1(val) (((val) & (0x3))<<2)
 #define DBCON_MASKBIT (1<<8)
 
-void
+int
 prepPXAtraps(struct irqData *data)
 {
     data->isPXA = testPXA();
     if (! data->isPXA)
-        return;
+        return 0;
     // Check for software debug data watch points.
     if (irqTrace != 0xFFFFFFFF) {
         data->dbr0 = irqTrace;
@@ -378,4 +375,6 @@ prepPXAtraps(struct irqData *data)
     data->demuxGPIOirq = irqDemuxGPIO;
     memcpy(data->ignoreAddr, irqIgnoreAddr, sizeof(data->ignoreAddr));
     data->traceForWatch = traceForWatch;
+
+    return 0;
 }

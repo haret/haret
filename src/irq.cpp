@@ -79,20 +79,26 @@ extern "C" int __irq
 abort_handler(struct irqData *data, struct irqregs *regs)
 {
     data->abortCount++;
-    if (data->isPXA)
+    if (data->isPXA) {
         // Separate routine for PXA chips
-        return PXA_abort_handler(data, regs);
-    return 0;
+        int ret = PXA_abort_handler(data, regs);
+        if (ret)
+            return ret;
+    }
+    return L1_abort_handler(data, regs);
 }
 
 extern "C" int __irq
 prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
     data->prefetchCount++;
-    if (data->isPXA)
+    if (data->isPXA) {
         // Separate routine for PXA chips
-        return PXA_prefetch_handler(data, regs);
-    return 0;
+        int ret = PXA_prefetch_handler(data, regs);
+        if (ret)
+            return ret;
+    }
+    return L1_prefetch_handler(data, regs);
 }
 
 
@@ -330,6 +336,7 @@ cmd_wirq(const char *cmd, const char *args)
     rawCode = late_AllocPhysMem(size_handlerCode()
                                 , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
     irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
+    int ret;
     struct irqData *data = &code->data;
     struct irqAsmVars *asmVars = (irqAsmVars*)&code->cCode[offset_asmIrqVars()];
     if (!rawCode) {
@@ -363,14 +370,21 @@ cmd_wirq(const char *cmd, const char *args)
            , asmVars->dataMVA
            , size_cHandlers(), size_handlerCode());
 
-    prepPXAtraps(data);
+    ret = prepPXAtraps(data);
+    if (ret)
+        goto abort;
 
     preLoop(data);
+
+    ret = prepL1traps(data);
+    if (ret)
+        goto abort;
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
     take_control();
     startPXAtraps(data);
+    startL1traps(data);
     Mach->flushCache();
     *irq_loc = newIrqHandler;
     *abort_loc = newAbortHandler;
@@ -385,6 +399,7 @@ cmd_wirq(const char *cmd, const char *args)
     Output("Restoring windows exception handlers...");
     take_control();
     stopPXAtraps(data);
+    stopL1traps(data);
     Mach->flushCache();
     *irq_loc = asmVars->winceIrqHandler;
     *abort_loc = asmVars->winceAbortHandler;

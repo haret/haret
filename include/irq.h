@@ -49,6 +49,26 @@ struct irqData {
     uint32 writePos, readPos;
     struct traceitem traces[NR_TRACE];
 
+    // Summary counters.
+    uint32 irqCount, abortCount, prefetchCount;
+
+    // Standard memory polling.
+    uint32 tracepollcount;
+    memcheck tracepolls[MAX_MEMCHECK];
+    uint32 irqpollcount;
+    memcheck irqpolls[MAX_MEMCHECK];
+
+    //
+    // MMU tracing specific
+    //
+    uint32 *alt_l1traceDesc, *l1traceDesc;
+    uint32 alt_l1trace, l1trace;
+    uint32 max_l1trace;
+
+    //
+    // PXA tracing specific
+    //
+
     // Intel PXA based chip?
     int isPXA;
 
@@ -56,8 +76,6 @@ struct irqData {
     uint8 *irq_ctrl, *gpio_ctrl;
     uint32 ignoredIrqs[BITMAPSIZE(MAX_IRQ)];
     uint32 demuxGPIOirq;
-    uint32 irqpollcount;
-    memcheck irqpolls[MAX_MEMCHECK];
 
     // Debug information.
     uint32 ignoreAddr[MAX_IGNOREADDR];
@@ -66,11 +84,6 @@ struct irqData {
     // Instruction trace information.
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];
     uint32 dbr0, dbr1, dbcon;
-    uint32 tracepollcount;
-    memcheck tracepolls[MAX_MEMCHECK];
-
-    // Summary counters.
-    uint32 irqCount, abortCount, prefetchCount;
 };
 
 // Add an item to the trace buffer.
@@ -144,4 +157,16 @@ int PXA_prefetch_handler(struct irqData *data, struct irqregs *regs);
 
 void startPXAtraps(struct irqData *data);
 void stopPXAtraps(struct irqData *data);
-void prepPXAtraps(struct irqData *data);
+int prepPXAtraps(struct irqData *data);
+
+
+/****************************************************************
+ * MMU based memory tracing (see l1trace.cpp)
+ ****************************************************************/
+
+int L1_abort_handler(struct irqData *data, struct irqregs *regs);
+int L1_prefetch_handler(struct irqData *data, struct irqregs *regs);
+
+void startL1traps(struct irqData *data);
+void stopL1traps(struct irqData *data);
+int prepL1traps(struct irqData *data);

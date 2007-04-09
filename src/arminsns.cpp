@@ -96,30 +96,59 @@ static inline uint32 __irq get_SPSR(void) {
 
 // Return the value of a given register.
 uint32 __irq
-getReg(struct irqregs *regs, struct extraregs *er, uint32 nr)
+getReg(struct irqregs *regs, uint32 nr)
 {
     if (nr < 13)
         return regs->regs[nr];
     if (nr >= 15)
         return regs->old_pc;
-    if (!er->didfetch) {
-        // In order to access the r13/r14 registers, it is necessary
-        // to switch contexts, copy the registers to low order
-        // registers, and then switch context back.
-        uint32 newContext = get_SPSR();
-        newContext &= 0x1f; // Extract mode bits.
-        newContext |= (1<<6)|(1<<7); // Disable interrupts
-        uint32 temp;
-        asm volatile("mrs %0, cpsr @ Get current cpsr\n"
-                     "msr cpsr, %3 @ Change processor mode\n"
-                     "mov %1, r13  @ Get r13\n"
-                     "mov %2, r14  @ Get r14\n"
-                     "msr cpsr, %0 @ Restore processor mode"
-                     : "=&r" (temp), "=r" (er->r13), "=r" (er->r14)
-                     : "r" (newContext));
-        er->didfetch = 1;
+
+    // In order to access the r13/r14 registers, it is necessary
+    // to switch contexts, copy the registers to low order
+    // registers, and then switch context back.
+    uint32 newContext = get_SPSR();
+    newContext &= 0x1f; // Extract mode bits.
+    newContext |= (1<<6)|(1<<7); // Disable interrupts
+    uint32 temp, hiregs[2];
+    asm volatile("mrs %0, cpsr @ Get current cpsr\n"
+                 "msr cpsr, %3 @ Change processor mode\n"
+                 "mov %1, r13  @ Get r13\n"
+                 "mov %2, r14  @ Get r14\n"
+                 "msr cpsr, %0 @ Restore processor mode"
+                 : "=&r" (temp), "=r" (hiregs[0]), "=r" (hiregs[1])
+                 : "r" (newContext));
+    return hiregs[nr-13];
+}
+
+// Set the value of a register.
+void __irq
+setReg(struct irqregs *regs, uint32 nr, uint32 val)
+{
+    if (nr < 13) {
+        regs->regs[nr] = val;
+        return;
     }
-    return er->regs[nr-13];
+    if (nr >= 15) {
+        regs->old_pc = val;
+        return;
+    }
+
+    // In order to access the r13/r14 registers, it is necessary to
+    // switch contexts, set the register, and then switch context
+    // back.
+    uint32 newContext = get_SPSR();
+    newContext &= 0x1f; // Extract mode bits.
+    newContext |= (1<<6)|(1<<7); // Disable interrupts
+    if (nr == 13)
+        newContext |= (1<<30); // Z bit
+    uint32 temp;
+    asm volatile("mrs %0, cpsr   @ Get current cpsr\n"
+                 "msr cpsr, %2   @ Change processor mode\n"
+                 "moveq r13, %1  @ Set r13\n"
+                 "movne r14, %1  @ Set r14\n"
+                 "msr cpsr, %0   @ Restore processor mode"
+                 : "=&r" (temp), "=r" (val)
+                 : "r" (newContext));
 }
 
 // Lookup an assembler name for an instruction - this is incomplete.
