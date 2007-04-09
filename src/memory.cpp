@@ -862,6 +862,9 @@ DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 static void
 memDumpMMU(const char *tok, const char *args)
 {
+  uint32 l1only = 0;
+  get_expression(&args, &l1only);
+
   Output("----- Virtual address map -----");
   Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
          , get_p15r1(), get_p15r2(), get_p15r3(), get_p15r13());
@@ -927,7 +930,7 @@ memDumpMMU(const char *tok, const char *args)
           break;
       }
 
-      if (l2_count)
+      if (l2_count && !l1only)
       {
         // There is a possibility of crash here. I don't know what's the
         // cause but that's why L2 is commented out for now
@@ -979,8 +982,9 @@ memDumpMMU(const char *tok, const char *args)
   DoneProgress ();
 }
 REG_DUMP(0, "MMU", memDumpMMU,
-         "MMU\n"
-         "  Show virtual memory map (4Gb address space).")
+         "MMU [1]\n"
+         "  Show virtual memory map (4Gb address space). One may give an\n"
+         "  optional argument to trim output to the l1 tables.")
 
 static uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
 {
