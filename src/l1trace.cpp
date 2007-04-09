@@ -85,6 +85,8 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
 #define Bbit(insn) ((insn)&(1<<22))
 #define Wbit(insn) ((insn)&(1<<21))
 #define Lbit(insn) ((insn)&(1<<20))
+#define Sbit(insn) ((insn)&(1<<6))
+#define Hbit(insn) ((insn)&(1<<5))
 
     uint32 val;
     if ((insn & 0x0C000000) == 0x04000000) {
@@ -104,6 +106,31 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
                 *(uint8*)newaddr = val;
             else
                 *(uint32*)newaddr = val;
+        }
+        if (Wbit(insn))
+            setReg(regs, mask_Rn(insn), addr);
+    } else if ((insn & 0x0E000090) == 0x00000090) {
+        if (Pbit(insn) == 0)
+            goto fail;
+        if (Lbit(insn)) {
+            // ldrh
+            if (Hbit(insn)) {
+                if (Sbit(insn)) {
+                    val = *(int16*)newaddr;
+                } else {
+                    val = *(uint16*)newaddr;
+                }
+            } else if (Sbit(insn)) {
+                val = *(int8*)newaddr;
+            } else
+                goto fail;
+            setReg(regs, mask_Rd(insn), val);
+        } else {
+            // strh
+            if (Sbit(insn) || !Hbit(insn))
+                goto fail;
+            val = getReg(regs, mask_Rd(insn));
+            *(uint16*)newaddr = val;
         }
         if (Wbit(insn))
             setReg(regs, mask_Rn(insn), addr);
