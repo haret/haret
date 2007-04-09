@@ -51,7 +51,7 @@ abort_chained_handler:
 
         @ Return to user code or call wince handler depending if r0 was 0
         ldreq   pc, [pc, #(winceAbortHandler - . - 8)]
-        subs    pc, lr, #4
+        subs    pc, r14, #4
 
         .global prefetch_chained_handler
 prefetch_chained_handler:
@@ -72,6 +72,6 @@ prefetch_chained_handler:
 
         @ Return to user code or call wince handler depending if r0 was 0
         ldreq   pc, [pc, #(wincePrefetchHandler - . - 8)]
-        subs    pc, lr, #4
+        subs    pc, r14, #4
 
         .end
