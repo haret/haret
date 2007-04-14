@@ -1,13 +1,13 @@
 #include "arch-omap.h"
 
-MachineOMAP::MachineOMAP()
+MachineOMAP850::MachineOMAP850()
 {
     name = "Generic TI OMAP";
     archname = "OMAP";
 }
 
 int
-MachineOMAP::detect()
+MachineOMAP850::detect()
 {
     // TODO - need to implement detection system.
     return 0;

@@ -15,7 +15,7 @@ Blueangel,  PXA     ,PH20,                        BLUEANGEL,set ramsize 128*1024
 Himalaya,   PXA     ,PH10A;PH10B,                 HIMALAYA
 Magician,   PXA27x  ,PM10,                        MAGICIAN
 H1910,      PXA     ,hp iPAQ h191,                H1900
-H1940,      S3      ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*1024
+H1940,      S3c2410 ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*1024
 H2200,      PXA     ,hp iPAQ h22,                 H2200
 H3600b,     SA      ,Compaq iPAQ H3600
 H3700,      SA      ,Compaq iPAQ H3700
@@ -26,11 +26,11 @@ H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
 HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   set ramsize 64*1024*1024
 HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*1024
 Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024
-Wizard,     OMAP    ,WIZA100;WIZA200
-Hermes,     S3      ,HERM100;HERM200;HERM300,     HTCHERMES,set ramsize 64*1024*1024
-G500,       S3      ,G50V,                        G500,     set ramsize 64*1024*1024
-Artemis,    OMAP    ,ARTE
-RX3000,     S3      ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
+Wizard,     OMAP850 ,WIZA100;WIZA200
+Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES,set ramsize 64*1024*1024
+G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
+Artemis,    OMAP850 ,ARTE
+RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
 Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   set ramsize 64*1024*1024
 e310,       SA      ,Toshiba e310
 e740,       PXA     ,TOSHIBA e740
@@ -44,4 +44,4 @@ H3100,      SA      ,Compaq iPAQ H3100
 H3600a,     SA      ,Compaq iPAQ H3600
 
 PLATFORM=SmartPhone
-Tornado,    OMAP    ,Vodafone v1240,              OMAP_TORNADO
+Tornado,    OMAP850 ,Vodafone v1240,              OMAP_TORNADO

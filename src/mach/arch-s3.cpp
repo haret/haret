@@ -1,23 +1,38 @@
 #include "arch-s3.h"
 #include "s3c24xx.h"
-#include "memory.h" // memPhysAddr
+#include "memory.h" // memPhysMap
+#include "script.h" // runMemScript
 
-MachineS3::MachineS3()
+MachineS3c2442::MachineS3c2442()
 {
     name = "Generic Samsung s3c24xx";
+    archname = "s3c2442";
 }
 
 int
-MachineS3::detect()
+MachineS3c2442::detect()
 {
     // TODO - need to implement detection system.
     return 0;
 }
 
 void
-MachineS3::init()
+MachineS3c2442::init()
 {
-    memPhysAddr = 0x30000000;
+    runMemScript("set ramaddr 0x30000000\n"
+                 // IRQs
+                 "addirqwatch p2v(0x4A000010) 0x4010 32 0\n"
+                 "addirqwatch p2v(0x560000a8) 0x0 32 0\n"
+                 // GPIOs
+                 "addwatch p2v(0x56000004)\n"
+                 "addwatch p2v(0x56000014)\n"
+                 "addwatch p2v(0x56000024)\n"
+                 "addwatch p2v(0x56000034)\n"
+                 "addwatch p2v(0x56000044)\n"
+                 "addwatch p2v(0x56000054)\n"
+                 "addwatch p2v(0x56000064)\n"
+                 "addwatch p2v(0x56000074)\n"
+                 "addwatch p2v(0x56000084)\n");
 }
 
 static inline uint32 s3c_readl(volatile uint32 *base, uint32 reg)
@@ -31,7 +46,7 @@ static inline void s3c_writel(volatile uint32 *base, uint32 reg, uint32 val)
 }
 
 int
-MachineS3::preHardwareShutdown()
+MachineS3c2442::preHardwareShutdown()
 {
     channels = (uint32*)memPhysMap(S3C2410_PA_DMA);
     uhcmap = (uint32 *)memPhysMap(S3C2410_PA_USBHOST);
@@ -77,7 +92,7 @@ ResetUHC(volatile uint32 *uhcmap)
 }
 
 void
-MachineS3::hardwareShutdown()
+MachineS3c2442::hardwareShutdown()
 {
     s3c24xxShutdownDMA(channels);
     ResetUHC(uhcmap);
