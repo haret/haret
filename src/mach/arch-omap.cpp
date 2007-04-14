@@ -3,6 +3,7 @@
 MachineOMAP::MachineOMAP()
 {
     name = "Generic TI OMAP";
+    archname = "OMAP";
 }
 
 int

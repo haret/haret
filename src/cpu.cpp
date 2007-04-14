@@ -109,10 +109,10 @@ printWelcome()
            "Minimal virtual address: %p, maximal virtual address: %p",
            VERSION, vi.dwMajorVersion, vi.dwMinorVersion,
            si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
-    Output("Detected machine '%s' (Plat='%ls' OEM='%ls')\n"
+    Output("Detected machine %s/%s (Plat='%ls' OEM='%ls')\n"
            "CPU is %s running in %s mode\n"
            "Enter 'HELP' for a short command summary.\n",
-           Mach->name, bufplat, bufoem,
+           Mach->name, Mach->archname, bufplat, bufoem,
            cpu_id(), cpu_mode());
 }
 

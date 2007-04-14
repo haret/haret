@@ -9,6 +9,7 @@ DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
 MachinePXA::MachinePXA()
 {
     name = "Generic Intel PXA";
+    archname = "PXA";
     dcsr_count = 16;
 }
 

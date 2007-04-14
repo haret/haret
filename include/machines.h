@@ -29,7 +29,7 @@ public:
     Machine();
     virtual ~Machine() { }
 
-    const char *name;
+    const char *name, *archname;
     const wchar_t *OEMInfo[16];
     const wchar_t *PlatformType;
     int machType;

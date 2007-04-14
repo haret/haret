@@ -18,7 +18,7 @@ extern "C" {
 }
 
 Machine::Machine()
-    : name("Default"), PlatformType(L"PocketPC")
+    : name("Default"), archname("generic"), PlatformType(L"PocketPC")
     , machType(0), flushCache(cpuFlushCache)
 {
     memset(OEMInfo, 0, sizeof(OEMInfo));
