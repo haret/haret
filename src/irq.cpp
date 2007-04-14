@@ -127,6 +127,8 @@ REG_CMD(testWirqAvail, "ADDIRQWATCH", cmd_addirqwatch,
         "  See ADDWATCH for syntax.  <CLEAR|LS>IRQWATCH is also available.")
 REG_CMD_ALT(testWirqAvail, "CLEARIRQWATCH", cmd_addirqwatch, clear, 0)
 REG_CMD_ALT(testWirqAvail, "LSIRQWATCH", cmd_addirqwatch, list, 0)
+REG_CMD_ALT(testWirqAvail, "IGNOREIRQWATCH", cmd_addirqwatch, ignore, 0)
+REG_CMD_ALT(testWirqAvail, "UNIGNOREIRQWATCH", cmd_addirqwatch, unignore, 0)
 
 static uint32 watchtracecount;
 static memcheck watchtracepolls[16];
@@ -143,6 +145,8 @@ REG_CMD(testWirqAvail, "ADDTRACEWATCH", cmd_addtracewatch,
         "  See ADDWATCH for syntax.  <CLEAR|LS>TRACEWATCH is also available.")
 REG_CMD_ALT(testWirqAvail, "CLEARTRACEWATCH", cmd_addtracewatch, clear, 0)
 REG_CMD_ALT(testWirqAvail, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
+REG_CMD_ALT(testWirqAvail, "IGNORETRACEWATCH", cmd_addtracewatch, ignore, 0)
+REG_CMD_ALT(testWirqAvail, "UNIGNORETRACEWATCH", cmd_addtracewatch, unignore, 0)
 
 
 /****************************************************************
@@ -379,6 +383,9 @@ cmd_wirq(const char *cmd, const char *args)
     ret = prepL1traps(data);
     if (ret)
         goto abort;
+
+    beginWatch(data->irqpolls, data->irqpollcount, "irq");
+    beginWatch(data->tracepolls, data->tracepollcount, "trace", 0);
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");

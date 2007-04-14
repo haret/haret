@@ -14,6 +14,7 @@
 #include "lateload.h" // LATE_LOAD
 #include "script.h" // REG_CMD
 #include "irq.h" // __irq
+#include "memory.h" // memVirtToPhys
 #include "watch.h"
 
 // Older versions of wince don't have SleepTillTick - use Sleep(1)
@@ -32,23 +33,25 @@ enum MemOps {
     MO_READ32 = 3,
 };
 
-int __irq
-testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
+static inline uint32
+doRead(struct memcheck *mc)
 {
-    uint32 curval;
     switch (mc->readSize) {
     default:
     case MO_READ32:
-        curval = *(uint32*)mc->addr;
-        break;
+        return *(uint32*)mc->addr;
     case MO_READ16:
-        curval = *(uint16*)mc->addr;
-        break;
+        return *(uint16*)mc->addr;
     case MO_READ8:
-        curval = *(uint8*)mc->addr;
-        break;
+        return *(uint8*)mc->addr;
     }
+}
 
+// Read a memory area and check for a change.
+int __irq
+testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
+{
+    uint32 curval = doRead(mc);
     uint32 maskedval = 0;
     if (mc->trySuppress) {
         maskedval = (curval ^ mc->cmpVal) & mc->mask;
@@ -80,6 +83,7 @@ r_basic(uint32 msecs, uint32 clock, struct memcheck *mc
         Output("%06d: mem %p=%08x (%08x)", msecs, mc->addr, newval, maskval);
 }
 
+// Helper for handling memory poll haret commands.
 void
 watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
                , const char *cmd, const char *args)
@@ -96,6 +100,24 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
             memcheck *mc = &list[i];
             Output("%2d: 0x%p %08x %2d"
                    , i, mc->addr, ~mc->mask, 4<<mc->readSize);
+        }
+        return;
+    }
+    if (toupper(cmd[0]) == 'I' || toupper(cmd[0]) == 'U') {
+        // Add bits to the mask
+        uint32 bit;
+        while (get_expression(&args, &bit)) {
+            uint pos = bit / 32;
+            uint mask = 1<<(bit % 32);
+            if (pos >= *ptotal) {
+                Output(C_ERROR "Bit %d is past max found of %d"
+                       , pos, *ptotal);
+                return;
+            }
+            if (toupper(cmd[0]) == 'I')
+                list[pos].mask &= ~mask;
+            else
+                list[pos].mask |= mask;
         }
         return;
     }
@@ -147,6 +169,23 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
     mc->cmpVal = cmpVal;
 }
 
+// Output the addresses to be watched.
+void
+beginWatch(memcheck *list, uint32 count, const char *name, int isStart)
+{
+    if (isStart)
+        Output("Beginning memory tracing.");
+    for (uint i=0; i<count; i++) {
+        memcheck *mc = &list[i];
+        uint32 paddr = memVirtToPhys((uint32)mc->addr);
+        mc->trySuppress = 0;
+        uint32 val, tmp;
+        testMem(mc, &val, &tmp);
+        Output("Watching %s(%02d): Addr %p(@%08x) = %08x"
+               , name, i, mc->addr, paddr, val);
+    }
+}
+
 
 /****************************************************************
  * Basic memory polling.
@@ -171,6 +210,12 @@ REG_CMD(0, "ADDWATCH", cmd_addwatch,
 REG_CMD_ALT(0, "CLEARWATCH", cmd_addwatch, clear,
             "CLEARWATCH\n"
             "  Remove all items from the list of polled memory");
+REG_CMD_ALT(0, "IGNOREWATCH", cmd_addwatch, ignore,
+            "IGNOREWATCH <bit#>\n"
+            "  Ignore the nth bit in the watch list");
+REG_CMD_ALT(0, "UNIGNOREWATCH", cmd_addwatch, unignore,
+            "UNIGNOREWATCH <bit#>\n"
+            "  Resume watching the nth bit in the watch list");
 REG_CMD_ALT(0, "LSWATCH", cmd_addwatch, list,
             "LSWATCH\n"
             "  Display the current list of polled memory");
@@ -181,6 +226,8 @@ cmd_watch(const char *cmd, const char *args)
     uint32 seconds;
     if (!get_expression(&args, &seconds))
         seconds = 0;
+
+    beginWatch(watchlist, watchcount);
 
     uint32 start_time = GetTickCount();
     uint32 cur_time = start_time;

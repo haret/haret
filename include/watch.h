@@ -17,12 +17,12 @@ struct memcheck {
     uint32 mask;
 };
 
-// Read a memory area and check for a change.
 int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
 
-// Helper for handling memory poll haret commands.
 void watchCmdHelper(memcheck *list, uint32 max, uint32 *total
                     , const char *cmd, const char *args);
+void beginWatch(memcheck *list, uint32 count
+                , const char *name="mem", int isStart=1);
 
 // Give up rest of time slice.
 extern void (*late_SleepTillTick)();
