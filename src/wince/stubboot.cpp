@@ -32,6 +32,14 @@ REG_CMD(0, "RAMBOOT|LINUX", ramboot,
         "RAMBOOTLINUX\n"
         "  Start booting linux kernel. See HELP VARS for variables affecting boot.")
 
+// Register some dummy commands to prevent startup warnings.
+static void
+dummy(const char *cmd, const char *args)
+{
+}
+REG_CMD_ALT(0, "ADDWATCH", dummy, d1, 0)
+REG_CMD_ALT(0, "ADDIRQWATCH", dummy, d2, 0)
+
 HINSTANCE hInst;
 HWND MainWindow = 0;
 
