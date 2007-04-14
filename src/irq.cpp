@@ -70,9 +70,9 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     }
 
     // Irq time memory polling.
-    checkPolls(data, 0, data->irqpolls, data->irqpollcount);
+    checkPolls(data, -1, data->irqpolls, data->irqpollcount);
     // Trace time memory polling.
-    checkPolls(data, 0, data->tracepolls, data->tracepollcount);
+    checkPolls(data, -1, data->tracepolls, data->tracepollcount);
 }
 
 extern "C" int __irq

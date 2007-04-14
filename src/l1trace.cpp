@@ -65,8 +65,8 @@ static void
 report_memAccess(uint32 msecs, traceitem *item)
 {
     uint32 addr=item->d0, pc=item->d1, insn=item->d2, val=item->d3;
-    Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
-           , msecs, 0, pc, insn, getInsnName(insn), val, addr);
+    Output("%06d: debug %08x: %08x(%s) %08x %08x"
+           , msecs, pc, insn, getInsnName(insn), val, addr);
 }
 
 static void __irq
