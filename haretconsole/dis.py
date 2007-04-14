@@ -9,6 +9,8 @@ import os
 import tempfile
 import struct
 
+import memalias
+
 OBJDUMP='arm-linux-objdump'
 OBJDUMPARGS='-D -b binary -m arm'
 CLOCKRATE=416000000.0/64
@@ -46,53 +48,41 @@ def dis(insn):
     InsnCache[insn] = out
     return out
 
-TIMEPRE_S = r'^(?P<time>[0-9]+): (?P<clock>[0-9a-f]+): '
-redebug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
-                     r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
-reirq = re.compile(TIMEPRE_S + r'(?P<data>(irq |insn |mem |cpu resumed).*)$')
-re_start = re.compile(r'^Replacing windows exception handlers')
+TIMEPRE_S = memalias.TIMEPRE_S
+re_debug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
+                      r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
+re_irq = re.compile(TIMEPRE_S + r'(?P<data>(irq |insn |cpu resumed).*)$')
+getClock = memalias.getClock
 
 def transRegVal(reg, val):
     return "r%d=%s" % (reg, val)
 
-LastClock = 0
-
-def getClock(m):
-    global LastClock
-    clock = int(m.group('clock'), 16)
-    out = "%07d" % (clock - LastClock,)
-    LastClock = clock
-    return "%07.3f(%s)" % (int(m.group('time')) / 1000.0, out)
-
 def procline(line):
-    m = redebug.match(line)
+    m = re_debug.match(line)
     if m is None:
-        m = reirq.match(line)
+        m = re_irq.match(line)
         if m is not None:
             print getClock(m), m.group('data')
         else:
-            m = re_start.match(line)
-            if m is not None:
-                global LastClock
-                LastClock = 0
-            print line.rstrip()
+            memalias.procline(line)
         return
     insn = int(m.group('insn'), 16)
     iname = dis(insn)
     Rd = (insn >> 12) & 0xF
     Rn = (insn >> 16) & 0xF
     Rdval = transRegVal(Rd, m.group('Rd'))
-    if Rd == Rn:
+    Rnval = transRegVal(Rn, m.group('Rn'))
+    if Rd == Rn and Rdval == Rnval:
         regs = Rdval
     else:
-        regs = Rdval + " " + transRegVal(Rn, m.group('Rn'))
+        regs = Rdval + " " + Rnval
     print "%s %s: %-30s # %s" % (
         getClock(m), m.group('addr'), iname, regs)
 
 def main():
     lines = sys.stdin.readlines()
     for line in lines:
-        procline(line)
+        procline(line.rstrip())
 
 if __name__ == '__main__':
     main()

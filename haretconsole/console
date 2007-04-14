@@ -11,6 +11,7 @@ import re
 import time
 
 import dis
+import memalias
 
 HARETPORT = 9999
 
@@ -32,6 +33,7 @@ class Prompts(cmd.Cmd):
             "#################################################\n"
             % time.asctime())
         # Drain initial message.
+        self.proc = memalias.procline
         self.processData()
     def getLogName(self):
         return time.strftime("haretlog-%Y%m%d_%H%M%S.log")
@@ -79,6 +81,9 @@ class Prompts(cmd.Cmd):
     def do_wi(self, line):
         self.proc = dis.procline
         self.sendAndProcess("wi " + line)
+    def do_watch(self, line):
+        self.proc = dis.procline
+        self.sendAndProcess("watch " + line)
     def do_help(self, line):
         self.default("help " + line)
     def do_quit(self, line):
