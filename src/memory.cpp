@@ -780,8 +780,8 @@ static void
 cmd_memtofile(const char *tok, const char *args)
 {
     bool virt = toupper (tok [0]) == 'V';
-    char fn[MAX_CMDLEN];
-    if (get_token(&args, fn, sizeof(fn))) {
+    char rawfn[MAX_CMDLEN], fn[MAX_CMDLEN];
+    if (get_token(&args, rawfn, sizeof(rawfn))) {
         Output(C_ERROR "line %d: file name expected", ScriptLine);
         return;
     }
@@ -793,6 +793,7 @@ cmd_memtofile(const char *tok, const char *args)
         return;
     }
 
+    fnprepare(rawfn, fn, sizeof(fn));
     if (virt)
         memVirtWriteFile (fn, addr, size);
     else
