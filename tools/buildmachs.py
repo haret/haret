@@ -27,7 +27,7 @@ def main():
         lines.append(line)
     # Parse line using csv
     machs = []
-    for line in csv.reader(lines):
+    for line in csv.reader(lines, escapechar="\\"):
         if len(line) < 3:
             if len(line) == 1 and line[0][:9] == 'PLATFORM=':
                 platform = line[0][9:]
@@ -60,7 +60,7 @@ def main():
         # Optional init function
         initfunc = ""
         if mach['cmds'] is not None:
-            cmds = map(string.strip, mach['cmds'])
+            cmds = [cmd.replace('\\\n', '').strip() for cmd in mach['cmds']]
             cmds = '"' + '\\n"\n                     "'.join(cmds) + '\\n"'
             initfunc = """
     void init() {
