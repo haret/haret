@@ -42,8 +42,14 @@ Regs_s3c2442 = {
                             (18, "nEN_SCLK1"))),
     0x560000a8: ("EINTPEND", (lambda bit: "EINT%d" % bit)),
     }
+RegsList['ARCH:s3c2442'] = Regs_s3c2442
 
-RegsList['s3c2442'] = Regs_s3c2442
+# HTC Hermes specific registers
+Regs_Hermes = Regs_s3c2442.copy()
+Regs_Hermes.update({
+    0x08000004: ("cpldirq", ((2, "sd?"), (4, "jogup"), (5, "jogdown"))),
+    })
+RegsList['Hermes'] = Regs_Hermes
 
 
 ######################################################################
@@ -203,7 +209,10 @@ def handleBegin(m):
 
 def handleDetect(m):
     global ArchRegs
-    ArchRegs = RegsList.get(m.group('arch'), {})
+    ar = RegsList.get(m.group('name'))
+    if ar is None:
+        ar = RegsList.get("ARCH:"+m.group('arch'), {})
+    ArchRegs = ar
     print m.string
 
 def procline(line):
