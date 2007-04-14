@@ -43,7 +43,7 @@ Regs_s3c2442 = {
     0x560000a8: ("EINTPEND", (lambda bit: "EINT%d" % bit)),
     }
 
-RegsList['s3c24xx'] = Regs_s3c2442
+RegsList['s3c2442'] = Regs_s3c2442
 
 
 ######################################################################
