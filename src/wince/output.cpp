@@ -334,8 +334,6 @@ static struct ProgressFeedback {
     int dialogId;
     HCURSOR oldCursor;
 } progressFeedback;
-#ifdef USE_WAIT_CURSOR
-#endif
 
 static BOOL CALLBACK pbDialogFunc (HWND hWnd, UINT message, WPARAM wParam,
   LPARAM lParam)
@@ -440,7 +438,7 @@ cmd_print(const char *tok, const char *x)
     char arg[MAX_CMDLEN];
     get_token(&x, arg, sizeof(arg));
     uint32 args[4];
-    for (int i = 0; i < 4; i++)
+    for (uint i = 0; i < ARRAY_SIZE(args); i++)
         if (!get_expression(&x, &args[i]))
             break;
 
