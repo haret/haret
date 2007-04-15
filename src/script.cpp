@@ -113,20 +113,28 @@ static inline int isVar(haret_cmd_s *cmd) {
 }
 
 static haret_cmd_s *
-FindVar(const char *vn, haret_cmd_s *Vars, int VarCount)
+__findVar(const char *vn, haret_cmd_s *vars, int varCount)
 {
-    for (int i = 0; i < commands_count; i++) {
-        haret_cmd_s *var = &commands_start[i];
+    for (int i = 0; i < varCount; i++) {
+        haret_cmd_s *var = &vars[i];
         if (var->isAvail && isVar(var) && !strcasecmp(vn, var->name))
             return var;
     }
     return NULL;
 }
 
-static bool GetVar (const char *vn, const char **s, uint32 *v,
-                    haret_cmd_s *Vars, int VarCount)
+static haret_cmd_s *
+FindVar(const char *vn)
 {
-  haret_cmd_s *var = FindVar (vn, Vars, VarCount);
+    haret_cmd_s *v = __findVar(vn, commands_start, commands_count);
+    if (v)
+        return v;
+    return __findVar(vn, UserVars, UserVarsCount);
+}
+
+static bool GetVar (const char *vn, const char **s, uint32 *v)
+{
+  haret_cmd_s *var = FindVar(vn);
   if (!var)
     return false;
 
@@ -193,6 +201,7 @@ NewVar (char *vn, cmdType vt)
 
   haret_cmd_s *nv = UserVars + UserVarsCount;
   memset (nv, 0, sizeof (*nv));
+  nv->isAvail = 1;
   nv->name = _strdup(vn);
   nv->type = vt;
   // Since integer variables don't use their val_size field,
@@ -283,8 +292,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       }
     }
     // Look through variables
-    else if (!GetVar (x, s, v, commands_start, commands_count)
-          && !GetVar (x, s, v, UserVars, UserVarsCount))
+    else if (!GetVar(x, s, v))
     {
       Output(C_ERROR "line %d: Unknown variable '%s' in expression",
                 ScriptLine, x);
@@ -418,7 +426,7 @@ static bool IsToken (const char *tok, const char *mask)
   return true;
 }
 
-bool scrInterpret (const char *str, uint lineno)
+bool scrInterpret(const char *str, uint lineno)
 {
     ScriptLine = lineno;
 
@@ -553,9 +561,7 @@ cmd_set(const char *cmd, const char *x)
         return;
     }
 
-    haret_cmd_s *var = FindVar (vn, commands_start, commands_count);
-    if (!var)
-        var = FindVar (vn, UserVars, UserVarsCount);
+    haret_cmd_s *var = FindVar(vn);
     if (!var)
         var = NewVar (vn, varInteger);
 
@@ -792,3 +798,27 @@ cmd_test(const char *cmd, const char *args)
 REG_CMD(0, "IF", cmd_test,
         "IF <expr> <command>\n"
         "  Run <command> iff <expr> is non-zero.")
+
+static void
+cmd_evalf(const char *cmd, const char *args)
+{
+    // Extract fmt and args
+    char fmt[MAX_CMDLEN];
+    get_token(&args, fmt, sizeof(fmt));
+    uint32 fmtargs[4];
+    for (uint i = 0; i < ARRAY_SIZE(fmtargs); i++)
+        if (!get_expression(&args, &fmtargs[i]))
+            break;
+
+    // Build command string
+    char cmdstr[MAX_CMDLEN];
+    _snprintf(cmdstr, sizeof(cmdstr), fmt
+              , fmtargs[0], fmtargs[1], fmtargs[2], fmtargs[3]);
+
+    // Run command
+    scrInterpret(cmdstr, ScriptLine);
+}
+REG_CMD(0, "EVALF", cmd_evalf,
+        "EVALF <fmt> [<args>...]\n"
+        "  Build a string based on <fmt> and <args> using sprintf and\n"
+        "  then evaluate the string as a command")
