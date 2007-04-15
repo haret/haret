@@ -21,7 +21,7 @@ MachineS3c2442::init()
 {
     runMemScript("set ramaddr 0x30000000\n"
                  // IRQs
-                 "addirqwatch p2v(0x4A000010) 0x4010 32 0\n"
+                 "addirqwatch p2v(0x4A000010) 0x4030 32 0\n"
                  "addirqwatch p2v(0x560000a8) 0x0 32 0\n"
                  // GPIOs
                  "addwatch p2v(0x56000004)\n"
