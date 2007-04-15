@@ -7,7 +7,7 @@
     names during the "watch" and "wi" commands.
 
   * New command "evalf".  One can use this to build commands
-    dynamicall - for example:
+    dynamically - for example:
       evalf "runscript startup-%s.txt" MACHNAME
 
   * Status messages can now be written directly to the frame buffer
@@ -193,7 +193,7 @@
         work quite reliably, so there's no need to override this manually.
 
 11-Apr-2005
-    -*- updates for seperate UART drivers
+    -*- updates for separate UART drivers
     -*- s3c24xx uart driver additions
     -*- settable cpu-type
 
