@@ -10,15 +10,11 @@ New features:
 
 * Possibly sort help output by command name.
 
-* Try to run "startup-<mach#>.txt" at haret startup.  This may be
-  useful for launching linux on multiple PDAs from a single SD card.
-
 * Possibly link in a "debug.wav" file and provide a mechanism to play
   that file.  This may be useful for tracing the sound system.
 
-Misc cleanups:
 
-* Define linux "mach-type" boot code for wizard.
+Misc cleanups:
 
 * Don't export ScriptLine from script.cpp - instead export a wrapper
   around Output that prepends the script line.
@@ -60,23 +56,14 @@ Misc cleanups:
 
 Possible features for "wi":
 
-* Support hooking of interrupts on non-pxa based processors.  There is
-  nothing PXA specific about hooking the wince interrupt vector - the
-  code can be refactored to pull out the PXA specific stuff.
-
-  * It should also be possible to have each machine define its own
-    interrupt additions.  This will allow the egpio and asic3
-    interrupts to be monitored as easily as the builtin interrupts.
+* Enhance l1trace so that it can take a list of address ranges along
+  with the type of access to report (read and/or write).
 
 * It should be possible to implement a portable instruction breakpoint
   system by overwriting code in memory with an interrupt or "undefined
   instruction" code.  (It may also be possible to just jump to a
   special handler.)  This would allow breakpoints on machines other
   than the PXA.
-
-* It may be possible to implement a portable memory tracing capability
-  by fiddling with the MMU table.  This may permit basic memory
-  tracing features on non PXA processors.
 
 * Find out why AllocPhysMem is needed - it is unclear why the
   interrupt vector can't jump to an address in normal Haret exe space.

@@ -1,5 +1,15 @@
 <next version> <kevin@koconnor.net>
 
+  * New support for memory tracing based on MMU manipulation.  This
+    allows one to watch reads/writes to memory on any ARM platform.
+
+  * New support in haretconsole for showing architecture register
+    names during the "watch" and "wi" commands.
+
+  * New command "evalf".  One can use this to build commands
+    dynamicall - for example:
+      evalf "runscript startup-%s.txt" MACHNAME
+
   * Status messages can now be written directly to the frame buffer
     during the linux boot (when fbduringboot is enabled).
 
