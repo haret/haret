@@ -394,6 +394,9 @@ bool scrInterpret(const char *str, uint lineno)
     if (*x == '#' || !*x)
         return true;
 
+    // Output command being executed to the log.
+    Output(C_LOG "HaRET(%d)# %s", lineno, str);
+
     char tok[MAX_CMDLEN];
     get_token(&x, tok, sizeof(tok), 1);
 

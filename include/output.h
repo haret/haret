@@ -12,6 +12,8 @@
 
 // Prepend one of the following strings to the format of an Output
 // call to force a messagebox to popup.
+#define C_LOG   "<9>"
+#define C_NORM  "<7>"
 #define C_INFO  "<6>"
 #define C_WARN  "<3>"
 #define C_ERROR "<0>"

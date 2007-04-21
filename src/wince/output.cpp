@@ -192,7 +192,7 @@ void
 __output(int sendScreen, const char *format, ...)
 {
     // Check for error indicator (eg, format starting with "<0>")
-    int code = 0;
+    int code = 7;
     if (format[0] == '<'
         && format[1] >= '0' && format[1] <= '9'
         && format[2] == '>') {
@@ -214,10 +214,12 @@ __output(int sendScreen, const char *format, ...)
     writeLog(buf, len);
     if (sendScreen)
         writeScreen(buf, len);
-    outputfn *ofn = getOutputFn();
-    if (ofn) {
-        ofn->sendMessage(buf, len);
-    } else if (code) {
+    if (code <= 7) {
+        outputfn *ofn = getOutputFn();
+        if (ofn) {
+            ofn->sendMessage(buf, len);
+        }
+    } else if (code < 7) {
         Complain(rawbuf, rawlen, code-1);
     }
 }
