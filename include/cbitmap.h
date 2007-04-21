@@ -12,7 +12,7 @@
 #define BITMAPSIZE(num) ( ((num) + LONGBITS - 1) / LONGBITS )
 
 // Helper function - return the 'unsigned long' that stores bit <pos>
-#define BITMAPPOS(bitset, pos) (bitset[(pos)/LONGBITS])
+#define BITMAPPOS(bitset, pos) ((bitset)[(pos)/LONGBITS])
 // Helper function - return the bit offset within an unsigned long for
 // <pos>
 #define BITMAPMASK(pos) ( 1 << ((pos) & (LONGBITS-1)) )
