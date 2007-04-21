@@ -12,11 +12,12 @@
 
 // Prepend one of the following strings to the format of an Output
 // call to force a messagebox to popup.
-#define C_LOG   "<9>"
-#define C_NORM  "<7>"
-#define C_INFO  "<6>"
-#define C_WARN  "<3>"
-#define C_ERROR "<0>"
+#define C_LOG    "<9>"
+#define C_NORM   "<7>"
+#define C_SCREEN "<6>"
+#define C_INFO   "<5>"
+#define C_WARN   "<3>"
+#define C_ERROR  "<0>"
 
 /* Display some text in status line */
 extern void Status (const wchar_t *format, ...);
@@ -30,13 +31,10 @@ extern const char *VERSION;
 void setupHaret();
 void shutdownHaret();
 void prepThread();
-// Internal function for outputing to screen/logs/socket.
-void __output(int sendScreen, const char *fmt, ...)
-    __attribute__ ((format (printf, 2, 3)));
-// Print some text through output_fn if set and/or log if set
-#define Output(fmt, args...) __output(0, fmt , ##args )
+void Output(const char *fmt, ...)
+    __attribute__ ((format (printf, 1, 2)));
 // Send output to screen, output_fn (if set), and/or log (if set)
-#define Screen(fmt, args...) __output(1, fmt , ##args )
+#define Screen(fmt, args...) Output(C_SCREEN fmt , ##args )
 
 // Close any previously created log files.
 void closeLogFile();

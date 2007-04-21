@@ -75,7 +75,7 @@ Complain(const char *msg, int len, int code)
     unsigned severity = MB_ICONEXCLAMATION;
     wchar_t *title = L"Warning";
 
-    if (code >= 6) {
+    if (code >= 5) {
         severity = MB_ICONASTERISK;
         title = L"Information";
     } else if (code >= 3) {
@@ -188,15 +188,16 @@ convertNL(char *outbuf, int maxlen, const char *inbuf, int len)
     return d - outbuf;
 }
 
+// Output message to screen/logs/socket.
 void
-__output(int sendScreen, const char *format, ...)
+Output(const char *format, ...)
 {
     // Check for error indicator (eg, format starting with "<0>")
     int code = 7;
     if (format[0] == '<'
         && format[1] >= '0' && format[1] <= '9'
         && format[2] == '>') {
-        code = format[1] - '0' + 1;
+        code = format[1] - '0';
         format += 3;
     }
 
@@ -212,16 +213,15 @@ __output(int sendScreen, const char *format, ...)
     int len = convertNL(buf, sizeof(buf), rawbuf, rawlen);
 
     writeLog(buf, len);
-    if (sendScreen)
-        writeScreen(buf, len);
-    if (code <= 7) {
-        outputfn *ofn = getOutputFn();
-        if (ofn) {
-            ofn->sendMessage(buf, len);
-        }
-    } else if (code < 7) {
+    outputfn *ofn = getOutputFn();
+    if (ofn && code <= 7) {
+        ofn->sendMessage(buf, len);
+    } else if (code < 6) {
         Complain(rawbuf, rawlen, code-1);
+        code = 99;
     }
+    if (code <= 6)
+        writeScreen(buf, len);
 }
 
 
@@ -451,7 +451,7 @@ cmd_print(const char *tok, const char *x)
         fmt = tmp;
     }
 
-    __output(!msg, fmt, args[0], args[1], args[2], args[3]);
+    Output(fmt, args[0], args[1], args[2], args[3]);
 }
 REG_CMD(0, "M|ESSAGE", cmd_print,
         "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
