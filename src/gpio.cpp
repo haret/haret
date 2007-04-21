@@ -198,12 +198,11 @@ static void
 cmd_wgpio(const char *cmd, const char *x)
 {
     uint32 sec;
-    if (!get_expression (&x, &sec))
-    {
-        Output(C_ERROR "line %d: Expected <seconds>", ScriptLine);
+    if (!get_expression(&x, &sec)) {
+        ScriptError("Expected <seconds>");
         return;
     }
-    gpioWatch (sec);
+    gpioWatch(sec);
 }
 REG_CMD(testPXA, "WG|PIO", cmd_wgpio,
         "WGPIO <seconds>\n"

@@ -17,7 +17,7 @@ cpuDumpAC97(const char *tok, const char *args)
 {
     uint32 unit;
     if (!get_expression(&args, &unit)) {
-        Output(C_ERROR "line %d: Expected <id>", ScriptLine);
+        ScriptError("Expected <id>");
         return;
     }
 

@@ -224,7 +224,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
         return false;
 
       default:
-        Output(C_ERROR "line %d: Unexpected input '%s'", ScriptLine, *s);
+        ScriptError("Unexpected input '%s'", *s);
         return false;
     }
   }
@@ -237,15 +237,14 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       *v = strtoul (x, &err, 0);
       if (*err)
       {
-        Output(C_ERROR "line %d: Expected a number, got %s", ScriptLine, x);
+        ScriptError("Expected a number, got %s", x);
         return false;
       }
     }
     // Look through variables
     else if (!GetVar(x, s, v))
     {
-      Output(C_ERROR "line %d: Unknown variable '%s' in expression",
-                ScriptLine, x);
+      ScriptError("Unknown variable '%s' in expression", x);
       return false;
     }
   }
@@ -296,7 +295,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       case ')':
         if (!(flags & PAREN_EXPECT))
         {
-          Output(C_ERROR "line %d: Unexpected ')'", ScriptLine);
+          ScriptError("Unexpected ')'");
           return false;
         }
         if (flags & PAREN_EAT)
@@ -311,7 +310,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
 
   if (flags & PAREN_EXPECT)
   {
-    Output(C_ERROR "line %d: No closing ')'", ScriptLine);
+    ScriptError("No closing ')'");
     return false;
   }
 
@@ -325,7 +324,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
 
   if (peek_char (s) != '(')
   {
-    Output(C_ERROR "line %d: %s(%d args) expected", ScriptLine, keyw, count);
+    ScriptError("%s(%d args) expected", keyw, count);
     return false;
   }
 
@@ -335,8 +334,7 @@ static bool get_args (const char **s, const char *keyw, uint32 *args, uint count
     if (!get_expression (s, args, 0, count ? 0 : PAREN_EXPECT | PAREN_EAT))
     {
 error:
-      Output(C_ERROR "line %d: not enough arguments to function %s"
-             , ScriptLine, keyw);
+      ScriptError("not enough arguments to function %s", keyw);
       return false;
     }
 
@@ -382,7 +380,18 @@ static bool IsToken (const char *tok, const char *mask)
  ****************************************************************/
 
 // Currently processed line (for error display)
-uint ScriptLine;
+static uint ScriptLine;
+
+void ScriptError(const char *fmt, ...)
+{
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    Output(C_ERROR "line %d: %s", ScriptLine, buf);
+}
 
 bool scrInterpret(const char *str, uint lineno)
 {
@@ -481,8 +490,7 @@ bool variableBase::getVar(const char **s, uint32 *v) {
     return false;
 }
 void variableBase::setVar(const char *s) {
-    Output(C_ERROR "line %d: `%s' is a read-only variable", ScriptLine,
-           name);
+    ScriptError("`%s' is a read-only variable", name);
 }
 
 bool integerVar::getVar(const char **s, uint32 *v) {
@@ -491,7 +499,7 @@ bool integerVar::getVar(const char **s, uint32 *v) {
 }
 void integerVar::setVar(const char *s) {
     if (!get_expression(&s, data))
-        Output(C_ERROR "line %d: Expected numeric <value>", ScriptLine);
+        ScriptError("Expected numeric <value>");
 }
 void integerVar::fillVarType(char *buf) {
     strcpy(buf, "int");
@@ -518,8 +526,7 @@ bool bitsetVar::getVar(const char **s, uint32 *v) {
     if (!get_args(s, name, v, 1))
         return false;
     if (*v > maxavail) {
-        Output(C_ERROR "line %d: Index out of range (0..%d)",
-               ScriptLine, maxavail);
+        ScriptError("Index out of range (0..%d)", maxavail);
         return false;
     }
     *v = TESTBIT(data, *v);
@@ -528,12 +535,11 @@ bool bitsetVar::getVar(const char **s, uint32 *v) {
 void bitsetVar::setVar(const char *s) {
     uint32 idx, val;
     if (!get_expression(&s, &idx) || !get_expression(&s, &val)) {
-        Output(C_ERROR "line %d: Expected <index> <value>", ScriptLine);
+        ScriptError("Expected <index> <value>");
         return;
     }
     if (idx > maxavail) {
-        Output(C_ERROR "line %d: Index out of range (0..%d)",
-               ScriptLine, maxavail);
+        ScriptError("Index out of range (0..%d)", maxavail);
         return;
     }
     ASSIGNBIT(data, idx, val);
@@ -547,8 +553,7 @@ bool intListVar::getVar(const char **s, uint32 *v) {
     if (!get_args(s, name, &idx, 1))
         return false;
     if (idx > maxavail || idx >= data[0]) {
-        Output(C_ERROR "line %d: Index out of range (0..%d)",
-               ScriptLine, data[0]);
+        ScriptError("Index out of range (0..%d)", data[0]);
         return false;
     }
     *v = data[idx];
@@ -581,7 +586,7 @@ void rwfuncVar::setVar(const char *s) {
     if (!get_args(&s, name, args, numargs))
         return;
     if (!get_expression(&s, &val)) {
-        Output(C_ERROR "line %d: Expected <value>", ScriptLine);
+        ScriptError("Expected <value>");
         return;
     }
     func(true, args, val);
@@ -613,7 +618,7 @@ cmd_dump(const char *cmd, const char *args)
 {
     char vn[MAX_CMDLEN];
     if (get_token(&args, vn, sizeof(vn), 1)) {
-        Output("line %d: Dumper name expected", ScriptLine);
+        ScriptError("Dumper name expected");
         return;
     }
 
@@ -625,8 +630,7 @@ cmd_dump(const char *cmd, const char *args)
         }
     }
 
-    Output("line %d: No dumper %s available, see HELP DUMP for a list"
-           , ScriptLine, vn);
+    ScriptError("No dumper %s available, see HELP DUMP for a list", vn);
 }
 REG_CMD(0, "D|UMP", cmd_dump,
         "DUMP <hardware>[(args...)]\n"
@@ -646,7 +650,7 @@ redir(const char *args)
 {
     char vn[MAX_CMDLEN];
     if (get_token(&args, vn, sizeof(vn))) {
-        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        ScriptError("file name expected");
         return;
     }
     char fn[200];
@@ -655,7 +659,7 @@ redir(const char *args)
     fileredir redir;
     redir.f = fopen(fn, "wb");
     if (!redir.f) {
-        Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
+        ScriptError("Cannot open file `%s' for writing", fn);
         return;
     }
     outputfn *old = setOutputFn(&redir);
@@ -694,7 +698,7 @@ cmd_set(const char *cmd, const char *x)
 {
     char vn[MAX_CMDLEN];
     if (get_token(&x, vn, sizeof(vn), 1)) {
-        Output(C_ERROR "line %d: Expected <varname>", ScriptLine);
+        ScriptError("Expected <varname>");
         return;
     }
 
@@ -762,7 +766,7 @@ cmd_runscript(const char *cmd, const char *args)
 {
     char vn[MAX_CMDLEN];
     if (get_token(&args, vn, sizeof(vn))) {
-        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        ScriptError("file name expected");
         return;
     }
     uint32 ignore = 0;
@@ -780,7 +784,7 @@ cmd_test(const char *cmd, const char *args)
 {
     uint32 val;
     if (!get_expression(&args, &val)) {
-        Output(C_ERROR "line %d: expected <expr>", ScriptLine);
+        ScriptError("expected <expr>");
         return;
     }
     if (val)

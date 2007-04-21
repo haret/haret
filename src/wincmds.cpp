@@ -20,7 +20,7 @@ cmd_sleep(const char *cmd, const char *args)
 {
     uint32 msec;
     if (!get_expression(&args, &msec)) {
-        Output(C_ERROR "line %d: Expected <milliseconds>", ScriptLine);
+        ScriptError("Expected <milliseconds>");
         return;
     }
     Sleep(msec);
@@ -40,7 +40,7 @@ cmd_LoadLibraryEx(const char *cmd, const char *args)
 {
     char name[MAX_CMDLEN];
     if (get_token(&args, name, sizeof(name))) {
-        Output(C_ERROR "line %d: Expected <file name>", ScriptLine);
+        ScriptError("Expected <file name>");
         return;
     }
     wchar_t wname[MAX_CMDLEN];
@@ -59,7 +59,7 @@ LedSet(const char *cmd, const char *args)
 {
     uint32 id, value;
     if (!get_expression(&args, &id) || !get_expression(&args, &value)) {
-        Output(C_ERROR "line %d: Expected <id> <value>", ScriptLine);
+        ScriptError("Expected <id> <value>");
         return;
     }
     NLED_SETTINGS_INFO settings;

@@ -36,7 +36,7 @@ cmd_kill(const char *cmd, const char *args)
 {
     char name[MAX_CMDLEN];
     if (get_token(&args, name, sizeof(name))) {
-        Output(C_ERROR "line %d: process name expected", ScriptLine);
+        ScriptError("process name expected");
         return;
     }
     wchar_t wname[MAX_CMDLEN];

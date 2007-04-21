@@ -314,7 +314,7 @@ cmd_wirq(const char *cmd, const char *args)
 {
     uint32 seconds;
     if (!get_expression(&args, &seconds)) {
-        Output(C_ERROR "line %d: Expected <seconds>", ScriptLine);
+        ScriptError("Expected <seconds>");
         return;
     }
 

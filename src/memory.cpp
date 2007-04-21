@@ -533,7 +533,7 @@ static uchar dump_char (uchar c)
 static bool alignMemAddr(uint32 *addrLoc)
 {
     if (*addrLoc & 3) {
-	Output(C_ERROR "line %d: Unaligned memory address, rounding up", ScriptLine);
+	ScriptError("Unaligned memory address, rounding up");
 	*addrLoc &= ~3;
 	return true;
     }
@@ -606,7 +606,7 @@ cmd_memaccess(const char *tok, const char *args)
     bool virt = toupper(tok[0]) == 'V';
     uint32 addr, size;
     if (!get_expression(&args, &addr) || !get_expression(&args, &size)) {
-        Output(C_ERROR "line %d: Expected <addr> <size>", ScriptLine);
+        ScriptError("Expected <addr> <size>");
         return;
     }
 
@@ -666,7 +666,7 @@ cmd_memfill(const char *tok, const char *x)
         || !get_expression(&x, &size)
         || !get_expression(&x, &value))
     {
-        Output(C_ERROR "line %d: Expected <addr> <size> <value>", ScriptLine);
+        ScriptError("Expected <addr> <size> <value>");
         return;
     }
 
@@ -782,14 +782,13 @@ cmd_memtofile(const char *tok, const char *args)
     bool virt = toupper (tok [0]) == 'V';
     char rawfn[MAX_CMDLEN], fn[MAX_CMDLEN];
     if (get_token(&args, rawfn, sizeof(rawfn))) {
-        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        ScriptError("file name expected");
         return;
     }
 
     uint32 addr, size;
     if (!get_expression(&args, &addr) || !get_expression(&args, &size)) {
-        Output(C_ERROR "line %d: Expected <filename> <address> <size>"
-               , ScriptLine);
+        ScriptError("Expected <filename> <address> <size>");
         return;
     }
 

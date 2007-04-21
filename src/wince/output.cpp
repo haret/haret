@@ -214,14 +214,14 @@ Output(const char *format, ...)
 
     writeLog(buf, len);
     outputfn *ofn = getOutputFn();
-    if (ofn && code <= 7) {
-        ofn->sendMessage(buf, len);
-    } else if (code < 6) {
+    if (!ofn && code < 6) {
         Complain(rawbuf, rawlen, code-1);
-        code = 99;
+        return;
     }
     if (code <= 6)
         writeScreen(buf, len);
+    if (ofn && code <= 7)
+        ofn->sendMessage(buf, len);
 }
 
 
@@ -467,12 +467,12 @@ cmd_log(const char *cmd, const char *args)
 {
     char vn[MAX_CMDLEN];
     if (get_token(&args, vn, sizeof(vn))) {
-        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        ScriptError("file name expected");
         return;
     }
     int ret = openLogFile(vn);
     if (ret)
-        Output("line %d: Cannot open file `%s' for writing", ScriptLine, vn);
+        ScriptError("Cannot open file `%s' for writing", vn);
 }
 REG_CMD(0, "L|OG", cmd_log,
         "LOG <filename>\n"

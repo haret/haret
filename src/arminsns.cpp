@@ -64,7 +64,7 @@ cpuDumpCP(const char *tok, const char *args)
 {
     uint32 cp;
     if (!get_expression(&args, &cp)) {
-        Output(C_ERROR "line %d: Expected <cp>", ScriptLine);
+        ScriptError("Expected <cp>");
         return;
     }
 

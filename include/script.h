@@ -19,8 +19,8 @@ void runMemScript(const char *script);
 bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
 // Parse the next string as a literal token
 int get_token(const char **s, char *storage, int storesize, int for_expr=0);
-// The current line of the script being parsed
-extern uint ScriptLine;
+void ScriptError(const char *fmt, ...)
+    __attribute__ ((format (printf, 1, 2)));
 // Maximum command line supported
 static const int MAX_CMDLEN = 512;
 
