@@ -16,9 +16,6 @@ New features:
 
 Misc cleanups:
 
-* Don't export ScriptLine from script.cpp - instead export a wrapper
-  around Output that prepends the script line.
-
 * Scan all L1 based 1meg virtual->physical mappings at startup.  This
   will make memPhysMap_section available even in critical sections
   where the code can't call into wince.
@@ -55,6 +52,9 @@ Misc cleanups:
 
 
 Possible features for "wi":
+
+* Haret should fixup the exception vectors if the user tries to exit
+  while in "wi".
 
 * Enhance l1trace so that it can take a list of address ranges along
   with the type of access to report (read and/or write).
