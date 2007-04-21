@@ -116,23 +116,29 @@ printWelcome()
            cpu_id(), cpu_mode());
 }
 
-REG_VAR_ROFUNC(0, "PSR", cpuGetPSR, 0, "Program Status Register")
+uint32 cmd_cpuGetPSR(bool, uint32*, uint32) {
+    return cpuGetPSR();
+}
+REG_VAR_ROFUNC(0, "PSR", cmd_cpuGetPSR, 0, "Program Status Register")
 
 DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 
 // Returns the address of 1st level descriptor table
-uint32 cpuGetMMU ()
+uint32 cpuGetMMU()
 {
     return get_p15r2() & 0xffffc000;
 }
+uint32 cmd_cpuGetMMU(bool, uint32*, uint32) {
+    return cpuGetMMU();
+}
 REG_VAR_ROFUNC(
-    0, "MMU", cpuGetMMU, 0,
+    0, "MMU", cmd_cpuGetMMU, 0,
     "Memory Management Unit level 1 descriptor table physical addr")
 
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
 // Returns the PID register contents
-static uint32 cpuGetPID()
+static uint32 cpuGetPID(bool, uint32*, uint32)
 {
     return get_p15r13() >> 25;
 }
