@@ -145,3 +145,20 @@ powerMon(const char *cmd, const char *args)
 REG_CMD(0, "POWERMON", powerMon,
         "POWERMON [<seconds>]\n"
         "  Watch power status")
+
+static void
+playSound(const char *cmd, const char *args)
+{
+    uint32 seconds;
+    if (!get_expression(&args, &seconds))
+        seconds = 0;
+
+    Output("Playing chord.wav for %d seconds",seconds);
+    int ret=PlaySound(L"\\Windows\\chord.wav", 0, SND_LOOP|SND_ASYNC|SND_FILENAME);
+    Sleep(seconds*1000);
+    if (ret)
+        PlaySound(0, 0, 0);
+}
+REG_CMD(0, "PLAYSOUND", playSound,
+        "PLAYSOUND [<seconds>]\n"
+        " Plays chord.wav")
