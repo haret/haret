@@ -33,88 +33,146 @@ static const int MAX_CMDLEN = 512;
 #define REG_CMD(Pred, Name, Func, Desc)         \
     REG_CMD_ALT(Pred, Name, Func, , Desc)
 
-#define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)                        \
-    __REG_CMD(Func ##Alt, Pred, 0, Name, Desc, cmdFunc, {0}, 0, Func)
+#define REG_CMD_ALT(Pred, Name, Func, Alt, Desc)                \
+    __REG_CMD(regCommand, Func ##Alt, Pred, Name, Desc, Func)
 
 // Registration of script dump commands
-#define REG_DUMP(Pred, Name, Func, Desc)      \
-    __REG_CMD(Func, Pred, 0, Name, Desc, cmdDump, {0}, 0, Func)
+#define REG_DUMP(Pred, Name, Func, Desc)                        \
+    __REG_CMD(dumpCommand, Func, Pred, Name, Desc, Func)
 
 // Registration of variables
-#define REG_VAR_STR(Pred, Name, Var, Desc)                      \
-    __REG_CMD(Var, Pred, 0, Name, Desc, varString, { (uint32*)&Var } )
+#define REG_VAR_STR(Pred, Name, Var, Desc)              \
+    __REG_CMD(stringVar, Var, Pred, Name, Desc, &Var )
 
 #define REG_VAR_INT(Pred, Name, Var, Desc)              \
-    __REG_CMD(Var, Pred, 0, Name, Desc, varInteger, { &Var })
+    __REG_CMD(integerVar, Var, Pred, Name, Desc, &Var)
 
 #define REG_VAR_INTLIST(Pred, Name, Var, ArgCount, Desc)        \
-    __REG_CMD(Var, Pred, 0, Name, Desc, varIntList, { Var }, ArgCount)
+    __REG_CMD(intListVar, Var, Pred, Name, Desc, Var, ArgCount)
 
 #define REG_VAR_BITSET(Pred, Name, Var, ArgCount, Desc)         \
-    __REG_CMD(Var, Pred, 0, Name, Desc, varBitSet, { Var }, ArgCount)
+    __REG_CMD(bitsetVar, Var, Pred, Name, Desc, Var, ArgCount)
 
 #define REG_VAR_ROFUNC(Pred, Name, Func, ArgCount, Desc)                \
-    __REG_CMD(Func, Pred, 0, Name, Desc, varROFunc, { (uint32*)&Func }, ArgCount)
+    __REG_CMD(rofuncVar, Func, Pred, Name, Desc, Func, ArgCount)
 
 #define REG_VAR_RWFUNC(Pred, Name, Func, ArgCount, Desc)                \
-    __REG_CMD(Func, Pred, 0, Name, Desc, varRWFunc, { (uint32*)&Func }, ArgCount)
+    __REG_CMD(rwfuncVar, Func, Pred, Name, Desc, Func, ArgCount)
 
 
 /****************************************************************
  * Internals to declaring commands
  ****************************************************************/
 
-#define __REG_CMD(Decl, Vals...)                        \
-struct haret_cmd_s Ref ##Decl                           \
-    __attribute__ ((__section__ (".data.cmds")))        \
-    = { Vals };
-
-// Command types (HaRET scripting has very loose type checking anyway...)
-enum cmdType
-{
-  cmdDump,
-  cmdFunc,
-  varInteger,
-  varString,
-  varBitSet,
-  varIntList,
-  varROFunc,
-  varRWFunc
-};
+#define __REG_CMD(Type, Decl, Vals...)                                  \
+class Type Ref ##Decl (Vals);                                           \
+class commandBase *RefPtr ##Decl                                        \
+    __attribute__ ((__section__ (".rdata.cmds"))) = & Ref ##Decl;
 
 // Structure to hold commands
-struct haret_cmd_s {
-  // Predicate function to determine if this command is available.
-  int (*testAvail)();
-  // Is this command active.
-  int isAvail;
-  // Variable name
-  const char *name;
-  // Variable description
-  const char *desc;
-  // Command type
-  cmdType type;
+class commandBase {
+public:
+    typedef int (*predFunc)();
+    commandBase(predFunc ta, const char *n, const char *d)
+        : testAvail(ta), isAvail(0), name(n), desc(d) { }
+    virtual ~commandBase() { }
+    // Predicate function to determine if this command/variable is available.
+    predFunc testAvail;
+    // Is this command/variable active.
+    int isAvail;
+    // Command/variable name
+    const char *name;
+    // Command/variable description
+    const char *desc;
+};
 
-  /*
-   * Fields for variables
-   */
+class regCommand : public commandBase {
+public:
+    typedef void (*cmdfunc)(const char *cmd, const char *args);
+    regCommand(predFunc ta, const char *n, const char *d, cmdfunc f)
+        : commandBase(ta, n, d), func(f) { }
+    cmdfunc func;
+};
 
-  // The pointer to variable value
-  union
-  {
-    uint32 *ival;
-    char **sval;
-    uint32 *bsval;
-    uint32 (*fval) (bool setval, uint32 *args, uint32 val);
-  };
-  // A optional value size (for bitset in bits, for funcs number of args,
-  // for string whether free is necessary, for others no meaning)
-  uint val_size;
+class dumpCommand : public commandBase {
+public:
+    typedef regCommand::cmdfunc cmdfunc;
+    dumpCommand(predFunc ta, const char *n, const char *d, cmdfunc f)
+        : commandBase(ta, n, d), func(f) { }
+    cmdfunc func;
+};
 
-  /*
-   * Fields for normal commands
-   */
-  void (*func)(const char *cmd, const char *args);
+class variableBase : public commandBase {
+public:
+    variableBase(predFunc ta, const char *n, const char *d)
+        : commandBase(ta, n, d) { }
+    virtual bool getVar(const char **args, uint32 *v);
+    virtual void setVar(const char *args);
+    static const int MAXTYPELEN = 16;
+    virtual void fillVarType(char *buf) { }
+};
+
+class stringVar : public variableBase {
+public:
+    stringVar(predFunc ta, const char *n, const char *d, char **v)
+        : variableBase(ta, n, d), data(v), isDynamic(0) { }
+    bool getVar(const char **args, uint32 *v);
+    void setVar(const char *args);
+    void fillVarType(char *buf);
+    char **data;
+    int isDynamic;
+};
+
+class integerVar : public variableBase {
+public:
+    integerVar(predFunc ta, const char *n, const char *d, uint32 *v)
+        : variableBase(ta, n, d), data(v), dynstorage(0) { }
+    bool getVar(const char **args, uint32 *v);
+    void setVar(const char *args);
+    void fillVarType(char *buf);
+    uint32 *data;
+    uint32 dynstorage;
+};
+
+class intListVar : public variableBase {
+public:
+    intListVar(predFunc ta, const char *n, const char *d, uint32 *v, uint max)
+        : variableBase(ta, n, d), data(v), maxavail(max) { }
+    bool getVar(const char **args, uint32 *v);
+    void setVar(const char *args);
+    void fillVarType(char *buf);
+    uint32 *data;
+    uint maxavail;
+};
+
+class bitsetVar : public variableBase {
+public:
+    bitsetVar(predFunc ta, const char *n, const char *d, uint32 *v, uint max)
+        : variableBase(ta, n, d), data(v), maxavail(max) { }
+    bool getVar(const char **args, uint32 *v);
+    void setVar(const char *args);
+    void fillVarType(char *buf);
+    uint32 *data;
+    uint maxavail;
+};
+
+class rofuncVar : public variableBase {
+public:
+    typedef uint32 (*varfunc_t)(bool setval, uint32 *args, uint32 val);
+    rofuncVar(predFunc ta, const char *n, const char *d, varfunc_t f, int na)
+        : variableBase(ta, n, d), func(f), numargs(na) { }
+    bool getVar(const char **args, uint32 *v);
+    void fillVarType(char *buf);
+    varfunc_t func;
+    int numargs;
+};
+
+class rwfuncVar : public rofuncVar {
+public:
+    rwfuncVar(predFunc ta, const char *n, const char *d, varfunc_t f, int na)
+        : rofuncVar(ta, n, d, f, na) { }
+    void setVar(const char *args);
+    void fillVarType(char *buf);
 };
 
 void setupCommands();

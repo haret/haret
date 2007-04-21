@@ -35,12 +35,10 @@ SECTIONS
     latelist_start = .;
     *(.rdata.late)
     latelist_end = .;
-  }
 
-  .data : {
     /* List of haret commands */
     commands_start = .;
-    *(.data.cmds)
+    *(.rdata.cmds)
     commands_end = .;
   }
 }

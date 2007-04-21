@@ -18,26 +18,24 @@
 #include "output.h" // Output, fnprepare
 #include "script.h"
 
-static const char *quotes = "\"'";
-// Currently processed line (for error display)
-uint ScriptLine;
+
+/****************************************************************
+ * Command/Variable setup
+ ****************************************************************/
 
 // Symbols added by linker.
 extern "C" {
-    extern haret_cmd_s commands_start[];
-    extern haret_cmd_s commands_end;
+    extern commandBase *commands_start[];
+    extern commandBase *commands_end;
 }
 #define commands_count (&commands_end - commands_start)
-
-static haret_cmd_s *UserVars = NULL;
-static int UserVarsCount = 0;
 
 // Initialize builtin commands and variables.
 void
 setupCommands()
 {
     for (int i = 0; i < commands_count; i++) {
-        haret_cmd_s *x = &commands_start[i];
+        commandBase *x = commands_start[i];
         if (x->testAvail) {
             Output("Testing for command %s", x->name);
             int ret = x->testAvail();
@@ -51,6 +49,64 @@ setupCommands()
     }
 }
 
+
+/****************************************************************
+ * Basic variable definitions
+ ****************************************************************/
+
+static inline regCommand *isCmd(commandBase *cmd) {
+    return cmd->isAvail ? dynamic_cast<regCommand*>(cmd) : 0;
+}
+static inline dumpCommand *isDump(commandBase *cmd) {
+    return cmd->isAvail ? dynamic_cast<dumpCommand*>(cmd) : 0;
+}
+static inline variableBase *isVar(commandBase *cmd) {
+    return cmd->isAvail ? dynamic_cast<variableBase*>(cmd) : 0;
+}
+
+// List of user defined variables.
+static commandBase **UserVars = NULL;
+static int UserVarsCount = 0;
+
+// Locate a variable in a specified list.
+static variableBase *
+__findVar(const char *vn, commandBase **vars, int varCount)
+{
+    for (int i = 0; i < varCount; i++) {
+        variableBase *var = isVar(vars[i]);
+        if (var && !strcasecmp(vn, var->name))
+            return var;
+    }
+    return NULL;
+}
+
+// Lookup a variable (either in the predefined list or user added list).
+static variableBase *
+FindVar(const char *vn)
+{
+    variableBase *v = __findVar(vn, commands_start, commands_count);
+    if (v)
+        return v;
+    return __findVar(vn, UserVars, UserVarsCount);
+}
+
+// Translate a variable to an integer for argument parsing.
+static bool GetVar(const char *vn, const char **s, uint32 *v)
+{
+    variableBase *var = FindVar(vn);
+    if (!var)
+        return false;
+    return var->getVar(s, v);
+}
+
+
+/****************************************************************
+ * Argument parsing
+ ****************************************************************/
+
+static const char *quotes = "\"'";
+
+// Extract the next argument as a string.
 int
 get_token(const char **s, char *storage, int storesize, int for_expr)
 {
@@ -103,112 +159,6 @@ static char peek_char (const char **s)
 
   *s = x;
   return *x;
-}
-
-static bool get_args (const char **s, const char *keyw, uint32 *args,
-                      uint count);
-
-static inline int isVar(haret_cmd_s *cmd) {
-    return cmd->type >= varInteger;
-}
-
-static haret_cmd_s *
-__findVar(const char *vn, haret_cmd_s *vars, int varCount)
-{
-    for (int i = 0; i < varCount; i++) {
-        haret_cmd_s *var = &vars[i];
-        if (var->isAvail && isVar(var) && !strcasecmp(vn, var->name))
-            return var;
-    }
-    return NULL;
-}
-
-static haret_cmd_s *
-FindVar(const char *vn)
-{
-    haret_cmd_s *v = __findVar(vn, commands_start, commands_count);
-    if (v)
-        return v;
-    return __findVar(vn, UserVars, UserVarsCount);
-}
-
-static bool GetVar (const char *vn, const char **s, uint32 *v)
-{
-  haret_cmd_s *var = FindVar(vn);
-  if (!var)
-    return false;
-
-  switch (var->type)
-  {
-    default:
-    case varInteger:
-      *v = *var->ival;
-      break;
-    case varString:
-      *v = (uint32)*var->sval;
-      break;
-    case varBitSet:
-      if (!get_args (s, vn, v, 1))
-        return false;
-      if (*v > var->val_size)
-      {
-        Output(C_ERROR "line %d: Index out of range (0..%d)",
-                  ScriptLine, var->val_size);
-        return false;
-      }
-      *v = TESTBIT(var->bsval, *v);
-      break;
-    case varIntList:
-      if (!get_args (s, vn, v, 1))
-        return false;
-      if (*v > var->val_size || *v >= var->bsval[0])
-      {
-        Output(C_ERROR "line %d: Index out of range (0..%d)",
-                  ScriptLine, var->bsval[0]);
-        return false;
-      }
-      *v = var->bsval[*v];
-      break;
-    case varROFunc:
-    case varRWFunc:
-    {
-      uint32 args [50];
-      if (var->val_size)
-      {
-        if (!get_args (s, vn, args, var->val_size))
-          return false;
-      }
-      *v = var->fval (false, args, 0);
-      break;
-    }
-  }
-  return true;
-}
-
-static haret_cmd_s *
-NewVar (char *vn, cmdType vt)
-{
-  haret_cmd_s *ouv = UserVars;
-  UserVars = (haret_cmd_s *)
-      realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
-  if (UserVars != ouv)
-  {
-    // Since we reallocated the stuff, we have to fix the ival pointers as well
-    for (int i = 0; i < UserVarsCount; i++)
-      if (UserVars [i].type == varInteger)
-        UserVars [i].ival = &UserVars [i].val_size;
-  }
-
-  haret_cmd_s *nv = UserVars + UserVarsCount;
-  memset (nv, 0, sizeof (*nv));
-  nv->isAvail = 1;
-  nv->name = _strdup(vn);
-  nv->type = vt;
-  // Since integer variables don't use their val_size field,
-  // we'll use it for variable value itself
-  nv->ival = &nv->val_size;
-  UserVarsCount++;
-  return nv;
 }
 
 // Quick primitive expression evaluator
@@ -426,6 +376,14 @@ static bool IsToken (const char *tok, const char *mask)
   return true;
 }
 
+
+/****************************************************************
+ * Script parsing
+ ****************************************************************/
+
+// Currently processed line (for error display)
+uint ScriptLine;
+
 bool scrInterpret(const char *str, uint lineno)
 {
     ScriptLine = lineno;
@@ -441,8 +399,8 @@ bool scrInterpret(const char *str, uint lineno)
 
     // Okay, now see what keyword is this :)
     for (int i = 0; i < commands_count; i++) {
-        haret_cmd_s *hc = &commands_start[i];
-        if (hc->isAvail && hc->type == cmdFunc && IsToken(tok, hc->name)) {
+        regCommand *hc = isCmd(commands_start[i]);
+        if (hc && IsToken(tok, hc->name)) {
             hc->func(tok, x);
             return true;
         }
@@ -454,261 +412,6 @@ bool scrInterpret(const char *str, uint lineno)
     Output(C_ERROR "Unknown keyword: `%s'", tok);
     return true;
 }
-
-class fileredir : public outputfn {
-    FILE *f;
-    outputfn *old;
-public:
-    int init(const char *vn) {
-        char fn [200];
-        fnprepare(vn, fn, sizeof (fn));
-
-        f = fopen(fn, "wb");
-        if (!f) {
-            Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
-            return -1;
-        }
-        old = setOutputFn(this);
-        return 0;
-    }
-    void done() {
-        setOutputFn(old);
-        fclose(f);
-    }
-    void sendMessage(const char *msg, int len) {
-        fwrite(msg, len, 1, f);
-    }
-};
-
-static void
-cmd_dump(const char *cmd, const char *args)
-{
-    char vn[MAX_CMDLEN];
-    if (get_token(&args, vn, sizeof(vn), 1)) {
-        Output("line %d: Dumper name expected", ScriptLine);
-        return;
-    }
-
-    haret_cmd_s *hwd = NULL;
-    for (int i = 0; i < commands_count; i++) {
-        haret_cmd_s *hd = &commands_start[i];
-        if (hd->isAvail && hd->type == cmdDump && !strcasecmp(vn, hd->name)) {
-            hwd = hd;
-            break;
-        }
-    }
-    if (!hwd) {
-        Output("line %d: No dumper %s available, see HELP DUMP for a list"
-               , ScriptLine, vn);
-        return;
-    }
-
-    hwd->func(vn, args);
-}
-REG_CMD(0, "D|UMP", cmd_dump,
-        "DUMP <hardware>[(args...)]\n"
-        "  Dump the state of given hardware.\n"
-        "  Use HELP DUMP to see available dumpers.")
-
-static void
-redir(const char *args)
-{
-    char vn[MAX_CMDLEN];
-    if (get_token(&args, vn, sizeof(vn))) {
-        Output(C_ERROR "line %d: file name expected", ScriptLine);
-        return;
-    }
-
-    fileredir redir;
-    int ret = redir.init(vn);
-    if (ret)
-        return;
-    scrInterpret(args, ScriptLine);
-    redir.done();
-}
-
-static void
-bgRun(char *args)
-{
-    prepThread();
-    redir(args);
-    free(args);
-}
-
-static void
-cmd_redir(const char *cmd, const char *args)
-{
-    if (toupper(cmd[0]) == 'B')
-        // Run in background thread.
-        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)bgRun,
-                     (LPVOID)_strdup(args), 0, NULL);
-    else
-        redir(args);
-}
-REG_CMD(0, "REDIR", cmd_redir,
-        "REDIR <filename> <command>\n"
-        "  Run <command> and send it's output to <file>")
-REG_CMD_ALT(0, "BG", cmd_redir, bg,
-            "BG <filename> <command>\n"
-            "  Run <command> in a background thread - store output in <file>")
-
-static void
-cmd_set(const char *cmd, const char *x)
-{
-    char vn[MAX_CMDLEN];
-    if (get_token(&x, vn, sizeof(vn), 1)) {
-        Output(C_ERROR "line %d: Expected <varname>", ScriptLine);
-        return;
-    }
-
-    haret_cmd_s *var = FindVar(vn);
-    if (!var)
-        var = NewVar (vn, varInteger);
-
-    switch (var->type) {
-    case varInteger:
-        if (!get_expression (&x, var->ival))
-        {
-            Output(C_ERROR "line %d: Expected numeric <value>", ScriptLine);
-            return;
-        }
-        break;
-    case varString:
-        // If val_size is zero, it means a const char* in .text segment
-        if (var->val_size)
-            free(*var->sval);
-        get_token(&x, vn, sizeof(vn));
-        *var->sval = _strdup(vn);
-        var->val_size = 1;
-        break;
-    case varBitSet:
-    {
-        uint32 idx, val;
-        if (!get_expression (&x, &idx)
-            || !get_expression (&x, &val))
-        {
-            Output(C_ERROR "line %d: Expected <index> <value>", ScriptLine);
-            return;
-        }
-        if (idx > var->val_size)
-        {
-            Output(C_ERROR "line %d: Index out of range (0..%d)",
-                      ScriptLine, var->val_size);
-            return;
-        }
-        ASSIGNBIT(var->bsval, idx, val);
-        break;
-    }
-    case varIntList:
-    {
-        uint32 idx=1;
-        while (idx < var->val_size && get_expression(&x, &var->bsval[idx]))
-            idx++;
-        var->bsval[0] = idx;
-        break;
-    }
-    case varRWFunc:
-    {
-        uint32 val;
-        uint32 args [50];
-
-        if (!get_args (&x, var->name, args, var->val_size))
-            return;
-        if (!get_expression (&x, &val))
-        {
-            Output(C_ERROR "line %d: Expected <value>", ScriptLine);
-            return;
-        }
-        var->fval (true, args, val);
-        break;
-    }
-    default:
-        Output(C_ERROR "line %d: `%s' is a read-only variable", ScriptLine,
-                  var->name);
-        return;
-    }
-}
-REG_CMD(0, "S|ET", cmd_set,
-        "SET <variable> <value>\n"
-        "  Assign a value to a variable. Use HELP VARS for a list of variables.")
-
-static void
-cmd_help(const char *cmd, const char *x)
-{
-    char vn[MAX_CMDLEN];
-    get_token(&x, vn, sizeof(vn));
-
-    if (!strcasecmp(vn, "VARS")) {
-        char type [9];
-        char args [10];
-
-        Output("Name\tType\tDescription");
-        Output("-----------------------------------------------------------");
-        for (int i = 0; i < commands_count; i++) {
-            haret_cmd_s *var = &commands_start[i];
-            if (!var->isAvail || !isVar(var))
-                continue;
-
-            args [0] = 0;
-            type [0] = 0;
-            switch (var->type)
-            {
-            default:
-            case varInteger:
-                strcpy (type, "int");
-                break;
-            case varString:
-                strcpy (type, "string");
-                break;
-            case varBitSet:
-                strcpy (type, "bitset");
-                break;
-            case varIntList:
-                strcpy (type, "int list");
-                break;
-            case varROFunc:
-                strcpy (type, "ro func");
-                // fallback
-            case varRWFunc:
-                if (!type[0])
-                    strcpy(type, "rw func");
-                if (var->val_size)
-                    sprintf(args, "(%d)", var->val_size);
-                break;
-            }
-            Output("%s%s\t%s\t%s", var->name, args, type, var->desc);
-        }
-    }
-    else if (!strcasecmp (vn, "DUMP"))
-    {
-        for (int i = 0; i < commands_count; i++) {
-            haret_cmd_s *hc = &commands_start[i];
-            if (hc->isAvail && hc->type == cmdDump && hc->desc)
-                Output("%s", hc->desc);
-        }
-    }
-    else if (!vn[0])
-    {
-        Output("----=====****** A summary of HaRET commands: ******=====----");
-        Output("Notations used below:");
-        Output("  [A|B] denotes either A or B");
-        Output("  <ABC> denotes a mandatory argument");
-        Output("  Any command name can be shortened to minimal unambiguous length,");
-        Output("  e.g. you can use 'p' for 'print' but not 'vd' for 'vdump'");
-        for (int i = 0; i < commands_count; i++) {
-            haret_cmd_s *hc = &commands_start[i];
-            if (hc->isAvail && hc->type == cmdFunc && hc->desc)
-                Output("%s", hc->desc);
-        }
-        Output("QUIT");
-        Output("  Quit the remote session.");
-    }
-    else
-        Output("No help on this topic available");
-}
-REG_CMD(0, "H|ELP", cmd_help,
-        "HELP [VARS|DUMP]\n"
-        "  Display a description of either commands, variables or dumpers.")
 
 // Run a haret script that is compiled into the exe.
 void
@@ -765,6 +468,291 @@ void scrExecute (const char *scrfn, bool complain)
 
   fclose (f);
 }
+
+
+/****************************************************************
+ * Variable definitions
+ ****************************************************************/
+
+bool variableBase::getVar(const char **s, uint32 *v) {
+    return false;
+}
+void variableBase::setVar(const char *s) {
+    Output(C_ERROR "line %d: `%s' is a read-only variable", ScriptLine,
+           name);
+}
+
+bool integerVar::getVar(const char **s, uint32 *v) {
+    *v = *data;
+    return true;
+}
+void integerVar::setVar(const char *s) {
+    if (!get_expression(&s, data))
+        Output(C_ERROR "line %d: Expected numeric <value>", ScriptLine);
+}
+void integerVar::fillVarType(char *buf) {
+    strcpy(buf, "int");
+}
+
+bool stringVar::getVar(const char **s, uint32 *v) {
+    *v = (uint32)*data;
+    return true;
+}
+void stringVar::setVar(const char *s) {
+    // If val_size is zero, it means a const char* in .text segment
+    if (isDynamic)
+        free(*data);
+    char tmp[MAX_CMDLEN];
+    get_token(&s, tmp, sizeof(tmp));
+    *data = _strdup(tmp);
+    isDynamic = 1;
+}
+void stringVar::fillVarType(char *buf) {
+    strcpy(buf, "string");
+}
+
+bool bitsetVar::getVar(const char **s, uint32 *v) {
+    if (!get_args(s, name, v, 1))
+        return false;
+    if (*v > maxavail) {
+        Output(C_ERROR "line %d: Index out of range (0..%d)",
+               ScriptLine, maxavail);
+        return false;
+    }
+    *v = TESTBIT(data, *v);
+    return true;
+}
+void bitsetVar::setVar(const char *s) {
+    uint32 idx, val;
+    if (!get_expression(&s, &idx) || !get_expression(&s, &val)) {
+        Output(C_ERROR "line %d: Expected <index> <value>", ScriptLine);
+        return;
+    }
+    if (idx > maxavail) {
+        Output(C_ERROR "line %d: Index out of range (0..%d)",
+               ScriptLine, maxavail);
+        return;
+    }
+    ASSIGNBIT(data, idx, val);
+}
+void bitsetVar::fillVarType(char *buf) {
+    strcpy(buf, "bitset");
+}
+
+bool intListVar::getVar(const char **s, uint32 *v) {
+    uint32 idx;
+    if (!get_args(s, name, &idx, 1))
+        return false;
+    if (idx > maxavail || idx >= data[0]) {
+        Output(C_ERROR "line %d: Index out of range (0..%d)",
+               ScriptLine, data[0]);
+        return false;
+    }
+    *v = data[idx];
+    return true;
+}
+void intListVar::setVar(const char *s) {
+    uint32 idx=1;
+    while (idx < maxavail && get_expression(&s, &data[idx]))
+        idx++;
+    data[0] = idx;
+}
+void intListVar::fillVarType(char *buf) {
+    strcpy(buf, "int list");
+}
+
+bool rofuncVar::getVar(const char **s, uint32 *v) {
+    uint32 args[50];
+    if (numargs && !get_args(s, name, args, numargs))
+        return false;
+    *v = func(false, args, 0);
+    return true;
+}
+void rofuncVar::fillVarType(char *buf) {
+    sprintf(buf, "ro func(%d)", numargs);
+}
+
+void rwfuncVar::setVar(const char *s) {
+    uint32 val;
+    uint32 args[50];
+    if (!get_args(&s, name, args, numargs))
+        return;
+    if (!get_expression(&s, &val)) {
+        Output(C_ERROR "line %d: Expected <value>", ScriptLine);
+        return;
+    }
+    func(true, args, val);
+}
+void rwfuncVar::fillVarType(char *buf) {
+    sprintf(buf, "rw func(%d)", numargs);
+}
+
+static variableBase *
+NewVar(char *vn)
+{
+    UserVars = (commandBase**)
+        realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
+
+    integerVar *iv = new integerVar(0, _strdup(vn), 0, 0);
+    iv->isAvail = 1;
+    iv->data = &iv->dynstorage;
+    UserVars[UserVarsCount++] = iv;
+    return iv;
+}
+
+
+/****************************************************************
+ * Basic script commands
+ ****************************************************************/
+
+static void
+cmd_dump(const char *cmd, const char *args)
+{
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn), 1)) {
+        Output("line %d: Dumper name expected", ScriptLine);
+        return;
+    }
+
+    for (int i = 0; i < commands_count; i++) {
+        dumpCommand *hd = isDump(commands_start[i]);
+        if (hd && !strcasecmp(vn, hd->name)) {
+            hd->func(vn, args);
+            return;
+        }
+    }
+
+    Output("line %d: No dumper %s available, see HELP DUMP for a list"
+           , ScriptLine, vn);
+}
+REG_CMD(0, "D|UMP", cmd_dump,
+        "DUMP <hardware>[(args...)]\n"
+        "  Dump the state of given hardware.\n"
+        "  Use HELP DUMP to see available dumpers.")
+
+class fileredir : public outputfn {
+public:
+    FILE *f;
+    void sendMessage(const char *msg, int len) {
+        fwrite(msg, len, 1, f);
+    }
+};
+
+static void
+redir(const char *args)
+{
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn))) {
+        Output(C_ERROR "line %d: file name expected", ScriptLine);
+        return;
+    }
+    char fn[200];
+    fnprepare(vn, fn, sizeof(fn));
+
+    fileredir redir;
+    redir.f = fopen(fn, "wb");
+    if (!redir.f) {
+        Output("line %d: Cannot open file `%s' for writing", ScriptLine, fn);
+        return;
+    }
+    outputfn *old = setOutputFn(&redir);
+    scrInterpret(args, ScriptLine);
+    setOutputFn(old);
+    fclose(redir.f);
+}
+
+static void
+bgRun(char *args)
+{
+    prepThread();
+    redir(args);
+    free(args);
+}
+
+static void
+cmd_redir(const char *cmd, const char *args)
+{
+    if (toupper(cmd[0]) == 'B')
+        // Run in background thread.
+        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)bgRun,
+                     (LPVOID)_strdup(args), 0, NULL);
+    else
+        redir(args);
+}
+REG_CMD(0, "REDIR", cmd_redir,
+        "REDIR <filename> <command>\n"
+        "  Run <command> and send it's output to <file>")
+REG_CMD_ALT(0, "BG", cmd_redir, bg,
+            "BG <filename> <command>\n"
+            "  Run <command> in a background thread - store output in <file>")
+
+static void
+cmd_set(const char *cmd, const char *x)
+{
+    char vn[MAX_CMDLEN];
+    if (get_token(&x, vn, sizeof(vn), 1)) {
+        Output(C_ERROR "line %d: Expected <varname>", ScriptLine);
+        return;
+    }
+
+    variableBase *var = FindVar(vn);
+    if (!var)
+        var = NewVar(vn);
+
+    var->setVar(x);
+}
+REG_CMD(0, "S|ET", cmd_set,
+        "SET <variable> <value>\n"
+        "  Assign a value to a variable. Use HELP VARS for a list of variables.")
+
+static void
+cmd_help(const char *cmd, const char *x)
+{
+    char vn[MAX_CMDLEN];
+    get_token(&x, vn, sizeof(vn));
+
+    if (!strcasecmp(vn, "VARS")) {
+        Output("Name\tType\tDescription");
+        Output("-----------------------------------------------------------");
+        for (int i = 0; i < commands_count; i++) {
+            variableBase *var = isVar(commands_start[i]);
+            if (!var)
+                continue;
+            char type[variableBase::MAXTYPELEN];
+            var->fillVarType(type);
+            Output("%s\t%s\t%s", var->name, type, var->desc);
+        }
+    }
+    else if (!strcasecmp (vn, "DUMP"))
+    {
+        for (int i = 0; i < commands_count; i++) {
+            dumpCommand *hc = isDump(commands_start[i]);
+            if (hc && hc->desc)
+                Output("%s", hc->desc);
+        }
+    }
+    else if (!vn[0])
+    {
+        Output("----=====****** A summary of HaRET commands: ******=====----");
+        Output("Notations used below:");
+        Output("  [A|B] denotes either A or B");
+        Output("  <ABC> denotes a mandatory argument");
+        Output("  Any command name can be shortened to minimal unambiguous length,");
+        Output("  e.g. you can use 'p' for 'print' but not 'vd' for 'vdump'");
+        for (int i = 0; i < commands_count; i++) {
+            regCommand *hc = isCmd(commands_start[i]);
+            if (hc && hc->desc)
+                Output("%s", hc->desc);
+        }
+        Output("QUIT");
+        Output("  Quit the remote session.");
+    }
+    else
+        Output("No help on this topic available");
+}
+REG_CMD(0, "H|ELP", cmd_help,
+        "HELP [VARS|DUMP]\n"
+        "  Display a description of either commands, variables or dumpers.")
 
 static void
 cmd_runscript(const char *cmd, const char *args)
