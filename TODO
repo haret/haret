@@ -10,9 +10,6 @@ New features:
 
 * Possibly sort help output by command name.
 
-* Possibly link in a "debug.wav" file and provide a mechanism to play
-  that file.  This may be useful for tracing the sound system.
-
 
 Misc cleanups:
 
