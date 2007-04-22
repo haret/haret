@@ -47,8 +47,8 @@ static const int MAX_CMDLEN = 512;
 #define REG_VAR_INT(Pred, Name, Var, Desc)              \
     __REG_CMD(integerVar, Var, Pred, Name, Desc, &Var)
 
-#define REG_VAR_INTLIST(Pred, Name, Var, ArgCount, Desc)        \
-    __REG_CMD(intListVar, Var, Pred, Name, Desc, Var, ArgCount)
+#define REG_VAR_INTLIST(Pred, Name, ArgCount, Var, Desc)       \
+    __REG_CMD(intListVar, Var, Pred, Name, Desc, ArgCount, Var, ARRAY_SIZE(Var))
 
 #define REG_VAR_BITSET(Pred, Name, Var, ArgCount, Desc)         \
     __REG_CMD(bitsetVar, Var, Pred, Name, Desc, Var, ArgCount)
@@ -108,6 +108,8 @@ public:
         : commandBase(ta, n, d) { }
     virtual bool getVar(const char **args, uint32 *v);
     virtual void setVar(const char *args);
+    virtual void showVar(const char *args);
+    virtual void clearVar(const char *args);
     static const int MAXTYPELEN = 16;
     virtual void fillVarType(char *buf) { }
 };
@@ -118,6 +120,7 @@ public:
         : variableBase(ta, n, d), data(v), isDynamic(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
+    void showVar(const char *args);
     void fillVarType(char *buf);
     char **data;
     int isDynamic;
@@ -134,15 +137,32 @@ public:
     uint32 dynstorage;
 };
 
-class intListVar : public variableBase {
+class listVarBase : public variableBase {
 public:
-    intListVar(predFunc ta, const char *n, const char *d, uint32 *v, uint max)
-        : variableBase(ta, n, d), data(v), maxavail(max) { }
+    listVarBase(predFunc ta, const char *n, const char *d, uint32 *c
+                , void *v, uint ds, uint max)
+        : variableBase(ta, n, d)
+        , count(c), data(v), datasize(ds), maxavail(max) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
-    void fillVarType(char *buf);
-    uint32 *data;
+    void clearVar(const char *args);
+    virtual bool getVarItem(void *p, const char **args, uint32 *v);
+    virtual bool setVarItem(void *p, const char *args);
+    uint32 *count;
+    void *data;
+    uint datasize;
     uint maxavail;
+};
+
+class intListVar : public listVarBase {
+public:
+    intListVar(predFunc ta, const char *n, const char *d, uint32 *c
+               , uint32 *v, uint max)
+        : listVarBase(ta, n, d, c, (void*)v, sizeof(uint32), max) { }
+    bool getVarItem(void *p, const char **args, uint32 *v);
+    bool setVarItem(void *p, const char *args);
+    void showVar(const char *args);
+    void fillVarType(char *buf);
 };
 
 class bitsetVar : public variableBase {

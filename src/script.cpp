@@ -492,6 +492,17 @@ bool variableBase::getVar(const char **s, uint32 *v) {
 void variableBase::setVar(const char *s) {
     ScriptError("`%s' is a read-only variable", name);
 }
+void variableBase::showVar(const char *s) {
+    uint32 val;
+    bool res = getVar(&s, &val);
+    if (res)
+        Output("0x%08x", val);
+    else
+        ScriptError("Show operation on `%s' not supported", name);
+}
+void variableBase::clearVar(const char *s) {
+    ScriptError("Can not clear `%s' variable", name);
+}
 
 bool integerVar::getVar(const char **s, uint32 *v) {
     *v = *data;
@@ -517,6 +528,9 @@ void stringVar::setVar(const char *s) {
     get_token(&s, tmp, sizeof(tmp));
     *data = _strdup(tmp);
     isDynamic = 1;
+}
+void stringVar::showVar(const char *s) {
+    Output("%s", *data);
 }
 void stringVar::fillVarType(char *buf) {
     strcpy(buf, "string");
@@ -548,22 +562,57 @@ void bitsetVar::fillVarType(char *buf) {
     strcpy(buf, "bitset");
 }
 
-bool intListVar::getVar(const char **s, uint32 *v) {
+bool listVarBase::getVar(const char **s, uint32 *v) {
     uint32 idx;
     if (!get_args(s, name, &idx, 1))
         return false;
-    if (idx > maxavail || idx >= data[0]) {
-        ScriptError("Index out of range (0..%d)", data[0]);
+    if (idx >= *count) {
+        ScriptError("Index out of range (0..%d)", *count);
         return false;
     }
-    *v = data[idx];
+    void *p = (char *)data + datasize * idx;
+    return getVarItem(p, s, v);
+}
+void listVarBase::setVar(const char *s) {
+    uint32 idx;
+    if (!get_args(&s, name, &idx, 1)) {
+        ScriptError("Expected index for var %s", name);
+        return;
+    }
+    if (idx >= *count) {
+        ScriptError("Index out of range (0..%d)", *count);
+        return;
+    }
+    void *p = (char *)data + datasize * idx;
+    setVarItem(p, s);
+}
+void listVarBase::clearVar(const char *s) {
+    *count = 0;
+}
+bool listVarBase::getVarItem(void *p, const char **s, uint32 *v) {
+    return false;
+}
+bool listVarBase::setVarItem(void *p, const char *s) {
+    ScriptError("`%s' is a read-only variable", name);
+    return false;
+}
+
+bool intListVar::getVarItem(void *p, const char **s, uint32 *v) {
+    *v = *(uint32*)p;
     return true;
 }
-void intListVar::setVar(const char *s) {
-    uint32 idx=1;
-    while (idx < maxavail && get_expression(&s, &data[idx]))
-        idx++;
-    data[0] = idx;
+bool intListVar::setVarItem(void *p, const char *s) {
+    uint32 *d = (uint32*)p;
+    if (! get_expression(&s, d)) {
+        ScriptError("Expected <int>");
+        return false;
+    }
+    return true;
+}
+void intListVar::showVar(const char *s) {
+    uint32 *d = (uint32*)data;
+    for (uint i=0; i<*count; i++)
+        Output("%03d: 0x%08x", i, d[i]);
 }
 void intListVar::fillVarType(char *buf) {
     strcpy(buf, "int list");
@@ -595,9 +644,23 @@ void rwfuncVar::fillVarType(char *buf) {
     sprintf(buf, "rw func(%d)", numargs);
 }
 
-static variableBase *
-NewVar(char *vn)
+static void
+cmd_set(const char *cmd, const char *args)
 {
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn), 1)) {
+        ScriptError("Expected <varname>");
+        return;
+    }
+
+    variableBase *var = FindVar(vn);
+    if (var) {
+        // Existing variable - just set it.
+        var->setVar(args);
+        return;
+    }
+
+    // Need to create a new user variable.
     UserVars = (commandBase**)
         realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
 
@@ -605,8 +668,66 @@ NewVar(char *vn)
     iv->isAvail = 1;
     iv->data = &iv->dynstorage;
     UserVars[UserVarsCount++] = iv;
-    return iv;
+    iv->setVar(args);
 }
+REG_CMD(0, "S|ET", cmd_set,
+        "SET <variable> <value>\n"
+        "  Assign a value to a variable. Use HELP VARS for a list of variables.")
+
+static void
+cmd_showvar(const char *cmd, const char *args)
+{
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn), 1)) {
+        ScriptError("Expected <varname>");
+        return;
+    }
+
+    variableBase *var = FindVar(vn);
+    if (!var) {
+        ScriptError("Variable %s not found", vn);
+        return;
+    }
+    if (toupper(cmd[0]) == 'C')
+        // Clearvar
+        var->clearVar(args);
+    else
+        // Showvar
+        var->showVar(args);
+}
+REG_CMD(0, "SHOW|VAR", cmd_showvar,
+        "SHOWVAR <variable>\n"
+        "  Display the contents of a variable.")
+REG_CMD_ALT(0, "CLEAR|VAR", cmd_showvar, clear,
+        "CLEARVAR <variable>\n"
+        "  Reset the contents of a variable.")
+
+static void
+cmd_addlist(const char *cmd, const char *args)
+{
+    char vn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn), 1)) {
+        ScriptError("Expected <varname>");
+        return;
+    }
+    listVarBase *var = dynamic_cast<listVarBase*>(FindVar(vn));
+    if (!var) {
+        ScriptError("Expected list variable");
+        return;
+    }
+
+    if (*var->count >= var->maxavail) {
+        Output("List %s already at max (%d)", var->name, var->maxavail);
+        return;
+    }
+    void *p = (char *)var->data + var->datasize * (*var->count);
+    int ret = var->setVarItem(p, args);
+    if (ret)
+        (*var->count)++;
+}
+REG_CMD(0, "ADDLIST", cmd_addlist,
+        "ADDLIST <variable> <value>\n"
+        "  Add an item to a list variable.");
 
 
 /****************************************************************
@@ -692,25 +813,6 @@ REG_CMD(0, "REDIR", cmd_redir,
 REG_CMD_ALT(0, "BG", cmd_redir, bg,
             "BG <filename> <command>\n"
             "  Run <command> in a background thread - store output in <file>")
-
-static void
-cmd_set(const char *cmd, const char *x)
-{
-    char vn[MAX_CMDLEN];
-    if (get_token(&x, vn, sizeof(vn), 1)) {
-        ScriptError("Expected <varname>");
-        return;
-    }
-
-    variableBase *var = FindVar(vn);
-    if (!var)
-        var = NewVar(vn);
-
-    var->setVar(x);
-}
-REG_CMD(0, "S|ET", cmd_set,
-        "SET <variable> <value>\n"
-        "  Assign a value to a variable. Use HELP VARS for a list of variables.")
 
 static void
 cmd_help(const char *cmd, const char *x)

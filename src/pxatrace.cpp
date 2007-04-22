@@ -176,8 +176,7 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
         return 1;
 
     uint32 old_pc = transPC(regs->old_pc - 8);
-    uint32 ignoreCount = data->ignoreAddr[0];
-    for (uint32 i=1; i<ignoreCount; i++) {
+    for (uint32 i=0; i<data->ignoreAddrCount; i++) {
         if (old_pc == data->ignoreAddr[i])
             // This address is being ignored.
             return 1;
@@ -269,13 +268,14 @@ static int testPXAAvail() {
 static uint32 irqIgnore[BITMAPSIZE(MAX_IRQ)];
 static uint32 irqDemuxGPIO = 1;
 static uint32 irqIgnoreAddr[MAX_IGNOREADDR];
+static uint32 irqIgnoreAddrCount;
 static uint32 traceForWatch;
 
 REG_VAR_BITSET(testPXAAvail, "II", irqIgnore, MAX_IRQ,
                "The list of interrupts to ignore during WI")
 REG_VAR_INT(testPXAAvail, "IRQGPIO", irqDemuxGPIO,
             "Turns on/off interrupt handler gpio irq demuxing")
-REG_VAR_INTLIST(testPXAAvail, "TRACEIGNORE", irqIgnoreAddr, MAX_IGNOREADDR,
+REG_VAR_INTLIST(testPXAAvail, "TRACEIGNORE", &irqIgnoreAddrCount, irqIgnoreAddr,
                 "List of pc addresses to ignore when tracing")
 REG_VAR_INT(testPXAAvail, "TRACEFORWATCH", traceForWatch,
             "Only report memory trace if ADDTRACEWATCH poll succeeds")
@@ -373,6 +373,7 @@ prepPXAtraps(struct irqData *data)
     data->irq_ctrl = memPhysMap(IRQ_OFFSET);
     memcpy(data->ignoredIrqs, irqIgnore, sizeof(irqIgnore));
     data->demuxGPIOirq = irqDemuxGPIO;
+    data->ignoreAddrCount = irqIgnoreAddrCount;
     memcpy(data->ignoreAddr, irqIgnoreAddr, sizeof(data->ignoreAddr));
     data->traceForWatch = traceForWatch;
 

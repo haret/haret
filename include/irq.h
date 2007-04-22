@@ -79,6 +79,7 @@ struct irqData {
 
     // Debug information.
     uint32 ignoreAddr[MAX_IGNOREADDR];
+    uint32 ignoreAddrCount;
     uint32 traceForWatch;
 
     // Instruction trace information.
