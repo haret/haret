@@ -2,6 +2,10 @@
 
   * New support for memory tracing based on MMU manipulation.  This
     allows one to watch reads/writes to memory on any ARM platform.
+    To use this infrastructure, run "addlist mmutrace <start> <size>
+    <rw>".  Where <start> is address to trace, <size> is the size of
+    the address range to trace, and <rw> is a string that determines
+    whether or not to check for reads or writes.
 
   * New support in haretconsole for showing architecture register
     names during the "watch" and "wi" commands.
