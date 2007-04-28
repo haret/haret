@@ -821,15 +821,15 @@ cmd_help(const char *cmd, const char *x)
     get_token(&x, vn, sizeof(vn));
 
     if (!strcasecmp(vn, "VARS")) {
-        Output("Name\tType\tDescription");
-        Output("-----------------------------------------------------------");
+        Output("Name                 Type");
+        Output("-------------------- ----------");
         for (int i = 0; i < commands_count; i++) {
             variableBase *var = isVar(commands_start[i]);
             if (!var)
                 continue;
             char type[variableBase::MAXTYPELEN];
             var->fillVarType(type);
-            Output("%s\t%s\t%s", var->name, type, var->desc);
+            Output("%-20s %s\n  %s", var->name, type, var->desc);
         }
     }
     else if (!strcasecmp (vn, "DUMP"))
