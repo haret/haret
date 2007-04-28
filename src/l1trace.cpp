@@ -119,7 +119,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     int addrsize;
     uint32 val;
     if ((insn & 0x0C000000) == 0x04000000) {
-        if (Pbit(insn) == 0)
+        if (!Pbit(insn) && (Wbit(insn) || Ibit(insn)))
             goto fail;
         addrsize = Bbit(insn) ? 1 : 4;
         if (Lbit(insn)) {
@@ -137,10 +137,16 @@ tryEmulate(struct irqData *data, struct irqregs *regs
             else
                 *(uint32*)newaddr = val;
         }
-        if (Wbit(insn))
+        if (Pbit(insn) == 0) {
+            uint32 offset = insn & 0xFFF;
+            uint32 Rn = addr + offset;
+            if (!Ubit(insn))
+                Rn = addr - offset;
+            setReg(regs, mask_Rn(insn), Rn);
+        } else if (Wbit(insn))
             setReg(regs, mask_Rn(insn), addr);
     } else if ((insn & 0x0E000090) == 0x00000090) {
-        if (Pbit(insn) == 0)
+        if (!Pbit(insn) && (Wbit(insn) || !Bbit(insn)))
             goto fail;
         addrsize = 2;
         if (Lbit(insn)) {
@@ -164,7 +170,13 @@ tryEmulate(struct irqData *data, struct irqregs *regs
             val = getReg(regs, mask_Rd(insn));
             *(uint16*)newaddr = val;
         }
-        if (Wbit(insn))
+        if (Pbit(insn) == 0) {
+            uint32 offset = ((insn & 0xF00) >> 4) | (insn & 0xF);
+            uint32 Rn = addr + offset;
+            if (!Ubit(insn))
+                Rn = addr - offset;
+            setReg(regs, mask_Rn(insn), Rn);
+        } else if (Wbit(insn))
             setReg(regs, mask_Rn(insn), addr);
     } else
         goto fail;
@@ -289,7 +301,11 @@ public:
 __REG_CMD(traceListVar, MMUTrace,
           testWirqAvail,
           "MMUTRACE",
-          "Memory locations to trace during WI")
+          "Memory locations to trace during WI.\n"
+          "  List of <start> [<size> [<rw>]] triples where <start> is a\n"
+          "  virtual address to trace, <size> is the number of bytes in the\n"
+          "  range to trace (default 1), and <rw> is a string (eg, 'r') that\n"
+          "  determines if reads and/or writes are reported (default 'rw').")
 
 static uint32 ignoreAddr[MAX_IGNOREADDR];
 static uint32 ignoreAddrCount;
