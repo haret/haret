@@ -18,26 +18,53 @@
 #define TOPBITS 0xFFF00000
 #define BOTBITS 0x000FFFFF
 
+
+/****************************************************************
+ * MMU fault handling
+ ****************************************************************/
+
+// Return a pointer to an MMU descriptor for a given vaddr
+static inline uint32 * __irq
+getMMUref(struct irqData *data, uint32 vaddr) {
+    return data->mmuVAddr + (MVAddr(vaddr) >> 20);
+}
+
+// Return the redirected address for the nth masked addr
+static inline uint32 __irq
+newAddr(struct irqData *data, uint i) {
+    return data->redirectVAddrBase + ONEMEG * i;
+}
+
 void
 startL1traps(struct irqData *data)
 {
-    if (!data->l1traceDesc)
+    if (!data->alterCount)
         return;
     // Unmap the l1 mmu reference
-    *data->alt_l1traceDesc = *data->l1traceDesc;
-    *data->l1traceDesc = MMU_L1_UNMAPPED;
-    // XXX - make sure unbuffered/uncached/read+writable
+    for (uint i=0; i<data->alterCount; i++) {
+        uint32 *desc = getMMUref(data, data->alterVAddrs[i]);
+        uint32 *redirectdesc = getMMUref(data, newAddr(data, i));
+        // XXX - set domain
+        data->alterVAddrs[i] |= *desc & BOTBITS;
+        *redirectdesc = ((*desc | MMU_L1_AP_MASK)
+                         & ~(MMU_L1_CACHEABLE | MMU_L1_BUFFERABLE));
+        *desc = MMU_L1_UNMAPPED;
+    }
 }
 
 void __irq
 stopL1traps(struct irqData *data)
 {
-    if (!data->l1traceDesc)
+    if (!data->alterCount)
         return;
     // Restore the previous l1 mmu info.
-    *data->l1traceDesc = *data->alt_l1traceDesc;
-    *data->alt_l1traceDesc = MMU_L1_UNMAPPED;
-    data->l1traceDesc = NULL;
+    for (uint i=0; i<data->alterCount; i++) {
+        uint32 *desc = getMMUref(data, data->alterVAddrs[i]);
+        uint32 *redirectdesc = getMMUref(data, newAddr(data, i));
+        *desc = (*redirectdesc & TOPBITS) | (data->alterVAddrs[i] & BOTBITS);
+        *redirectdesc = MMU_L1_UNMAPPED;
+    }
+    data->alterCount = 0;
 }
 
 // Flush the I and D TLBs.
@@ -70,11 +97,11 @@ report_memAccess(uint32 msecs, traceitem *item)
 }
 
 static void __irq
-tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
+tryEmulate(struct irqData *data, struct irqregs *regs
+           , uint32 addr, uint32 newaddr)
 {
     uint32 old_pc = transPC(regs->old_pc - 8);
     uint32 insn = *(uint32*)old_pc;
-    uint32 newaddr = data->alt_l1trace | (addr & BOTBITS);
 
     if (--data->max_l1trace == 0)
         goto fail;
@@ -88,10 +115,13 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
 #define Sbit(insn) ((insn)&(1<<6))
 #define Hbit(insn) ((insn)&(1<<5))
 
+    // Emulate instrution
+    int addrsize;
     uint32 val;
     if ((insn & 0x0C000000) == 0x04000000) {
         if (Pbit(insn) == 0)
             goto fail;
+        addrsize = Bbit(insn) ? 1 : 4;
         if (Lbit(insn)) {
             // ldr
             if (Bbit(insn))
@@ -112,6 +142,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
     } else if ((insn & 0x0E000090) == 0x00000090) {
         if (Pbit(insn) == 0)
             goto fail;
+        addrsize = 2;
         if (Lbit(insn)) {
             // ldrh
             if (Hbit(insn)) {
@@ -121,6 +152,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
                     val = *(uint16*)newaddr;
                 }
             } else if (Sbit(insn)) {
+                addrsize = 1;
                 val = *(int8*)newaddr;
             } else
                 goto fail;
@@ -136,7 +168,25 @@ tryEmulate(struct irqData *data, struct irqregs *regs, uint32 addr)
             setReg(regs, mask_Rn(insn), addr);
     } else
         goto fail;
-    add_trace(data, report_memAccess, addr, old_pc, insn, val);
+
+    // See if this instruction should be reported
+    if (isIgnoredAddr(data, old_pc))
+        return;
+    for (uint i=0; i<data->traceCount; i++) {
+        irqData::trace_s *t = &data->traceAddrs[i];
+        if (t->start > addr + addrsize || t->end <= addr)
+            continue;
+        if (Lbit(insn)) {
+            if (!(t->rw & 1))
+                break;
+        } else {
+            if (!(t->rw & 2))
+                break;
+        }
+        // Report insn
+        add_trace(data, report_memAccess, addr, old_pc, insn, val);
+        break;
+    }
     return;
 fail:
     add_trace(data, report_memAccess, addr, old_pc, insn
@@ -156,14 +206,17 @@ static inline int __irq addrmatch(uint32 addr1, uint32 addr2) {
 int __irq
 L1_abort_handler(struct irqData *data, struct irqregs *regs)
 {
-    if (!data->l1traceDesc)
+    if (!data->alterCount)
         return 0;
     uint32 faultaddr = get_FAR();
-    if (!addrmatch(faultaddr, data->l1trace))
-        // Not a fault to memory being traced
-        return 0;
-    tryEmulate(data, regs, faultaddr);
-    return 1;
+    for (uint i=0; i<data->alterCount; i++)
+        if (addrmatch(faultaddr, data->alterVAddrs[i])) {
+            // Fault to memory being traced
+            uint32 newaddr = newAddr(data, i) | (faultaddr & BOTBITS);
+            tryEmulate(data, regs, faultaddr, newaddr);
+            return 1;
+        }
+    return 0;
 }
 
 int __irq
@@ -171,20 +224,13 @@ L1_prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
     // XXX
     return 0;
-
-    if (!data->l1traceDesc)
-        return 0;
-    uint32 faultaddr = get_FAR();
-    if (!addrmatch(faultaddr, data->l1trace))
-        // Not a fault to memory being traced
-        return 0;
-    giveUp(data, regs, faultaddr);
-    return 1;
 }
 
-static uint32 L1Trace = 0xFFFFFFFF;
-REG_VAR_INT(testWirqAvail, "L1TRACE", L1Trace,
-            "1Meg Memory location to trace during WI")
+
+/****************************************************************
+ * Tracing variables
+ ****************************************************************/
+
 static uint32 AltL1Trace = 0xE1100000;
 REG_VAR_INT(testWirqAvail, "ALTL1TRACE", AltL1Trace,
             "Alternate location to move L1TRACE accesses to")
@@ -192,60 +238,139 @@ static uint32 MaxL1Trace = 0xFFFFFFFF;
 REG_VAR_INT(testWirqAvail, "MAXL1TRACE", MaxL1Trace,
             "Maximum number of l1traces to report before giving up (debug feature)")
 
-static uint32 *
-getMMUref(uint32 vaddr)
-{
-    return (uint32*)memPhysMap(cpuGetMMU() + ((MVAddr(vaddr) >> 18) & ~3));
-}
+class traceListVar : public listVarBase {
+public:
+    uint32 tracecount;
+    irqData::trace_s traces[MAX_L1TRACE];
+    traceListVar(predFunc ta, const char *n, const char *d)
+        : listVarBase(ta, n, d
+                      , &tracecount, (void*)traces, sizeof(traces[0])
+                      , ARRAY_SIZE(traces)) { }
+    bool setVarItem(void *p, const char *args) {
+        irqData::trace_s *t = (irqData::trace_s*)p;
+        if (!get_expression(&args, &t->start)) {
+            ScriptError("Expected <start>");
+            return false;
+        }
+        const char *flags = "rw";
+        char _flags[16];
+        uint32 addrsize = 1;
+        if (get_expression(&args, &addrsize))
+            if (!get_token(&args, _flags, sizeof(_flags)))
+                flags = _flags;
+        t->end = t->start + addrsize;
+        if ((t->start & TOPBITS) != (t->end & TOPBITS)) {
+            ScriptError("Address range must be within a 1Meg section");
+            return false;
+        }
+        t->rw = 0;
+        if (strchr(flags, 'r') || strchr(flags, 'R'))
+            t->rw = 1;
+        if (strchr(flags, 'w') || strchr(flags, 'W'))
+            t->rw |= 2;
+        return true;
+    }
+    void showVar(const char *args) {
+        for (uint i=0; i<tracecount; i++) {
+            irqData::trace_s *t = &traces[i];
+            char flags[3], *f = flags;
+            if (t->rw & 1)
+                *f++ = 'r';
+            if (t->rw & 2)
+                *f++ = 'w';
+            *f = '\0';
+            Output("%03d: 0x%08x %d %s", i, t->start, t->end - t->start, flags);
+        }
+    }
+    void fillVarType(char *buf) {
+        strcpy(buf, "trace list");
+    }
+};
+__REG_CMD(traceListVar, MMUTrace,
+          testWirqAvail,
+          "MMUTRACE",
+          "Memory locations to trace during WI")
+
+static uint32 ignoreAddr[MAX_IGNOREADDR];
+static uint32 ignoreAddrCount;
+REG_VAR_INTLIST(testWirqAvail, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
+                "List of pc addresses to ignore when tracing")
+
+
+/****************************************************************
+ * Tracing setup
+ ****************************************************************/
 
 static void
 alterTracePoint(struct irqData *data, memcheck *mc)
 {
     uint32 addr = (uint32)mc->addr;
-    if (!addrmatch(data->l1trace, addr))
-        return;
-    mc->addr = (char *)data->alt_l1trace + (addr & BOTBITS);
+    for (uint i=0; i<data->alterCount; i++)
+        if (addrmatch(data->alterVAddrs[i], addr))
+            mc->addr = (char *)(newAddr(data, i) | (addr & BOTBITS));
 }
 
 int
 prepL1traps(struct irqData *data)
 {
-    if (L1Trace == 0xFFFFFFFF)
+    // Copy ignoreaddr values (note pxatrace uses this too)
+    data->ignoreAddrCount = ignoreAddrCount;
+    memcpy(data->ignoreAddr, ignoreAddr, sizeof(data->ignoreAddr));
+
+    data->traceCount = RefMMUTrace.tracecount;
+    if (!data->traceCount)
         // Nothing to do.
         return 0;
-    if (L1Trace & BOTBITS) {
-        Output("L1Trace=%08x is not 1Meg aligned", L1Trace);
-        return -1;
-    }
-    if (AltL1Trace & BOTBITS) {
-        Output("AltL1Trace=%08x is not 1Meg aligned", AltL1Trace);
+    memcpy(data->traceAddrs, RefMMUTrace.traces, sizeof(data->traceAddrs));
+
+    data->redirectVAddrBase = AltL1Trace;
+    if (data->redirectVAddrBase & BOTBITS) {
+        Output("AltL1Trace=%08x is not 1Meg aligned", data->redirectVAddrBase);
         return -1;
     }
 
-    // Lookup descriptor for mappings
-    uint32 *l1d = getMMUref(L1Trace);
-    if ((*l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
-        Output("Address %08x not an L1 mapping (l1d=%08x)"
-               , L1Trace, *l1d);
-        return -1;
-    }
-    uint32 *alt_l1d = getMMUref(AltL1Trace);
-    if (*alt_l1d != MMU_L1_UNMAPPED) {
-        Output("Address %08x not unmapped (l1d=%08x)"
-               , AltL1Trace, *alt_l1d);
+    data->mmuVAddr = (uint32*)memPhysMap(cpuGetMMU());
+    if (! data->mmuVAddr) {
+        Output("Unable to map MMU table");
         return -1;
     }
 
-    data->l1trace = L1Trace;
-    data->l1traceDesc = l1d;
-    data->alt_l1trace = AltL1Trace;
-    data->alt_l1traceDesc = alt_l1d;
     data->max_l1trace = MaxL1Trace;
 
-    Output("Mapping %08x accesses to %08x (tbl %p=%08x/%p=%08x)"
-           , data->l1trace, data->alt_l1trace
-           , data->l1traceDesc, *data->l1traceDesc
-           , data->alt_l1traceDesc, *data->alt_l1traceDesc);
+    // Determine which 1Meg sections need to be altered
+    uint32 count = 0;
+    for (uint i=0; i<data->traceCount; i++) {
+        irqData::trace_s *t = &data->traceAddrs[i];
+        uint32 vaddr = t->start & TOPBITS;
+
+        // See if this vaddr already done.
+        int found = 0;
+        for (uint j=0; j<count; j++)
+            if (data->alterVAddrs[j] == vaddr)
+                found = 1;
+        if (found)
+            continue;
+
+        // Lookup descriptor for mappings
+        uint32 l1d = *getMMUref(data, vaddr);
+        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
+            Output("Address %08x not an L1 mapping (l1d=%08x)"
+                   , vaddr, l1d);
+            return -1;
+        }
+        uint32 alt_l1d = *getMMUref(data, newAddr(data, count));
+        if (alt_l1d != MMU_L1_UNMAPPED) {
+            Output("Address %08x not unmapped (l1d=%08x)"
+                   , newAddr(data, count), alt_l1d);
+            return -1;
+        }
+
+        data->alterVAddrs[count] = vaddr;
+        Output("%02d: Mapping %08x accesses to %08x (tbl %08x)"
+               , i, data->alterVAddrs[count], newAddr(data, count), l1d);
+        count++;
+    }
+    data->alterCount = count;
 
     // Redirect any traces of target area to alt area.
     for (uint i=0; i<data->tracepollcount; i++)

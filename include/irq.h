@@ -37,9 +37,12 @@ struct traceitem {
 };
 
 static const uint32 MAX_IRQ = 32 + 2 + 120;
-static const uint32 MAX_IGNOREADDR = 64;
 // Maximum number of irq/trace level memory polls available.
-#define MAX_MEMCHECK 32
+static const uint32 MAX_MEMCHECK = 32;
+// Maximum number of l1trace addresses available.
+static const uint32 MAX_L1TRACE = 64;
+// Maximum number of pc addresses that can be ignored.
+static const uint32 MAX_IGNOREADDR = 64;
 
 // Persistent data accessible by both exception handlers and regular
 // code.
@@ -61,9 +64,15 @@ struct irqData {
     //
     // MMU tracing specific
     //
-    uint32 *alt_l1traceDesc, *l1traceDesc;
-    uint32 alt_l1trace, l1trace;
+    uint32 *mmuVAddr;
+    uint32 redirectVAddrBase;
+    uint32 alterCount, alterVAddrs[MAX_L1TRACE];
+    uint32 traceCount;
+    struct trace_s { uint32 start, end, rw; } traceAddrs[MAX_L1TRACE];
     uint32 max_l1trace;
+
+    uint32 ignoreAddr[MAX_IGNOREADDR];
+    uint32 ignoreAddrCount;
 
     //
     // PXA tracing specific
@@ -77,14 +86,10 @@ struct irqData {
     uint32 ignoredIrqs[BITMAPSIZE(MAX_IRQ)];
     uint32 demuxGPIOirq;
 
-    // Debug information.
-    uint32 ignoreAddr[MAX_IGNOREADDR];
-    uint32 ignoreAddrCount;
-    uint32 traceForWatch;
-
     // Instruction trace information.
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];
     uint32 dbr0, dbr1, dbcon;
+    uint32 traceForWatch;
 };
 
 // Add an item to the trace buffer.
@@ -145,6 +150,15 @@ static inline uint32 __irq transPC(uint32 pc) {
         // Need to turn virtual address in to modified virtual address.
         pc |= (get_PID() & 0xfe000000);
     return pc;
+}
+
+// Is the "pc" in the list of ignored addresses?
+static inline int __irq isIgnoredAddr(struct irqData *data, uint32 pc) {
+    for (uint i=0; i<data->ignoreAddrCount; i++)
+        if (pc == data->ignoreAddr[i])
+            // This address is being ignored.
+            return 1;
+    return 0;
 }
 
 
