@@ -5,7 +5,7 @@
     (and "addlist IRQS ..." / "addlist TRACES ...").  The lswatch
     command is now "showvar <var>", the ignorewatch/unignorewatch
     commands are now "ibit <var>" and "wbit <var>".  Finally, the
-    "clearwatch" command becomes "clearlist <var>".  Internally, the
+    "clearwatch" command becomes "clearvar <var>".  Internally, the
     code now uses variables for the various watchlists, which will
     make it easier to add new watchlists in the future.
 
@@ -14,7 +14,9 @@
     To use this infrastructure, run "addlist mmutrace <start> <size>
     <rw>".  Where <start> is address to trace, <size> is the size of
     the address range to trace, and <rw> is a string that determines
-    whether or not to check for reads or writes.
+    whether or not to check for reads or writes.  Use addlist,
+    clearvar, and showvar to manipulate the list of address ranges to
+    watch.
 
   * New support in haretconsole for showing architecture register
     names during the "watch" and "wi" commands.
