@@ -137,9 +137,9 @@ struct irqregs {
 
 // Create a set of CPU coprocessor accessor functions for irq handlers
 #define DEF_GETIRQCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
-    DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, __irq)
+    DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, __irq,)
 #define DEF_SETIRQCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
-    DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, __irq)
+    DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, __irq,)
 
 // Get pid - can't use haret's because it isn't in this irq section.
 DEF_GETIRQCPR(get_PID, p15, 0, c13, c0, 0)

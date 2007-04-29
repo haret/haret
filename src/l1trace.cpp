@@ -68,7 +68,7 @@ stopL1traps(struct irqData *data)
 }
 
 // Flush the I and D TLBs.
-DEF_SETIRQCPR(set_TLBflush, p15, 0, c8, c7, 0)
+DEF_SETCPRATTR(set_TLBflush, p15, 0, c8, c7, 0, __irq, "memory")
 
 static void
 report_giveup(uint32 msecs, traceitem *item)

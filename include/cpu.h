@@ -18,24 +18,26 @@
 #define PAGE_ALIGN(v) (((v)+PAGE_SIZE-1) / PAGE_SIZE * PAGE_SIZE)
 
 // Macros useful for defining CPU coprocessor accessor functions
-#define DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, Attr)     \
-static inline uint32 Attr Name (void) {                         \
-    uint32 val;                                                 \
-    asm volatile("mrc " #Cpr ", " #Op1 ", %0, "                 \
-                 #CRn ", " #CRm ", " #Op2 : "=r" (val));        \
-    return val;                                                 \
+#define DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, Attr, Clob)       \
+static inline uint32 Attr Name (void) {                                 \
+    uint32 val;                                                         \
+    asm volatile("mrc " #Cpr ", " #Op1 ", %0, "                         \
+                 #CRn ", " #CRm ", " #Op2                               \
+                 : "=r" (val) : : Clob);                                \
+    return val;                                                         \
 }
-#define DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, Attr)     \
-static inline void Attr Name (uint32 val) {                     \
-    asm volatile("mcr " #Cpr ", " #Op1 ", %0, "                 \
-                 #CRn ", " #CRm ", " #Op2 : : "r"(val));        \
+#define DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, Attr, Clob)       \
+static inline void Attr Name (uint32 val) {                             \
+    asm volatile("mcr " #Cpr ", " #Op1 ", %0, "                         \
+                 #CRn ", " #CRm ", " #Op2                               \
+                 : : "r"(val) : Clob);                                  \
 }
 
 // Create a CPU coprocessor accessor functions
 #define DEF_GETCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
-    DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2,)
+    DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2,,)
 #define DEF_SETCPR(Name, Cpr, Op1, CRn, CRm, Op2)     \
-    DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2,)
+    DEF_SETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2,,)
 
 // Get physical address of MMU 1st level descriptor tables
 extern uint32 cpuGetMMU ();
