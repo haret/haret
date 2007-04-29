@@ -47,7 +47,7 @@ RegsList['ARCH:s3c2442'] = Regs_s3c2442
 # HTC Hermes specific registers
 Regs_Hermes = Regs_s3c2442.copy()
 Regs_Hermes.update({
-    0x08000004: ("cpldirq", ((2, "sd?"), (4, "jogup"), (5, "jogdown"))),
+    0x08000004: ("cpldirq", (lambda bit: "CPLD%d" % bit)),
     })
 RegsList['Hermes'] = Regs_Hermes
 
