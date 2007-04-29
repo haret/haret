@@ -64,10 +64,12 @@ static const int MAX_CMDLEN = 512;
  * Internals to declaring commands
  ****************************************************************/
 
-#define __REG_CMD(Type, Decl, Vals...)                                  \
-class Type Ref ##Decl (Vals);                                           \
-class commandBase *RefPtr ##Decl                                        \
-    __attribute__ ((__section__ (".rdata.cmds"))) = & Ref ##Decl;
+#define __REG_CMD(Type, Decl, Vals...)          \
+    __REG_VAR(Type, Ref ##Decl, Vals)
+#define __REG_VAR(Type, Decl, Vals...)                          \
+class Type Decl (Vals);                                         \
+class commandBase *Ptr ##Decl                                   \
+    __attribute__ ((__section__ (".rdata.cmds"))) = & Decl;
 
 // Structure to hold commands
 class commandBase {
@@ -196,5 +198,6 @@ public:
 };
 
 void setupCommands();
+variableBase *FindVar(const char *vn);
 
 #endif /* _SCRIPT_H */

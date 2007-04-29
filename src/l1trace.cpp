@@ -298,7 +298,7 @@ public:
         strcpy(buf, "trace list");
     }
 };
-__REG_CMD(traceListVar, MMUTrace,
+__REG_VAR(traceListVar, MMUTrace,
           testWirqAvail,
           "MMUTRACE",
           "Memory locations to trace during WI.\n"
@@ -333,11 +333,11 @@ prepL1traps(struct irqData *data)
     data->ignoreAddrCount = ignoreAddrCount;
     memcpy(data->ignoreAddr, ignoreAddr, sizeof(data->ignoreAddr));
 
-    data->traceCount = RefMMUTrace.tracecount;
+    data->traceCount = MMUTrace.tracecount;
     if (!data->traceCount)
         // Nothing to do.
         return 0;
-    memcpy(data->traceAddrs, RefMMUTrace.traces, sizeof(data->traceAddrs));
+    memcpy(data->traceAddrs, MMUTrace.traces, sizeof(data->traceAddrs));
 
     data->redirectVAddrBase = AltL1Trace;
     if (data->redirectVAddrBase & BOTBITS) {

@@ -81,7 +81,7 @@ __findVar(const char *vn, commandBase **vars, int varCount)
 }
 
 // Lookup a variable (either in the predefined list or user added list).
-static variableBase *
+variableBase *
 FindVar(const char *vn)
 {
     variableBase *v = __findVar(vn, commands_start, commands_count);
@@ -825,7 +825,7 @@ cmd_help(const char *cmd, const char *x)
         Output("-------------------- ----------");
         for (int i = 0; i < commands_count; i++) {
             variableBase *var = isVar(commands_start[i]);
-            if (!var)
+            if (!var || !var->desc)
                 continue;
             char type[variableBase::MAXTYPELEN];
             var->fillVarType(type);
