@@ -47,14 +47,14 @@ Misc cleanups:
 * Possibly allow the current machine definition (Mach) to be
   explicitly specified by a user command.
 
+* The strncpy calls (and snprintf, etc) should be audited to ensure
+  that a null character is always at the end of the buffer.
+
 
 Possible features for "wi":
 
 * Haret should fixup the exception vectors if the user tries to exit
   while in "wi".
-
-* Enhance l1trace so that it can take a list of address ranges along
-  with the type of access to report (read and/or write).
 
 * It should be possible to implement a portable instruction breakpoint
   system by overwriting code in memory with an interrupt or "undefined
