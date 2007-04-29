@@ -1,6 +1,8 @@
 #ifndef __WATCH_H
 #define __WATCH_H
 
+#include "script.h" // listVarBase
+
 // Function callback definition to report the results of a memory
 // check.
 typedef void (*reporter_t)(uint32 msecs, uint32 clock, struct memcheck *
@@ -19,12 +21,23 @@ struct memcheck {
 
 int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
 
-void watchCmdHelper(memcheck *list, uint32 max, uint32 *total
-                    , const char *cmd, const char *args);
-void beginWatch(memcheck *list, uint32 count
-                , const char *name="mem", int isStart=1);
-
 // Give up rest of time slice.
 extern void (*late_SleepTillTick)();
+
+// Trace listing class
+class watchListVar : public listVarBase {
+public:
+    uint32 watchcount;
+    memcheck watchlist[64];
+    watchListVar(predFunc ta, const char *n, const char *d)
+        : listVarBase(ta, n, d, &watchcount, (void*)watchlist
+                      , sizeof(watchlist[0]), ARRAY_SIZE(watchlist)) { }
+    bool setVarItem(void *p, const char *args);
+    void showVar(const char *args);
+    void fillVarType(char *buf);
+    void beginWatch(int isStart=1);
+};
+#define REG_VAR_WATCHLIST(Pred, Name, Var, Desc)       \
+    __REG_VAR(watchListVar, Var, Pred, Name, Desc)
 
 #endif // watch.h

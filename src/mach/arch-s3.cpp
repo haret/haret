@@ -21,18 +21,18 @@ MachineS3c2442::init()
 {
     runMemScript("set ramaddr 0x30000000\n"
                  // IRQs
-                 "addirqwatch p2v(0x4A000010) 0x4030 32 0\n"
-                 "addirqwatch p2v(0x560000a8) 0x0 32 0\n"
+                 "addlist IRQS p2v(0x4A000010) 0x4030 32 0\n"
+                 "addlist IRQS p2v(0x560000a8) 0x0 32 0\n"
                  // GPIOs
-                 "addwatch p2v(0x56000004)\n"
-                 "addwatch p2v(0x56000014)\n"
-                 "addwatch p2v(0x56000024)\n"
-                 "addwatch p2v(0x56000034)\n"
-                 "addwatch p2v(0x56000044)\n"
-                 "addwatch p2v(0x56000054)\n"
-                 "addwatch p2v(0x56000064)\n"
-                 "addwatch p2v(0x56000074)\n"
-                 "addwatch p2v(0x56000084)\n");
+                 "addlist GPIOS p2v(0x56000004)\n"
+                 "addlist GPIOS p2v(0x56000014)\n"
+                 "addlist GPIOS p2v(0x56000024)\n"
+                 "addlist GPIOS p2v(0x56000034)\n"
+                 "addlist GPIOS p2v(0x56000044)\n"
+                 "addlist GPIOS p2v(0x56000054)\n"
+                 "addlist GPIOS p2v(0x56000064)\n"
+                 "addlist GPIOS p2v(0x56000074)\n"
+                 "addlist GPIOS p2v(0x56000084)\n");
 }
 
 static inline uint32 s3c_readl(volatile uint32 *base, uint32 reg)

@@ -1,5 +1,14 @@
 <next version> <kevin@koconnor.net>
 
+  * New syntax for watching memory areas.  The addwatch (and
+    addirqwatch / addtracewatch) command is now "addlist GPIOS ..."
+    (and "addlist IRQS ..." / "addlist TRACES ...").  The lswatch
+    command is now "showvar <var>", the ignorewatch/unignorewatch
+    commands are now "ibit <var>" and "wbit <var>".  Finally, the
+    "clearwatch" command becomes "clearlist <var>".  Internally, the
+    code now uses variables for the various watchlists, which will
+    make it easier to add new watchlists in the future.
+
   * New support for memory tracing based on MMU manipulation.  This
     allows one to watch reads/writes to memory on any ARM platform.
     To use this infrastructure, run "addlist mmutrace <start> <size>

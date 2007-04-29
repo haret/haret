@@ -69,7 +69,7 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
 
 
 /****************************************************************
- * Helper for registering watched memory
+ * Helpers for registering watched memory
  ****************************************************************/
 
 static void
@@ -83,52 +83,14 @@ r_basic(uint32 msecs, uint32 clock, struct memcheck *mc
         Output("%06d: mem %p=%08x (%08x)", msecs, mc->addr, newval, maskval);
 }
 
-// Helper for handling memory poll haret commands.
-void
-watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
-               , const char *cmd, const char *args)
+bool
+watchListVar::setVarItem(void *p, const char *args)
 {
-    if (toupper(cmd[0]) == 'C') {
-        // Clear list.
-        *ptotal = 0;
-        return;
-    }
-    uint32 total = *ptotal;
-    if (toupper(cmd[0]) == 'L') {
-        // List what is currently registered
-        for (uint i=0; i<total; i++) {
-            memcheck *mc = &list[i];
-            Output("%2d: 0x%p %08x %2d"
-                   , i, mc->addr, ~mc->mask, 4<<mc->readSize);
-        }
-        return;
-    }
-    if (toupper(cmd[0]) == 'I' || toupper(cmd[0]) == 'U') {
-        // Add bits to the mask
-        uint32 bit;
-        while (get_expression(&args, &bit)) {
-            uint pos = bit / 32;
-            uint mask = 1<<(bit % 32);
-            if (pos >= *ptotal) {
-                Output(C_ERROR "Bit %d is past max found of %d"
-                       , pos, *ptotal);
-                return;
-            }
-            if (toupper(cmd[0]) == 'I')
-                list[pos].mask &= ~mask;
-            else
-                list[pos].mask |= mask;
-        }
-        return;
-    }
-
-    // Add a new item to the list.
-
     // Parse args
     uint32 addr;
     if (!get_expression(&args, &addr)) {
         ScriptError("Expected <addr>");
-        return;
+        return false;
     }
     uint32 mask = 0, size = 32, hasComp=0, cmpVal=0;
     if (get_expression(&args, &mask) && get_expression(&args, &size)
@@ -140,25 +102,11 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
     case 8: size=MO_READ8; break;
     default:
         ScriptError("Expected <32|16|8>");
-        return;
-    }
-
-    // See if this address is already in the list.
-    struct memcheck *mc = &list[total];
-    for (uint i=0; i<total; i++)
-        if (list[i].addr == (char *)addr) {
-            // In list already - just replace existing one.
-            total--;
-            mc = &list[i];
-        }
-
-    if (mc >= &list[max]) {
-        Output("Already at max (%d)", max);
-        return;
+        return false;
     }
 
     // Update structure.
-    *ptotal = total + 1;
+    memcheck *mc = (memcheck*)p;
     memset(mc, 0, sizeof(*mc));
     mc->reporter = r_basic;
     mc->addr = (char *)addr;
@@ -167,16 +115,30 @@ watchCmdHelper(memcheck *list, uint32 max, uint32 *ptotal
     mc->trySuppressNext = 1;
     mc->setCmp = !hasComp;
     mc->cmpVal = cmpVal;
+    return true;
+}
+
+void
+watchListVar::showVar(const char *args)
+{
+    memcheck *mc = watchlist;
+    for (uint i=0; i<watchcount; i++, mc++)
+        Output("%2d: 0x%p %08x %2d"
+               , i, mc->addr, ~mc->mask, 4<<mc->readSize);
+}
+
+void watchListVar::fillVarType(char *buf) {
+    strcpy(buf, "watch list");
 }
 
 // Output the addresses to be watched.
 void
-beginWatch(memcheck *list, uint32 count, const char *name, int isStart)
+watchListVar::beginWatch(int isStart)
 {
     if (isStart)
         Output("Beginning memory tracing.");
-    for (uint i=0; i<count; i++) {
-        memcheck *mc = &list[i];
+    memcheck *mc = watchlist;
+    for (uint i=0; i<watchcount; i++, mc++) {
         uint32 paddr = memVirtToPhys((uint32)mc->addr);
         mc->trySuppress = 0;
         uint32 val, tmp;
@@ -186,56 +148,88 @@ beginWatch(memcheck *list, uint32 count, const char *name, int isStart)
     }
 }
 
+watchListVar *
+FindWatchVar(const char **args)
+{
+    char varname[32];
+    if (get_token(args, varname, sizeof(varname))) {
+        ScriptError("Expected <varname>");
+        return NULL;
+    }
+    watchListVar *wl = dynamic_cast<watchListVar*>(FindVar(varname));
+    if (!wl) {
+        ScriptError("Expected <watch list var>");
+        return NULL;
+    }
+    return wl;
+}
+
+// Helper for handling memory poll haret commands.
+static void
+ignoreBit(const char *cmd, const char *args)
+{
+    watchListVar *wl = FindWatchVar(&args);
+    if (!wl)
+        return;
+
+    // Add bits to the mask
+    uint32 bit;
+    while (get_expression(&args, &bit)) {
+        uint pos = bit / 32;
+        uint mask = 1<<(bit % 32);
+        if (pos >= wl->watchcount) {
+            Output(C_ERROR "Bit %d is past max found of %d"
+                   , pos, wl->watchcount);
+            return;
+        }
+        if (toupper(cmd[0]) == 'I')
+            wl->watchlist[pos].mask &= ~mask;
+        else
+            wl->watchlist[pos].mask |= mask;
+    }
+}
+REG_CMD(0, "IBIT", ignoreBit,
+            "IBIT <watch list> <bit#> [<bit#>...]\n"
+            "  Ignore the nth bit in the watch list");
+REG_CMD_ALT(0, "WBIT", ignoreBit, watch,
+            "WBIT <watch list> <bit#> [<bit#>...]\n"
+            "  Opposite of IBIT - remove bit from mask");
+
 
 /****************************************************************
  * Basic memory polling.
  ****************************************************************/
 
-static uint32 watchcount;
-static memcheck watchlist[16];
-
-static void
-cmd_addwatch(const char *cmd, const char *args)
-{
-    watchCmdHelper(watchlist, ARRAY_SIZE(watchlist), &watchcount, cmd, args);
-}
-REG_CMD(0, "ADDWATCH", cmd_addwatch,
-        "ADDWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
-        "  Setup an address to be watched (via WATCH)\n"
-        "  <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
-        "  <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
-        "  <32|16|8>  specifies the memory access type (default 32)\n"
-        "  <cmpValue> when specified forces a report if read value doesn't\n"
-        "             equal that value (default is to report on change)")
-REG_CMD_ALT(0, "CLEARWATCH", cmd_addwatch, clear,
-            "CLEARWATCH\n"
-            "  Remove all items from the list of polled memory");
-REG_CMD_ALT(0, "IGNOREWATCH", cmd_addwatch, ignore,
-            "IGNOREWATCH <bit#>\n"
-            "  Ignore the nth bit in the watch list");
-REG_CMD_ALT(0, "UNIGNOREWATCH", cmd_addwatch, unignore,
-            "UNIGNOREWATCH <bit#>\n"
-            "  Resume watching the nth bit in the watch list");
-REG_CMD_ALT(0, "LSWATCH", cmd_addwatch, list,
-            "LSWATCH\n"
-            "  Display the current list of polled memory");
+REG_VAR_WATCHLIST(
+    0, "GPIOS", GPIOS,
+    "List of GPIOs to watch\n"
+    "  List of <addr> [<mask> [<32|16|8> [<cmpValue>]]] 4-tuples.\n"
+    "    <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
+    "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
+    "    <32|16|8>  specifies the memory access type (default 32)\n"
+    "    <cmpValue> when specified forces a report if read value doesn't\n"
+    "               equal that value (default is to report on change)")
 
 static void
 cmd_watch(const char *cmd, const char *args)
 {
+    watchListVar *wl = FindWatchVar(&args);
+    if (!wl)
+        return;
+
     uint32 seconds;
     if (!get_expression(&args, &seconds))
         seconds = 0;
 
-    beginWatch(watchlist, watchcount);
+    wl->beginWatch();
 
     uint32 start_time = GetTickCount();
     uint32 cur_time = start_time;
     uint32 fin_time = cur_time + seconds * 1000;
 
     for (;;) {
-        for (uint i=0; i<watchcount; i++) {
-            memcheck *mc = &watchlist[i];
+        for (uint i=0; i<wl->watchcount; i++) {
+            memcheck *mc = &wl->watchlist[i];
             uint32 val, maskval;
             int ret = testMem(mc, &val, &maskval);
             if (!ret)
@@ -249,7 +243,6 @@ cmd_watch(const char *cmd, const char *args)
         late_SleepTillTick();
     }
 }
-REG_CMD(0, "WATCH", cmd_watch,
-        "WATCH <seconds>\n"
-        "  Poll pre-registered areas of memory (see ADDWATCH)\n"
-        "  and report changes.")
+REG_CMD(0, "W|ATCH", cmd_watch,
+        "WATCH <watch list> [<seconds>]\n"
+        "  Poll areas of memory and report changes.  (See var GPIOS)")

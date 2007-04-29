@@ -11,6 +11,27 @@
 #include "script.h" // REG_CMD
 #include "haret.h"
 
+// Register some dummy commands to prevent startup warnings.
+static void
+dummy(const char *cmd, const char *args)
+{
+}
+REG_CMD(0, "IBIT", dummy, 0)
+
+class dummyListVar : public listVarBase {
+public:
+    uint32 dummycount;
+    dummyListVar(const char *n)
+        : listVarBase(0, n, 0, &dummycount, 0, 0, 1) { }
+    bool setVarItem(void *p, const char *args) {
+        return false;
+    }
+};
+#define REG_VAR_DUMMYLIST(Name, Var)                        \
+    __REG_VAR(dummyListVar, Var, Name)
+REG_VAR_DUMMYLIST("GPIOS", GPIOS)
+REG_VAR_DUMMYLIST("IRQS", IRQS)
+
 // Symbols surrounding kernel code added by kernelfiles.S
 extern "C" {
     extern char kernel_data[];
@@ -31,14 +52,6 @@ ramboot(const char *cmd, const char *args)
 REG_CMD(0, "RAMBOOT|LINUX", ramboot,
         "RAMBOOTLINUX\n"
         "  Start booting linux kernel. See HELP VARS for variables affecting boot.")
-
-// Register some dummy commands to prevent startup warnings.
-static void
-dummy(const char *cmd, const char *args)
-{
-}
-REG_CMD_ALT(0, "ADDWATCH", dummy, d1, 0)
-REG_CMD_ALT(0, "ADDIRQWATCH", dummy, d2, 0)
 
 HINSTANCE hInst;
 HWND MainWindow = 0;

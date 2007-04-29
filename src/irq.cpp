@@ -103,7 +103,7 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
 
 
 /****************************************************************
- * Standard interface commands and variables
+ * Code to report feedback from exception handlers
  ****************************************************************/
 
 // Commands and variables are only applicable if AllocPhysMem is
@@ -112,46 +112,11 @@ int testWirqAvail() {
     return late_AllocPhysMem && late_FreePhysMem;
 }
 
-static uint32 watchirqcount;
-static memcheck watchirqpolls[16];
-
-static void
-cmd_addirqwatch(const char *cmd, const char *args)
-{
-    watchCmdHelper(watchirqpolls, ARRAY_SIZE(watchirqpolls), &watchirqcount
-                   , cmd, args);
-}
-REG_CMD(testWirqAvail, "ADDIRQWATCH", cmd_addirqwatch,
-        "ADDIRQWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
-        "  Setup an address to be polled when an irq hits\n"
-        "  See ADDWATCH for syntax.  <CLEAR|LS>IRQWATCH is also available.")
-REG_CMD_ALT(testWirqAvail, "CLEARIRQWATCH", cmd_addirqwatch, clear, 0)
-REG_CMD_ALT(testWirqAvail, "LSIRQWATCH", cmd_addirqwatch, list, 0)
-REG_CMD_ALT(testWirqAvail, "IGNOREIRQWATCH", cmd_addirqwatch, ignore, 0)
-REG_CMD_ALT(testWirqAvail, "UNIGNOREIRQWATCH", cmd_addirqwatch, unignore, 0)
-
-static uint32 watchtracecount;
-static memcheck watchtracepolls[16];
-
-static void
-cmd_addtracewatch(const char *cmd, const char *args)
-{
-    watchCmdHelper(watchtracepolls, ARRAY_SIZE(watchtracepolls), &watchtracecount
-                   , cmd, args);
-}
-REG_CMD(testWirqAvail, "ADDTRACEWATCH", cmd_addtracewatch,
-        "ADDTRACEWATCH <addr> [<mask> <32|16|8> <cmpValue>]\n"
-        "  Setup an address to be polled when an irq hits\n"
-        "  See ADDWATCH for syntax.  <CLEAR|LS>TRACEWATCH is also available.")
-REG_CMD_ALT(testWirqAvail, "CLEARTRACEWATCH", cmd_addtracewatch, clear, 0)
-REG_CMD_ALT(testWirqAvail, "LSTRACEWATCH", cmd_addtracewatch, list, 0)
-REG_CMD_ALT(testWirqAvail, "IGNORETRACEWATCH", cmd_addtracewatch, ignore, 0)
-REG_CMD_ALT(testWirqAvail, "UNIGNORETRACEWATCH", cmd_addtracewatch, unignore, 0)
-
-
-/****************************************************************
- * Code to report feedback from exception handlers
- ****************************************************************/
+REG_VAR_WATCHLIST(testWirqAvail, "IRQS", IRQS,
+                  "List of IRQs to watch (see var GPIOS for format)");
+REG_VAR_WATCHLIST(testWirqAvail, "TRACES", TRACES,
+                  "List of memory addresses to trace during wirq"
+                  " (see var GPIOS for format)");
 
 static uint32 LastOverflowReport;
 
@@ -182,10 +147,10 @@ preLoop(struct irqData *data)
     LastOverflowReport = 0;
 
     // Setup memory tracing.
-    memcpy(data->irqpolls, watchirqpolls, sizeof(data->irqpolls));
-    data->irqpollcount = watchirqcount;
-    memcpy(data->tracepolls, watchtracepolls, sizeof(data->tracepolls));
-    data->tracepollcount = watchtracecount;
+    memcpy(data->irqpolls, IRQS.watchlist, sizeof(data->irqpolls));
+    data->irqpollcount = min(IRQS.watchcount, ARRAY_SIZE(data->irqpolls));
+    memcpy(data->tracepolls, TRACES.watchlist, sizeof(data->tracepolls));
+    data->tracepollcount = min(TRACES.watchcount, ARRAY_SIZE(data->tracepolls));
 }
 
 // Code called while exceptions are rerouted - should return after
@@ -384,8 +349,8 @@ cmd_wirq(const char *cmd, const char *args)
     if (ret)
         goto abort;
 
-    beginWatch(data->irqpolls, data->irqpollcount, "irq");
-    beginWatch(data->tracepolls, data->tracepollcount, "trace", 0);
+    IRQS.beginWatch();
+    TRACES.beginWatch(0);
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");

@@ -30,7 +30,8 @@ HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*
 Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024
 Wizard,     OMAP850 ,WIZA100;WIZA200
 Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
-        set ramsize 64*1024*1024, addirqwatch p2v(0x08000004) 0xf000 16 0
+        set ramsize 64*1024*1024, \
+        ibit IRQS 1, addlist IRQS p2v(0x08000004) 0xf000 16 0
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
 Artemis,    OMAP850 ,ARTE
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
