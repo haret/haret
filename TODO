@@ -83,3 +83,6 @@ Possible features for Linux booting:
 * Possibly allow the ability to launch an arbitrary binary (by
   disabling tag generation, specifying a destination address, and a
   jump-to address).  This may be useful for testing new boot loaders.
+
+* Possibly support larger font sizes.  (Some machines have high-res
+  displays which make the current fonts hard to read.)
