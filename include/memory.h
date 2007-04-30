@@ -77,6 +77,13 @@ extern uint32 memVirtToPhys (uint32 vaddr);
 // virtual address.
 uint32 cachedMVA(void *addr);
 
+struct pageAddrs {
+    uint32 physLoc;
+    char *virtLoc;
+};
+
+void *allocPages(struct pageAddrs *pages, int pageCount);
+
 // The size of physical memory to map at once
 #define PHYS_CACHE_SIZE 0x10000
 #define PHYS_CACHE_MASK (PHYS_CACHE_SIZE - 1)

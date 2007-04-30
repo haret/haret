@@ -14,6 +14,11 @@
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
 
+
+/****************************************************************
+ * Memory setup
+ ****************************************************************/
+
 // RAM start physical address
 uint32 memPhysAddr = 0xa0000000;
 // RAM size (autodetected)
@@ -39,6 +44,11 @@ mem_autodetect(void)
     Output("WinCE reports memory size %d (phys=%ld store=%ld)"
            , memPhysSize, mst.dwTotalPhys, sti.dwStoreSize);
 }
+
+
+/****************************************************************
+ * Mapping physical memory
+ ****************************************************************/
 
 #if 1
 
@@ -428,6 +438,54 @@ memPhysMap(uint32 paddr)
 
     return memPhysMap_wm(paddr);
 }
+
+
+/****************************************************************
+ * Page allocation
+ ****************************************************************/
+
+static int physPageComp(const void *e1, const void *e2) {
+    pageAddrs *i1 = (pageAddrs*)e1, *i2 = (pageAddrs*)e2;
+    return (i1->physLoc < i2->physLoc ? -1
+            : (i1->physLoc > i2->physLoc ? 1 : 0));
+}
+
+void *
+allocPages(struct pageAddrs *pages, int pageCount)
+{
+    int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
+    void *allocdata = calloc(bufSize, 1);
+    if (! allocdata) {
+        Output(C_ERROR "Failed to allocate %d pages", pageCount);
+        return NULL;
+    }
+
+    Output("Allocated load buffer at %p of size %08x", allocdata, bufSize);
+
+    // Find all the physical locations of the pages.
+    void *data = (void*)PAGE_ALIGN((uint32)allocdata);
+    for (int i = 0; i < pageCount; i++) {
+        struct pageAddrs *pd = &pages[i];
+        pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
+        *pd->virtLoc = 0xaa;
+        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
+        if (pd->physLoc == (uint32)-1) {
+            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
+            free(allocdata);
+            return NULL;
+        }
+    }
+
+    // Sort the pages by physical location.
+    qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
+
+    return allocdata;
+}
+
+
+/****************************************************************
+ * Misc utilities
+ ****************************************************************/
 
 uint32 memPhysRead (uint32 paddr)
 {

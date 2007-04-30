@@ -333,17 +333,6 @@ struct stackJumper_s {
     char asm_handler[1];
 };
 
-struct pagedata {
-    uint32 physLoc;
-    char *virtLoc;
-};
-
-static int physPageComp(const void *e1, const void *e2) {
-    pagedata *i1 = (pagedata*)e1, *i2 = (pagedata*)e2;
-    return (i1->physLoc < i2->physLoc ? -1
-            : (i1->physLoc > i2->physLoc ? 1 : 0));
-}
-
 // Description of memory alocated by prepForKernel()
 struct bootmem {
     char *imagePages[PAGES_PER_INDEX * MAX_INDEX];
@@ -362,38 +351,6 @@ cleanupBootMem(struct bootmem *bm)
         return;
     free(bm->allocedRam);
     free(bm);
-}
-
-static void *
-allocBufferPages(struct pagedata *pages, int pageCount)
-{
-    int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
-    void *allocdata = calloc(bufSize, 1);
-    if (! allocdata) {
-        Output(C_ERROR "Failed to allocate %d pages", pageCount);
-        return NULL;
-    }
-
-    Output("Allocated load buffer at %p of size %08x", allocdata, bufSize);
-
-    // Find all the physical locations of the pages.
-    void *data = (void*)PAGE_ALIGN((uint32)allocdata);
-    for (int i = 0; i < pageCount; i++) {
-        struct pagedata *pd = &pages[i];
-        pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
-        *pd->virtLoc = 0xaa;
-        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
-        if (pd->physLoc == (uint32)-1) {
-            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
-            free(allocdata);
-            return NULL;
-        }
-    }
-
-    // Sort the pages by physical location.
-    qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
-
-    return allocdata;
 }
 
 // Allocate memory for a kernel (and possibly initrd), and configure a
@@ -440,8 +397,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         return NULL;
     }
 
-    struct pagedata pages[PAGES_PER_INDEX * MAX_INDEX + 4];
-    bm->allocedRam = allocBufferPages(pages, totalCount);
+    struct pageAddrs pages[PAGES_PER_INDEX * MAX_INDEX + 4];
+    bm->allocedRam = allocPages(pages, totalCount);
     if (! bm->allocedRam) {
 	cleanupBootMem(bm);
 	return NULL;
@@ -449,13 +406,13 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
 
     Output("Built virtual to physical page mapping");
 
-    struct pagedata *pg_tag = &pages[0];
-    struct pagedata *pgs_kernel = &pages[1];
-    struct pagedata *pgs_initrd = &pages[kernelCount+1];
-    struct pagedata *pgs_index = &pages[initrdCount+kernelCount+1];
-    struct pagedata *pg_stack = &pages[totalCount-3];
-    struct pagedata *pg_data = &pages[totalCount-2];
-    struct pagedata *pg_preload = &pages[totalCount-1];
+    struct pageAddrs *pg_tag = &pages[0];
+    struct pageAddrs *pgs_kernel = &pages[1];
+    struct pageAddrs *pgs_initrd = &pages[kernelCount+1];
+    struct pageAddrs *pgs_index = &pages[initrdCount+kernelCount+1];
+    struct pageAddrs *pg_stack = &pages[totalCount-3];
+    struct pageAddrs *pg_data = &pages[totalCount-2];
+    struct pageAddrs *pg_preload = &pages[totalCount-1];
 
     Output("Allocated %d pages (tags=%p/%08x kernel=%p/%08x initrd=%p/%08x"
            " index=%p/%08x)"
