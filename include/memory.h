@@ -77,6 +77,10 @@ extern uint32 memVirtToPhys (uint32 vaddr);
 // virtual address.
 uint32 cachedMVA(void *addr);
 
+// The size of physical memory to map at once
+#define PHYS_CACHE_SIZE 0x10000
+#define PHYS_CACHE_MASK (PHYS_CACHE_SIZE - 1)
+
 // Physical memory location (default 0xa0000000 as per Intel specs)
 extern uint32 memPhysAddr;
 // Physical memory size (detected at startup)
