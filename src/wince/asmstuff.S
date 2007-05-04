@@ -37,6 +37,28 @@ cpuFlushCache:
 
 		mov	pc, lr
 
+@ Flush CPU caches on xscale - this MUST be called between
+@ take_control()/return_control()
+@
+@ Dirties r0, r1
+		.global	cpuFlushCache_xscale
+cpuFlushCache_xscale:
+@ Flush data cache
+		ldr	r1, =junkdata
+		mov	r0, #1024
+	1:	mcr	p15, 0, r1, c7, c2, 5	@ Allocate cache line
+		add	r1, r1, #32
+		subs	r0, r0, #1
+		bne	1b
+
+		mov	r0, #0
+		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
+		mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
+		mcr	p15, 0, r0, c7, c7, 0	@ Invalidate I+D caches & BTB
+		CPWAIT
+
+		mov	pc, lr
+
 @ Flush CPU caches on arm920 - this MUST be called between
 @ take_control()/return_control()
 @

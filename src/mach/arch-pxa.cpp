@@ -4,14 +4,20 @@
 #define CONFIG_PXA25x
 #include "pxa2xx.h"
 
-DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
+// Assembler functions
+extern "C" {
+    void cpuFlushCache_xscale();
+}
 
 MachinePXA::MachinePXA()
 {
     name = "Generic Intel PXA";
     archname = "PXA";
     dcsr_count = 16;
+    flushCache = cpuFlushCache_xscale;
 }
+
+DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
 
 int
 MachinePXA::detect()
