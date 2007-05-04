@@ -13,6 +13,7 @@
 #include "memory.h"
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
+#include "machines.h" // Mach
 
 
 /****************************************************************
@@ -420,7 +421,9 @@ memPhysMap_section(uint32 paddr)
     return (uint8*)((pos << 20) | (paddr & ((1<<20) - 1)));
 }
 
-static int PhysicalMapMethod = 1;
+static uint32 PhysicalMapMethod = 1;
+REG_VAR_INT(0, "PHYSMAPMETHOD", PhysicalMapMethod
+            , "Physical map method (1=1meg cache, 0=VirtualCopy only)")
 
 uint8 *
 memPhysMap(uint32 paddr)
@@ -453,33 +456,36 @@ static int physPageComp(const void *e1, const void *e2) {
 void *
 allocPages(struct pageAddrs *pages, int pageCount)
 {
-    int bufSize = pageCount * PAGE_SIZE + PAGE_SIZE;
-    void *allocdata = calloc(bufSize, 1);
-    if (! allocdata) {
-        Output(C_ERROR "Failed to allocate %d pages", pageCount);
+    int pageBytes = pageCount * PAGE_SIZE;
+    void *data = VirtualAlloc(NULL, pageBytes, MEM_COMMIT, PAGE_READWRITE);
+    if (!data) {
+        Output(C_ERROR "Failed to allocate %d pages (code %ld)"
+               , pageCount, GetLastError());
         return NULL;
     }
 
-    Output("Allocated load buffer at %p of size %08x", allocdata, bufSize);
+    DWORD pfns[pageCount];
+    int ret = LockPages(data, pageBytes, pfns, LOCKFLAG_WRITE);
+    if (!ret) {
+        Output(C_ERROR "Failed to lock %d pages (code %ld)"
+               , pageCount, GetLastError());
+        goto abort;
+    }
 
     // Find all the physical locations of the pages.
-    void *data = (void*)PAGE_ALIGN((uint32)allocdata);
     for (int i = 0; i < pageCount; i++) {
         struct pageAddrs *pd = &pages[i];
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
-        *pd->virtLoc = 0xaa;
-        pd->physLoc = memVirtToPhys((uint32)pd->virtLoc);
-        if (pd->physLoc == (uint32)-1) {
-            Output(C_ERROR "Page at %p not mapped", pd->virtLoc);
-            free(allocdata);
-            return NULL;
-        }
+        pd->physLoc = pfns[i]; // XXX should: x << UserKInfo[KINX_PFN_SHIFT]
     }
 
     // Sort the pages by physical location.
     qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
 
-    return allocdata;
+    return data;
+abort:
+    VirtualFree(data, pageBytes, MEM_DECOMMIT|MEM_RELEASE);
+    return NULL;
 }
 
 
@@ -487,6 +493,7 @@ allocPages(struct pageAddrs *pages, int pageCount)
  * Misc utilities
  ****************************************************************/
 
+// Read a word from given physical address; return (uint32)-1 on error
 uint32 memPhysRead (uint32 paddr)
 {
   uint8 *pm;
@@ -497,6 +504,7 @@ uint32 memPhysRead (uint32 paddr)
   return *(uint32 *)pm;
 }
 
+// Write a word and return success status
 bool memPhysWrite (uint32 paddr, uint32 value)
 {
   uint8 *pm;
@@ -523,6 +531,7 @@ cachedMVA(void *addr)
     return (uint32)((pos << 20) | (paddr & ((1<<20) - 1)));
 }
 
+// Translate a virtual address to physical
 uint32 memVirtToPhys (uint32 vaddr)
 {
   uint32 mmu = cpuGetMMU ();
@@ -572,4 +581,33 @@ uint32 memVirtToPhys (uint32 vaddr)
   }
 
   return paddr;
+}
+
+// Invalidate D TLB line
+DEF_SETCPRATTR(set_invDTLB, p15, 0, c8, c6, 1,, "memory")
+
+// Try finding the physical address of a page owned by haret.
+uint32
+retryVirtToPhys(uint32 vaddr)
+{
+    uint count = 0;
+    for (;;) {
+        // Touch the page.
+        uint32 dummy;
+        dummy = *(volatile uint32*)(vaddr + count);
+        // Try to find the physical address.
+        uint32 paddr = memVirtToPhys(vaddr);
+        if (paddr != (uint32)-1)
+            // Common case - address found.
+            return paddr;
+        count += sizeof(uint32);
+        if (count >= PAGE_SIZE)
+            // Too many tries - just give up.
+            break;
+        // Ughh. Some Wince versions mess with the page tables in
+        // weird ways - invalidate the D TLB for the address and try
+        // again.
+        set_invDTLB(MVAddr(vaddr + count));
+    }
+    return (uint32)-1;
 }

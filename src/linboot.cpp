@@ -18,7 +18,7 @@
 #include "script.h" // REG_CMD
 #include "memory.h" // memPhysMap, memPhysAddr, memPhysSize
 #include "output.h" // Output, Screen, fnprepare
-#include "cpu.h" // take_control, return_control, touchAppPages
+#include "cpu.h" // take_control, return_control
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
 #include "fbwrite.h" // fb_puts
@@ -512,7 +512,7 @@ setupTrampoline()
                , mmu_trampoline, virtTram, virtTramEnd);
         return 0;
     }
-    uint32 physAddrTram = memVirtToPhys(virtTram);
+    uint32 physAddrTram = retryVirtToPhys(virtTram);
     if (physAddrTram == (uint32)-1) {
         Output(C_ERROR "Trampoline not in physical ram. (virt=%08x)"
                , virtTram);
@@ -534,10 +534,6 @@ setupTrampoline()
 static void
 launchKernel(struct bootmem *bm)
 {
-    // Make sure trampoline and "Mach->hardwareShutdown" functions are
-    // loaded into memory.
-    touchAppPages();
-
     // Prep the trampoline.
     uint32 physAddrTram = setupTrampoline();
     if (! physAddrTram)

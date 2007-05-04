@@ -67,14 +67,10 @@ void mem_autodetect(void);
 extern uint8 *memPhysMap (uint32 paddr);
 // Free the virtual memory pointers cache used by memPhysMap
 extern void memPhysReset ();
-// Read a word from given physical address; return (uint32)-1 on error
 extern uint32 memPhysRead (uint32 paddr);
-// Write a word and return success status
 extern bool memPhysWrite (uint32 paddr, uint32 value);
-// Translate a virtual address to physical
 extern uint32 memVirtToPhys (uint32 vaddr);
-// Translate a virtual address to a long lived (externally visible)
-// virtual address.
+uint32 retryVirtToPhys(uint32 vaddr);
 uint32 cachedMVA(void *addr);
 
 struct pageAddrs {
