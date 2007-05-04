@@ -60,11 +60,7 @@ static inline uint32 MVAddr(uint32 addr) {
 }
 
 void printWelcome();
-// Take control of the cpu -- don't let wince interrupt.
 void take_control();
-// Return to normal processing.
 void return_control();
-// Force wince to map in all haret application pages.
-void touchAppPages(void);
 
 #endif /* _CPU_H */

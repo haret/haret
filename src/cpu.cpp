@@ -166,8 +166,8 @@ touchPages(uint32 *start, uint32 *end)
         Output("Internal error. touchPages range not page aligned");
 
     while (start < end) {
-        volatile uint32 dummy;
-        dummy = *start;
+        uint32 dummy;
+        dummy = *(volatile uint32*)start;
         start += (PAGE_SIZE/sizeof(*start));
     }
 }
@@ -182,7 +182,7 @@ touchPages(uint32 *start, uint32 *end)
 // code is accessed it causes a fault that hands control back to wm5.
 // A solution is to touch all code pages to ensure the code is really
 // in memory.
-void
+static void
 touchAppPages(void)
 {
     touchPages(&_text_start, &_text_end);
@@ -219,6 +219,7 @@ take_control()
         : "=r" (temp) : : "memory");
 }
 
+// Return to normal processing.
 void
 return_control()
 {
