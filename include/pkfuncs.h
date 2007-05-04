@@ -20,7 +20,8 @@ DWORD SetProcPermissions(DWORD);
 void SleepTillTick();
 BOOL UnlockPages(LPVOID,DWORD);
 BOOL VirtualCopy(LPVOID,LPVOID,DWORD,DWORD);
-#define LOCKFLAG_READ       0x004
+#define LOCKFLAG_WRITE 0x001
+#define LOCKFLAG_READ  0x004
 
 #ifdef __cplusplus
 } // extern "C"
