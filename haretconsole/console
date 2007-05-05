@@ -9,6 +9,7 @@ import telnetlib
 import cmd
 import re
 import time
+import socket
 
 import dis
 import memalias
@@ -114,8 +115,13 @@ def main():
 
     # Connect to remote server and dump info on MMU
     print "========  Connecting to haret  ========"
-    cmd = Prompts(host, port)
-    cmd.cmdloop()
+    try:
+        cmd = Prompts(host, port)
+        cmd.cmdloop()
+    except socket.error, e:
+        print "Socket error: ", e[1]
+    except KeyboardInterrupt:
+        print
 
 if __name__ == '__main__':
     main()
