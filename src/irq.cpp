@@ -33,7 +33,7 @@ report_memPoll(uint32 msecs, traceitem *item)
 {
     memcheck *mc = (memcheck*)item->d0;
     uint32 clock=item->d1, val=item->d2, mask=item->d3;
-    mc->reporter(msecs, clock, mc, val, mask);
+    reportWatch(msecs, clock, mc, val, mask);
 }
 
 // Perform a set of memory polls and add to trace buffer.

@@ -3,23 +3,22 @@
 
 #include "script.h" // listVarBase
 
-// Function callback definition to report the results of a memory
-// check.
-typedef void (*reporter_t)(uint32 msecs, uint32 clock, struct memcheck *
-                           , uint32 newval, uint32 maskval);
-
 // Main definition of a memory polling request.
 struct memcheck {
-    reporter_t reporter;
-    void *data;
+    uint32 isCP : 1;
     uint32 readSize : 2;
     uint32 trySuppress : 1, setCmp : 1, trySuppressNext : 1;
-    char *addr;
     uint32 cmpVal;
     uint32 mask;
+    union {
+        char *addr;
+        uint32 insn;
+    };
 };
 
 int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
+void reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
+                 , uint32 newval, uint32 maskval);
 
 // Give up rest of time slice.
 extern void (*late_SleepTillTick)();

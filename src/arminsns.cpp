@@ -16,34 +16,59 @@
  * Coprocessor accessors
  ****************************************************************/
 
-// Self-modified code
-static uint32 selfmod[2] = {
-    0xee100010,  // mrc pX,0,r0,crX,cr0,0
-    0xe1a0f00e,  // mov pc,lr
-};
+// Clean D cache line.
+DEF_SETCPRATTR(set_cleanDCache, p15, 0, c7, c10, 1, __irq, "memory")
+// Drain write buffer.
+DEF_SETCPRATTR(set_drainWrites, p15, 0, c7, c10, 4, __irq, "memory")
+// Invalidate I cache line.
+DEF_SETCPRATTR(set_invICache, p15, 0, c7, c5, 1, __irq, "memory")
 
-// Read or modify a coprocessor register
-static uint32
-getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
+uint32 __irq
+runArmInsn(uint32 insn, uint32 r0)
+{
+    // Self-modified code
+    uint32 selfmod[3], *sm = selfmod;
+    if ((uint32)sm & 0x7)
+        sm++;
+    sm[0] = insn;
+    sm[1] = 0xe1a0f00e; // mov pc,lr
+    uint32 mvamod = MVAddr_irq((uint32)sm);
+    uint32 ret = 0xffffffff;
+
+    set_cleanDCache(mvamod);
+    set_drainWrites(0);
+    ret = ((uint32 (*)(uint32))mvamod)(r0);
+    set_invICache(mvamod);
+
+    return ret;
+}
+
+uint32
+buildArmInsn(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2)
 {
     if (cp > 15 || op1 > 7 || CRn > 15 || CRm > 15 || op2 > 7)
-        return 0xffffffff;
+        return 0;
 
     // Create the instruction
     uint32 insn = 0xee100010;  // MRC
     if (setval)
         insn = 0xee000010; // MCR
-    selfmod[0] = (insn | (op1<<21) | (CRn<<16) | (cp << 8) | (op2<<5) | CRm);
+    insn |= (op1<<21) | (CRn<<16) | (cp << 8) | (op2<<5) | CRm;
+    return insn;
+}
 
-    // Flush the CPU caches.
-    take_control();
-    Mach->flushCache();
-    return_control();
+// Read or modify a coprocessor register
+static uint32
+getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
+{
+    uint32 ret = 0xffffffff;
+    uint32 insn = buildArmInsn(setval, cp, op1, CRn, CRm, op2);
+    if (!insn)
+        return ret;
 
     // Run the instruction
-    uint32 ret = 0xffffffff;
     try {
-        ret = ((uint32 (*)(uint32))&selfmod)(val);
+        ret = runArmInsn(insn, val);
     } catch (...) {
         Output(C_ERROR "EXCEPTION on access to coprocessor %d register %d"
                , cp, CRn);

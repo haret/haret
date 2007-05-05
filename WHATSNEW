@@ -1,5 +1,9 @@
 <next version> <kevin@koconnor.net>
 
+  * Support for watching coprocessor registers in addition to memory
+    locations.  This can be used with something like:
+      addlist gpios cp 15 0 2 0 0
+
   * New syntax for watching memory areas.  The addwatch (and
     addirqwatch / addtracewatch) command is now "addlist GPIOS ..."
     (and "addlist IRQS ..." / "addlist TRACES ...").  The lswatch

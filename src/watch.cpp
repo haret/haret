@@ -9,8 +9,10 @@
 #include "pkfuncs.h" // SleepTillTick
 #include <ctype.h> // toupper
 #include <time.h> // time
+#include <stdio.h> // _snprintf
 
 #include "output.h" // Output
+#include "arminsns.h" // runArmInsn
 #include "lateload.h" // LATE_LOAD
 #include "script.h" // REG_CMD
 #include "irq.h" // __irq
@@ -36,6 +38,8 @@ enum MemOps {
 static inline uint32 __irq
 doRead(struct memcheck *mc)
 {
+    if (mc->isCP)
+        return runArmInsn(mc->insn, 0);
     switch (mc->readSize) {
     default:
     case MO_READ32:
@@ -72,15 +76,19 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
  * Helpers for registering watched memory
  ****************************************************************/
 
-static void
-r_basic(uint32 msecs, uint32 clock, struct memcheck *mc
-        , uint32 newval, uint32 maskval)
+void
+reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
+            , uint32 newval, uint32 maskval)
 {
+    char header[64];
     if (clock != (uint32)-1)
-        Output("%06d: %08x: mem %p=%08x (%08x)"
-               , msecs, clock, mc->addr, newval, maskval);
+        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
     else
-        Output("%06d: mem %p=%08x (%08x)", msecs, mc->addr, newval, maskval);
+        _snprintf(header, sizeof(header), "%06d:", msecs);
+    if (mc->isCP)
+        Output("%s insn %08x=%08x (%08x)", header, mc->insn, newval, maskval);
+    else
+        Output("%s mem %p=%08x (%08x)", header, mc->addr, newval, maskval);
 }
 
 bool
@@ -88,14 +96,36 @@ watchListVar::setVarItem(void *p, const char *args)
 {
     // Parse args
     uint32 addr;
-    if (!get_expression(&args, &addr)) {
-        ScriptError("Expected <addr>");
-        return false;
+    uint32 isCP = 0, mask = 0, size = 32, hasComp=0, cmpVal=0;
+
+    char nexttoken[16];
+    const char *nextargs = args;
+    if (!get_token(&nextargs, nexttoken, sizeof(nexttoken))
+        && strcasecmp(nexttoken, "CP") == 0) {
+        // CP watch.
+        uint cp, op1, CRn, CRm, op2;
+        args = nextargs;
+        if (!get_expression(&args, &cp) || !get_expression(&args, &op1)
+            || !get_expression(&args, &CRn) || !get_expression(&args, &CRm)
+            || !get_expression(&args, &op2)) {
+            ScriptError("Expected CP <cp#> <op1> <CRn> <CRm> <op2>");
+            return false;
+        }
+        addr = buildArmInsn(0, cp, op1, CRn, CRm, op2);
+        isCP = 1;
+        if (get_expression(&args, &mask) && get_expression(&args, &cmpVal))
+            hasComp = 1;
+    } else {
+        // Normal address watch
+        if (!get_expression(&args, &addr)) {
+            ScriptError("Expected <addr>");
+            return false;
+        }
+
+        if (get_expression(&args, &mask) && get_expression(&args, &size)
+            && get_expression(&args, &cmpVal))
+            hasComp = 1;
     }
-    uint32 mask = 0, size = 32, hasComp=0, cmpVal=0;
-    if (get_expression(&args, &mask) && get_expression(&args, &size)
-        && get_expression(&args, &cmpVal))
-        hasComp = 1;
     switch (size) {
     case 32: size=MO_READ32; break;
     case 16: size=MO_READ16; break;
@@ -108,7 +138,7 @@ watchListVar::setVarItem(void *p, const char *args)
     // Update structure.
     memcheck *mc = (memcheck*)p;
     memset(mc, 0, sizeof(*mc));
-    mc->reporter = r_basic;
+    mc->isCP = isCP;
     mc->addr = (char *)addr;
     mc->mask = ~mask;
     mc->readSize = size;
@@ -139,12 +169,17 @@ watchListVar::beginWatch(int isStart)
         Output("Beginning memory tracing.");
     memcheck *mc = watchlist;
     for (uint i=0; i<watchcount; i++, mc++) {
-        uint32 paddr = memVirtToPhys((uint32)mc->addr);
         mc->trySuppress = 0;
         uint32 val, tmp;
         testMem(mc, &val, &tmp);
-        Output("Watching %s(%02d): Addr %p(@%08x) = %08x"
-               , name, i, mc->addr, paddr, val);
+        if (mc->isCP) {
+            Output("Watching %s(%02d): Insn %08x = %08x"
+                   , name, i, mc->insn, val);
+        } else {
+            uint32 paddr = memVirtToPhys((uint32)mc->addr);
+            Output("Watching %s(%02d): Addr %p(@%08x) = %08x"
+                   , name, i, mc->addr, paddr, val);
+        }
     }
 }
 
@@ -204,11 +239,13 @@ REG_VAR_WATCHLIST(
     0, "GPIOS", GPIOS,
     "List of GPIOs to watch\n"
     "  List of <addr> [<mask> [<32|16|8> [<cmpValue>]]] 4-tuples.\n"
+    "  OR      CP <cp#> <op1> <CRn> <CRm> <op2> [<mask> [<cmpValue>]] 7-tuples\n"
     "    <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
     "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
     "    <32|16|8>  specifies the memory access type (default 32)\n"
     "    <cmpValue> when specified forces a report if read value doesn't\n"
-    "               equal that value (default is to report on change)")
+    "               equal that value (default is to report on change)\n"
+    "    Alternatively, one may specify a coprocessor to watch")
 
 static void
 cmd_watch(const char *cmd, const char *args)
@@ -234,7 +271,7 @@ cmd_watch(const char *cmd, const char *args)
             int ret = testMem(mc, &val, &maskval);
             if (!ret)
                 continue;
-            mc->reporter(cur_time - start_time, -1, mc, val, maskval);
+            reportWatch(cur_time - start_time, -1, mc, val, maskval);
         }
 
         cur_time = GetTickCount();
