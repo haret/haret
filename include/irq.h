@@ -144,8 +144,9 @@ struct irqregs {
 // Get pid - can't use haret's because it isn't in this irq section.
 DEF_GETIRQCPR(get_PID, p15, 0, c13, c0, 0)
 
-// Return the Modified Virtual Address (MVA) of a given PC.
-static inline uint32 __irq transPC(uint32 pc) {
+// Return the Modified Virtual Address (MVA) of a given address.
+// (Can't use haret's because it needs to be in the __irq section.)
+static inline uint32 __irq MVAddr_irq(uint32 pc) {
     if (pc <= 0x01ffffff)
         // Need to turn virtual address in to modified virtual address.
         pc |= (get_PID() & 0xfe000000);

@@ -175,7 +175,7 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
     if (data->traceForWatch && !count)
         return 1;
 
-    uint32 old_pc = transPC(regs->old_pc - 8);
+    uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
     if (isIgnoredAddr(data, old_pc))
         return 1;
 
@@ -205,7 +205,7 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
     uint32 clock = get_CCNT();
     data->prefetchCount++;
 
-    uint32 old_pc = transPC(regs->old_pc-4);
+    uint32 old_pc = MVAddr_irq(regs->old_pc-4);
     struct irqData::insn_s *idata = &data->insns[0];
     if (idata->addr1 == old_pc) {
         // Match on breakpoint.  Setup to single step next time.

@@ -33,7 +33,7 @@ enum MemOps {
     MO_READ32 = 3,
 };
 
-static inline uint32
+static inline uint32 __irq
 doRead(struct memcheck *mc)
 {
     switch (mc->readSize) {

@@ -26,7 +26,7 @@
 // Return a pointer to an MMU descriptor for a given vaddr
 static inline uint32 * __irq
 getMMUref(struct irqData *data, uint32 vaddr) {
-    return data->mmuVAddr + (MVAddr(vaddr) >> 20);
+    return data->mmuVAddr + (MVAddr_irq(vaddr) >> 20);
 }
 
 // Return the redirected address for the nth masked addr
@@ -100,7 +100,7 @@ static void __irq
 tryEmulate(struct irqData *data, struct irqregs *regs
            , uint32 addr, uint32 newaddr)
 {
-    uint32 old_pc = transPC(regs->old_pc - 8);
+    uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
     uint32 insn = *(uint32*)old_pc;
 
     if (--data->max_l1trace == 0)
