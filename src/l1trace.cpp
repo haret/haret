@@ -44,10 +44,14 @@ startL1traps(struct irqData *data)
     for (uint i=0; i<data->alterCount; i++) {
         uint32 *desc = getMMUref(data, data->alterVAddrs[i]);
         uint32 *redirectdesc = getMMUref(data, newAddr(data, i));
-        // XXX - set domain
-        data->alterVAddrs[i] |= *desc & BOTBITS;
-        *redirectdesc = ((*desc | MMU_L1_AP_MASK)
-                         & ~(MMU_L1_CACHEABLE | MMU_L1_BUFFERABLE));
+        if ((*desc & MMU_L1_TYPE_MASK) == MMU_L1_SECTION) {
+            // XXX - set domain
+            data->alterVAddrs[i] |= *desc & BOTBITS;
+            *redirectdesc = ((*desc | MMU_L1_AP_MASK)
+                             & ~(MMU_L1_CACHEABLE | MMU_L1_BUFFERABLE));
+        } else {
+            *redirectdesc = *desc;
+        }
         *desc = MMU_L1_UNMAPPED;
     }
 }
@@ -61,7 +65,10 @@ stopL1traps(struct irqData *data)
     for (uint i=0; i<data->alterCount; i++) {
         uint32 *desc = getMMUref(data, data->alterVAddrs[i]);
         uint32 *redirectdesc = getMMUref(data, newAddr(data, i));
-        *desc = (*redirectdesc & TOPBITS) | (data->alterVAddrs[i] & BOTBITS);
+        if ((*redirectdesc & MMU_L1_TYPE_MASK) == MMU_L1_SECTION)
+            *desc = (*redirectdesc & TOPBITS) | (data->alterVAddrs[i] & BOTBITS);
+        else
+            *desc = *redirectdesc;
         *redirectdesc = MMU_L1_UNMAPPED;
     }
     data->alterCount = 0;
@@ -78,13 +85,11 @@ report_giveup(uint32 msecs, irqData *, traceitem *item)
 }
 
 static void __irq
-giveUp(struct irqData *data, struct irqregs *regs, uint32 addr)
+giveUp(struct irqData *data)
 {
     add_trace(data, report_giveup);
     data->errors++;
     stopL1traps(data);
-    // Rerun instruction on return to user code.
-    regs->old_pc -= 4;
     set_TLBflush(0);
 }
 
@@ -204,7 +209,9 @@ fail:
     add_trace(data, report_memAccess, addr, old_pc, insn
               , getReg(regs, mask_Rd(insn))
               , getReg(regs, mask_Rn(insn)));
-    giveUp(data, regs, addr);
+    // Rerun instruction on return to user code.
+    regs->old_pc -= 4;
+    giveUp(data);
 }
 
 // Obtain the Fault Address Register.
@@ -231,10 +238,24 @@ L1_abort_handler(struct irqData *data, struct irqregs *regs)
     return 0;
 }
 
+static void
+report_prefetch(uint32 msecs, irqData *, traceitem *item)
+{
+    uint32 addr=item->d0;
+    Output("%06d: %08x: Can't emulate insn access at %08x"
+           , msecs, 0, addr);
+}
+
 int __irq
 L1_prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
-    // XXX
+    uint32 faultaddr = MVAddr_irq(regs->old_pc - 4);
+    for (uint i=0; i<data->alterCount; i++)
+        if (addrmatch(faultaddr, data->alterVAddrs[i])) {
+            add_trace(data, report_prefetch, faultaddr);
+            giveUp(data);
+            return 1;
+        }
     return 0;
 }
 
@@ -271,7 +292,7 @@ public:
             if (!get_token(&args, _flags, sizeof(_flags)))
                 flags = _flags;
         t->end = t->start + addrsize;
-        if ((t->start & TOPBITS) != (t->end & TOPBITS)) {
+        if ((t->start & TOPBITS) != ((t->end - 1) & TOPBITS)) {
             ScriptError("Address range must be within a 1Meg section");
             return false;
         }
@@ -369,11 +390,14 @@ prepL1traps(struct irqData *data)
 
         // Lookup descriptor for mappings
         uint32 l1d = *getMMUref(data, vaddr);
-        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
-            Output("Address %08x not an L1 mapping (l1d=%08x)"
-                   , vaddr, l1d);
-            return -1;
-        }
+        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION)
+            // When tracing a coarse (or fine) mapping in the page
+            // tables there is no reliable way to disable caching.
+            // So, if an access occurs that can't be emulated and the
+            // tracing needs to stop early then any cached memory wont
+            // be flushed - this could cause problems.
+            Output("Warning! Tracing non-section mapping (%08x)"
+                   " not well supported", vaddr);
         uint32 alt_l1d = *getMMUref(data, newAddr(data, count));
         if (alt_l1d != MMU_L1_UNMAPPED) {
             Output("Address %08x not unmapped (l1d=%08x)"
