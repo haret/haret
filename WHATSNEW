@@ -1,5 +1,9 @@
 <next version> <kevin@koconnor.net>
 
+  * New support for tracing memory (or coprocessors) during a wince
+    resume.  This can be done with something like:
+      addlist resumetraces cp 15 0 1 0 0
+
   * Support for watching coprocessor registers in addition to memory
     locations.  This can be used with something like:
       addlist gpios cp 15 0 2 0 0
