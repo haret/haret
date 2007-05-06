@@ -71,7 +71,7 @@ stopL1traps(struct irqData *data)
 DEF_SETCPRATTR(set_TLBflush, p15, 0, c8, c7, 0, __irq, "memory")
 
 static void
-report_giveup(uint32 msecs, traceitem *item)
+report_giveup(uint32 msecs, irqData *, traceitem *item)
 {
     Output("%06d: %08x: giving up - clearing mapping"
            , msecs, 0);
@@ -89,7 +89,7 @@ giveUp(struct irqData *data, struct irqregs *regs, uint32 addr)
 }
 
 static void
-report_memAccess(uint32 msecs, traceitem *item)
+report_memAccess(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 addr=item->d0, pc=item->d1, insn=item->d2, val=item->d3;
     Output("%06d: debug %08x: %08x(%s) %08x %08x"

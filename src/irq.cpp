@@ -18,6 +18,7 @@
 #include "machines.h" // Mach
 #include "arch-pxa.h" // MachinePXA
 #include "lateload.h" // LATE_LOAD
+#include "winvectors.h" // findWinCEirq
 #include "irq.h"
 
 LATE_LOAD(AllocPhysMem, "coredll")
@@ -29,9 +30,9 @@ LATE_LOAD(FreePhysMem, "coredll")
  ****************************************************************/
 
 static void
-report_memPoll(uint32 msecs, traceitem *item)
+report_memPoll(uint32 msecs, irqData *data, traceitem *item)
 {
-    memcheck *mc = (memcheck*)item->d0;
+    memcheck *mc = (memcheck*)((uint32)data + item->d0);
     uint32 clock=item->d1, val=item->d2, mask=item->d3;
     reportWatch(msecs, clock, mc, val, mask);
 }
@@ -48,7 +49,8 @@ checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
         if (!ret)
             continue;
         foundcount++;
-        ret = add_trace(data, report_memPoll, (uint32)mc, clock, val, maskval);
+        ret = add_trace(data, report_memPoll, (uint32)mc - (uint32)data
+                        , clock, val, maskval);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
@@ -101,6 +103,19 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
     return L1_prefetch_handler(data, regs);
 }
 
+static void
+report_resume(uint32 msecs, irqData *, traceitem *item)
+{
+    Output("%06d: WinCE resume", msecs);
+}
+
+extern "C" void __irq
+resume_handler(struct irqData *data, struct irqregs *regs)
+{
+    add_trace(data, report_resume);
+    checkPolls(data, -1, data->resumepolls, data->resumepollcount);
+}
+
 
 /****************************************************************
  * Code to report feedback from exception handlers
@@ -117,6 +132,9 @@ REG_VAR_WATCHLIST(testWirqAvail, "IRQS", IRQS,
 REG_VAR_WATCHLIST(testWirqAvail, "TRACES", TRACES,
                   "List of memory addresses to trace during wirq"
                   " (see var GPIOS for format)");
+REG_VAR_WATCHLIST(testWirqAvail, "RESUMETRACES", RESUMETRACES,
+                  "Physical memory addresses to check during a wince resume"
+                  " (see var GPIOS)");
 
 static uint32 LastOverflowReport;
 
@@ -135,7 +153,7 @@ printTrace(uint32 msecs, struct irqData *data)
         LastOverflowReport = tmpoverflow;
     }
     struct traceitem *cur = &data->traces[data->readPos % NR_TRACE];
-    cur->reporter(msecs, cur);
+    cur->reporter(msecs, data, cur);
     data->readPos++;
     return 1;
 }
@@ -151,6 +169,9 @@ preLoop(struct irqData *data)
     data->irqpollcount = min(IRQS.watchcount, ARRAY_SIZE(data->irqpolls));
     memcpy(data->tracepolls, TRACES.watchlist, sizeof(data->tracepolls));
     data->tracepollcount = min(TRACES.watchcount, ARRAY_SIZE(data->tracepolls));
+    memcpy(data->resumepolls, RESUMETRACES.watchlist, sizeof(data->resumepolls));
+    data->resumepollcount = min(RESUMETRACES.watchcount
+                                , ARRAY_SIZE(data->resumepolls));
 }
 
 // Code called while exceptions are rerouted - should return after
@@ -204,14 +225,13 @@ postLoop(struct irqData *data)
  ****************************************************************/
 
 // Layout of memory in physically continuous ram.
-static const int IRQ_STACK_SIZE = 4096;
 struct irqChainCode {
     // Stack for C prefetch code.
-    char stack_prefetch[IRQ_STACK_SIZE];
+    char stack_prefetch[PAGE_SIZE];
     // Stack for C abort code.
-    char stack_abort[IRQ_STACK_SIZE];
+    char stack_abort[PAGE_SIZE];
     // Stack for C irq code.
-    char stack_irq[IRQ_STACK_SIZE];
+    char stack_irq[PAGE_SIZE];
     // Data for C code.
     struct irqData data;
 
@@ -231,6 +251,10 @@ struct irqAsmVars {
     uint32 winceAbortHandler;
     // Standard WinCE prefetch handler.
     uint32 wincePrefetchHandler;
+    // Physical address of irqData data.
+    uint32 dataPhys;
+    // Standard WinCE resume vector.
+    uint32 winceResumeVector;
 };
 
 extern "C" {
@@ -243,35 +267,15 @@ extern "C" {
     extern void irq_chained_handler();
     extern void abort_chained_handler();
     extern void prefetch_chained_handler();
+    extern void resume_chained_handler();
 }
 #define offset_asmIrqVars() (&asmIrqVars - &irq_start)
 #define offset_asmIrqHandler() ((char *)irq_chained_handler - &irq_start)
 #define offset_asmAbortHandler() ((char *)abort_chained_handler - &irq_start)
 #define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - &irq_start)
+#define offset_asmResumeHandler() ((char *)resume_chained_handler - &irq_start)
 #define size_cHandlers() (&irq_end - &irq_start)
 #define size_handlerCode() (uint)(&((irqChainCode*)0)->cCode[size_cHandlers()])
-
-// The virtual address of the irq vector
-static const uint32 VADDR_IRQTABLE=0xffff0000;
-static const uint32 VADDR_PREFETCHOFFSET=0x0C;
-static const uint32 VADDR_ABORTOFFSET=0x10;
-static const uint32 VADDR_IRQOFFSET=0x18;
-
-// Locate a WinCE exception handler.  This assumes the handler is
-// setup in a manor that wince has been observed to do in the past.
-static uint32 *
-findWinCEirq(uint8 *irq_table, uint32 offset)
-{
-    uint32 irq_ins = *(uint32*)&irq_table[offset];
-    if ((irq_ins & 0xfffff000) != 0xe59ff000) {
-        // We only know how to handle LDR PC, #XXX instructions.
-        Output(C_INFO "Unknown irq instruction %08x", irq_ins);
-        return NULL;
-    }
-    uint32 ins_offset = (irq_ins & 0xFFF) + 8;
-    //Output("Ins=%08x ins_offset=%08x", irq_ins, ins_offset);
-    return (uint32 *)(&irq_table[offset + ins_offset]);
-}
 
 // Main "watch irq" command entry point.
 static void
@@ -283,18 +287,14 @@ cmd_wirq(const char *cmd, const char *args)
         return;
     }
 
-    // Map in the IRQ vector tables in a place that we can be sure
-    // there is full read/write access to it.
-    uint8 *irq_table = memPhysMap(memVirtToPhys(VADDR_IRQTABLE));
-
     // Locate position of wince exception handlers.
-    uint32 *irq_loc = findWinCEirq(irq_table, VADDR_IRQOFFSET);
+    uint32 *irq_loc = findWinCEirq(VADDR_IRQOFFSET);
     if (!irq_loc)
         return;
-    uint32 *abort_loc = findWinCEirq(irq_table, VADDR_ABORTOFFSET);
+    uint32 *abort_loc = findWinCEirq(VADDR_ABORTOFFSET);
     if (!abort_loc)
         return;
-    uint32 *prefetch_loc = findWinCEirq(irq_table, VADDR_PREFETCHOFFSET);
+    uint32 *prefetch_loc = findWinCEirq(VADDR_PREFETCHOFFSET);
     if (!prefetch_loc)
         return;
     uint32 newIrqHandler, newAbortHandler, newPrefetchHandler;
@@ -351,6 +351,13 @@ cmd_wirq(const char *cmd, const char *args)
 
     IRQS.beginWatch();
     TRACES.beginWatch(0);
+    RESUMETRACES.beginWatch(0);
+
+    if (data->resumepollcount) {
+        asmVars->dataPhys = memVirtToPhys((uint32)data);
+        asmVars->winceResumeVector = hookResume(
+            memVirtToPhys((uint32)&code->cCode[offset_asmResumeHandler()]));
+    }
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
@@ -378,6 +385,9 @@ cmd_wirq(const char *cmd, const char *args)
     *prefetch_loc = asmVars->wincePrefetchHandler;
     return_control();
     Output("Finished restoring windows exception handlers.");
+
+    if (asmVars->winceResumeVector)
+        unhookResume();
 
     postLoop(data);
 abort:

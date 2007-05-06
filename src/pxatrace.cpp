@@ -90,13 +90,13 @@ startPXAtraps(struct irqData *data)
 }
 
 static void
-report_winceResume(uint32 msecs, traceitem *item)
+report_winceResume(uint32 msecs, irqData *, traceitem *item)
 {
     Output("%06d: %08x: cpu resumed", msecs, 0);
 }
 
 static void
-report_irq(uint32 msecs, traceitem *item)
+report_irq(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 clock = item->d0, irq = item->d1;
     if (irq >= START_GPIO_IRQS)
@@ -149,7 +149,7 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 }
 
 static void
-report_memAccess(uint32 msecs, traceitem *item)
+report_memAccess(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 clock=item->d0, pc=item->d1, insn=item->d2, Rd=item->d3, Rn=item->d4;
     Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
@@ -187,7 +187,7 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
 }
 
 static void
-report_insnTrace(uint32 msecs, traceitem *item)
+report_insnTrace(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 clock=item->d0, pc=item->d1, reg1=item->d2, reg2=item->d3;
     Output("%06d: %08x: insn %08x: %08x %08x"

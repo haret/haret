@@ -25,7 +25,8 @@
 #endif
 
 struct traceitem;
-typedef void (*tracereporter)(uint32 msecs, traceitem *);
+struct irqData;
+typedef void (*tracereporter)(uint32 msecs, irqData *, traceitem *);
 
 // The layout of each item in the "trace buffer" shared between the
 // exception handlers and the monitoring code.
@@ -60,6 +61,8 @@ struct irqData {
     memcheck tracepolls[MAX_MEMCHECK];
     uint32 irqpollcount;
     memcheck irqpolls[MAX_MEMCHECK];
+    uint32 resumepollcount;
+    memcheck resumepolls[MAX_MEMCHECK];
 
     //
     // MMU tracing specific
