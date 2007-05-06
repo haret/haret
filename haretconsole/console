@@ -119,7 +119,7 @@ def main():
         cmd = Prompts(host, port)
         cmd.cmdloop()
     except socket.error, e:
-        print "Socket error: ", e[1]
+        print "Socket error:", e[1]
     except KeyboardInterrupt:
         print
 
