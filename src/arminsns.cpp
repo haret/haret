@@ -172,8 +172,8 @@ setReg(struct irqregs *regs, uint32 nr, uint32 val)
                  "moveq r13, %1  @ Set r13\n"
                  "movne r14, %1  @ Set r14\n"
                  "msr cpsr, %0   @ Restore processor mode"
-                 : "=&r" (temp), "=r" (val)
-                 : "r" (newContext));
+                 : "=&r" (temp)
+                 : "r" (val), "r" (newContext));
 }
 
 // Lookup an assembler name for an instruction - this is incomplete.
