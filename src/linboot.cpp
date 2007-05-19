@@ -339,6 +339,7 @@ struct bootmem {
     char **kernelPages, **initrdPages;
     char *tagsPage;
     uint32 physExec;
+    uint32 pageCount;
     void *allocedRam;
     struct preloadData *pd;
 };
@@ -349,7 +350,7 @@ cleanupBootMem(struct bootmem *bm)
 {
     if (!bm)
         return;
-    free(bm->allocedRam);
+    freePages(bm->allocedRam, bm->pageCount);
     free(bm);
 }
 
@@ -398,9 +399,10 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     }
 
     struct pageAddrs pages[PAGES_PER_INDEX * MAX_INDEX + 4];
+    bm->pageCount = totalCount;
     bm->allocedRam = allocPages(pages, totalCount);
     if (! bm->allocedRam) {
-	cleanupBootMem(bm);
+	free(bm);
 	return NULL;
     }
 
@@ -715,6 +717,7 @@ resumeIntoBoot(uint32 physExec)
 
     // Wait for user to suspend/resume
     Screen("Ready to boot.  Please suspend/resume");
+    // SetSystemPowerState(NULL,POWER_STATE_SUSPEND, POWER_FORCE)
     Sleep(300 * 1000);
 
     // Cleanup (if boot failed somehow).
@@ -786,7 +789,7 @@ bootLinux(const char *cmd, const char *args)
     if (!bm)
         return;
 
-    // Luanch it.
+    // Launch it.
     tryLaunch(bm, bootViaResume);
 }
 REG_CMD(0, "BOOT|LINUX", bootLinux,
@@ -835,6 +838,6 @@ bootRamLinux(const char *kernel, uint32 kernelSize
     copy_pages(bm->initrdPages, initrd, initrdSize);
     DoneProgress();
 
-    // Luanch it.
+    // Launch it.
     tryLaunch(bm, bootViaResume);
 }

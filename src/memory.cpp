@@ -453,6 +453,19 @@ static int physPageComp(const void *e1, const void *e2) {
             : (i1->physLoc > i2->physLoc ? 1 : 0));
 }
 
+// Free pages allocated with allocPages()
+void
+freePages(void *data, int pageCount)
+{
+    int pageBytes = pageCount * PAGE_SIZE;
+    int ret = VirtualFree(data, pageBytes, MEM_DECOMMIT|MEM_RELEASE);
+    if (!ret)
+        Output(C_ERROR "VirtualFree failed %p / %d (code %ld)"
+               , data, pageCount, GetLastError());
+}
+
+// Allocate and pin 'pageCount' number of pages and fill 'pages'
+// structure with the physical and virtual locations of those pages.
 void *
 allocPages(struct pageAddrs *pages, int pageCount)
 {
@@ -469,7 +482,8 @@ allocPages(struct pageAddrs *pages, int pageCount)
     if (!ret) {
         Output(C_ERROR "Failed to lock %d pages (code %ld)"
                , pageCount, GetLastError());
-        goto abort;
+        freePages(data, pageCount);
+        return NULL;
     }
 
     // Find all the physical locations of the pages.
@@ -483,9 +497,6 @@ allocPages(struct pageAddrs *pages, int pageCount)
     qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
 
     return data;
-abort:
-    VirtualFree(data, pageBytes, MEM_DECOMMIT|MEM_RELEASE);
-    return NULL;
 }
 
 

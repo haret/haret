@@ -78,6 +78,7 @@ struct pageAddrs {
     char *virtLoc;
 };
 
+void freePages(void *data, int pageCount);
 void *allocPages(struct pageAddrs *pages, int pageCount);
 
 // The size of physical memory to map at once
