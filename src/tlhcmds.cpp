@@ -13,6 +13,7 @@
 #include "lateload.h" // LATE_LOAD
 #include "output.h" // Output
 #include "script.h" // REG_CMD
+#include "cpu.h" // MVAddr
 
 LATE_LOAD(CreateToolhelp32Snapshot, "toolhelp")
 LATE_LOAD(Process32First, "toolhelp")
@@ -43,32 +44,30 @@ cmd_kill(const char *cmd, const char *args)
     mbstowcs(wname, name, ARRAY_SIZE(wname));
     Output("Looking to kill '%ls'", wname);
 
-    HANDLE hts = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hts == INVALID_HANDLE_VALUE) {
+    HANDLE hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hTH == INVALID_HANDLE_VALUE) {
         Output("Unable to create tool help snapshot");
         return;
     }
 
     PROCESSENTRY32 pe;
-    pe.dwSize = sizeof(PROCESSENTRY32);
+    pe.dwSize = sizeof(pe);
 
-    if (late_Process32First(hts, &pe)) {
-        do {
-            if (_wcsicmp(wname, pe.szExeFile) == 0) {
-                HANDLE hproc = OpenProcess(0, 0, pe.th32ProcessID);
-                Output("Found '%ls' with pid %08lx / handle %p"
-                       , pe.szExeFile, pe.th32ProcessID, hproc);
+    for (int ret=late_Process32First(hTH, &pe); ret
+             ; ret=late_Process32Next(hTH, &pe))
+        if (_wcsicmp(wname, pe.szExeFile) == 0) {
+            HANDLE hproc = OpenProcess(0, 0, pe.th32ProcessID);
+            Output("Found '%ls' with pid %08lx / handle %p"
+                   , pe.szExeFile, pe.th32ProcessID, hproc);
 
-                if (hproc != INVALID_HANDLE_VALUE && hproc != NULL) {
-                    TerminateProcess(hproc, 0);
-                    CloseHandle(hproc);
-                    break;
-                }
+            if (hproc != INVALID_HANDLE_VALUE && hproc != NULL) {
+                TerminateProcess(hproc, 0);
+                CloseHandle(hproc);
+                break;
             }
-        } while (late_Process32Next(hts, &pe));
-    }
+        }
 
-    late_CloseToolhelp32Snapshot(hts);
+    late_CloseToolhelp32Snapshot(hTH);
 }
 REG_CMD(tlhAvail, "KILL", cmd_kill,
         "KILL <process name>\n"
@@ -87,14 +86,12 @@ psDump(const char *cmd, const char *args)
     PROCESSENTRY32 pe;
     pe.dwSize = sizeof(pe);
 
-    if (late_Process32First(hTH, &pe)) {
-        do {
-            Output("ps: pid=%08lx ppid=%lx pmem=%08lx"
-                   " tcnt=%03ld perm=%08lx procname=%ls",
-                   pe.th32ProcessID, pe.th32ParentProcessID, pe.th32MemoryBase
-                   , pe.cntThreads, pe.th32AccessKey, pe.szExeFile);
-        } while (late_Process32Next(hTH, &pe));
-    }
+    for (int ret=late_Process32First(hTH, &pe); ret
+             ; ret=late_Process32Next(hTH, &pe))
+        Output("ps: pid=%08lx ppid=%lx pmem=%08lx"
+               " tcnt=%03ld perm=%08lx procname=%ls",
+               pe.th32ProcessID, pe.th32ParentProcessID, pe.th32MemoryBase
+               , pe.cntThreads, pe.th32AccessKey, pe.szExeFile);
 
     late_CloseToolhelp32Snapshot(hTH);
 }
@@ -105,8 +102,13 @@ REG_CMD(tlhAvail, "PS", psDump,
 static void
 modDump(const char *cmd, const char *args)
 {
-    HANDLE hTH = late_CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE|TH32CS_GETALLMODS, 0);
+    uint32 pid = 0;
+    HANDLE hTH;
+    if (get_expression(&args, &pid))
+        hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
+    else
+        hTH = late_CreateToolhelp32Snapshot(
+            TH32CS_SNAPMODULE|TH32CS_GETALLMODS, pid);
     if (hTH == INVALID_HANDLE_VALUE) {
         Output("Unable to create tool help snapshot");
         return;
@@ -115,19 +117,82 @@ modDump(const char *cmd, const char *args)
     MODULEENTRY32 me;
     me.dwSize = sizeof(me);
 
-    if (late_Module32First(hTH, &me)) {
-        do {
-            Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%3ld pusg=%08lx"
-                   " base=%p size=%08lx hmod=%p mod=%ls exe=%ls",
-                   me.dwSize, me.dwFlags, me.th32ModuleID, me.th32ProcessID,
-                   me.GlblcntUsage, me.ProccntUsage,
-                   me.modBaseAddr, me.modBaseSize,
-                   me.hModule, me.szModule, me.szExePath);
-        } while (late_Module32Next(hTH, &me));
-    }
+    for (int ret=late_Module32First(hTH, &me); ret
+             ; ret=late_Module32Next(hTH, &me))
+        Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%3ld pusg=%08lx"
+               " base=%p size=%08lx hmod=%p mod=%ls exe=%ls",
+               me.dwSize, me.dwFlags, me.th32ModuleID, me.th32ProcessID,
+               me.GlblcntUsage, me.ProccntUsage,
+               me.modBaseAddr, me.modBaseSize,
+               me.hModule, me.szModule, me.szExePath);
 
     late_CloseToolhelp32Snapshot(hTH);
 }
 REG_CMD(tlhAvail, "LSMOD", modDump,
-        "LSMOD\n"
+        "LSMOD <pid>\n"
         "  List wince modules.")
+
+static void
+cmd_addr2module(const char *cmd, const char *args)
+{
+    uint32 addr;
+    if (!get_expression(&args, &addr)) {
+        ScriptError("virtual address expected");
+        return;
+    }
+    addr = MVAddr(addr);
+
+    HANDLE hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hTH == INVALID_HANDLE_VALUE) {
+        Output("Unable to create tool help snapshot");
+        return;
+    }
+
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(pe);
+    uint32 pid = 0;
+    uint32 membase = 0;
+
+    for (int ret=late_Process32First(hTH, &pe); ret
+             ; ret=late_Process32Next(hTH, &pe)) {
+        membase = pe.th32MemoryBase;
+        if (membase <= addr && membase + 0x02000000 > addr) {
+            Output("Address %08x in process: %ls (%08x - %08x)"
+                   , addr, pe.szExeFile, membase, membase + 0x02000000);
+            pid = pe.th32ProcessID;
+            break;
+        }
+    }
+
+    late_CloseToolhelp32Snapshot(hTH);
+
+    if (!pid) {
+        Output("Address %08x not found", addr);
+        return;
+    }
+
+    hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
+    if (hTH == INVALID_HANDLE_VALUE) {
+        Output("Unable to create tool help snapshot");
+        return;
+    }
+
+    MODULEENTRY32 me;
+    me.dwSize = sizeof(me);
+    for (int ret=late_Module32First(hTH, &me); ret
+             ; ret=late_Module32Next(hTH, &me)) {
+        uint32 a = (uint32)me.modBaseAddr;
+        if (a < 0x02000000)
+            a |= membase;
+        if (a <= addr && a + me.modBaseSize > addr) {
+            Output("  in module: %ls (%08x - %08x)", me.szModule
+                   , a, (uint32)(a + me.modBaseSize));
+            break;
+        }
+    }
+
+    late_CloseToolhelp32Snapshot(hTH);
+}
+REG_CMD(tlhAvail, "ADDR2MOD", cmd_addr2module,
+        "ADDR2MOD <virtual address>\n"
+        "  Lookup which process (and module) owns a given virtual address.")
