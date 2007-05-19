@@ -108,7 +108,7 @@ modDump(const char *cmd, const char *args)
         hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
     else
         hTH = late_CreateToolhelp32Snapshot(
-            TH32CS_SNAPMODULE|TH32CS_GETALLMODS, pid);
+            TH32CS_SNAPMODULE|TH32CS_GETALLMODS, 0);
     if (hTH == INVALID_HANDLE_VALUE) {
         Output("Unable to create tool help snapshot");
         return;
@@ -167,11 +167,12 @@ cmd_addr2module(const char *cmd, const char *args)
     late_CloseToolhelp32Snapshot(hTH);
 
     if (!pid) {
-        Output("Address %08x not found", addr);
-        return;
+        Output("Address %08x not process specific", addr);
+        hTH = late_CreateToolhelp32Snapshot(
+            TH32CS_SNAPMODULE|TH32CS_GETALLMODS, 0);
+    } else {
+        hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
     }
-
-    hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
     if (hTH == INVALID_HANDLE_VALUE) {
         Output("Unable to create tool help snapshot");
         return;
@@ -182,7 +183,7 @@ cmd_addr2module(const char *cmd, const char *args)
     for (int ret=late_Module32First(hTH, &me); ret
              ; ret=late_Module32Next(hTH, &me)) {
         uint32 a = (uint32)me.modBaseAddr;
-        if (a < 0x02000000)
+        if (pid && a < 0x02000000)
             a |= membase;
         if (a <= addr && a + me.modBaseSize > addr) {
             Output("  in module: %ls (%08x - %08x)", me.szModule
