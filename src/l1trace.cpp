@@ -415,10 +415,10 @@ prepL1traps(struct irqData *data)
     data->alterCount = count;
 
     // Redirect any traces of target area to alt area.
-    for (uint i=0; i<data->tracepollcount; i++)
-        alterTracePoint(data, &data->tracepolls[i]);
-    for (uint i=0; i<data->irqpollcount; i++)
-        alterTracePoint(data, &data->irqpolls[i]);
+    for (uint i=0; i<data->tracepoll.count; i++)
+        alterTracePoint(data, &data->tracepoll.list[i]);
+    for (uint i=0; i<data->irqpoll.count; i++)
+        alterTracePoint(data, &data->irqpoll.list[i]);
 
     return 0;
 }

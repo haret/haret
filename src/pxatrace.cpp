@@ -142,9 +142,9 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
     }
 
     // Irq time memory polling.
-    checkPolls(data, clock, data->irqpolls, data->irqpollcount);
+    checkPolls(data, clock, &data->irqpoll);
     // Trace time memory polling.
-    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    checkPolls(data, clock, &data->tracepoll);
     set_DBCON(data->dbcon);
 }
 
@@ -169,7 +169,7 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
 
     // Trace time memory polling.
     set_DBCON(0);
-    int count = checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    int count = checkPolls(data, clock, &data->tracepoll);
     set_DBCON(data->dbcon);
 
     if (data->traceForWatch && !count)
@@ -235,7 +235,7 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
 
     // Trace time memory polling.
     set_DBCON(0);
-    checkPolls(data, clock, data->tracepolls, data->tracepollcount);
+    checkPolls(data, clock, &data->tracepoll);
     set_DBCON(data->dbcon);
     return 1;
 }

@@ -45,6 +45,14 @@ static const uint32 MAX_L1TRACE = 64;
 // Maximum number of pc addresses that can be ignored.
 static const uint32 MAX_IGNOREADDR = 64;
 
+// Info on memory polling done in irq context.
+class watchListVar;
+struct pollinfo {
+    class watchListVar *cls;
+    uint32 count;
+    memcheck list[MAX_MEMCHECK];
+};
+
 // Persistent data accessible by both exception handlers and regular
 // code.
 struct irqData {
@@ -57,12 +65,9 @@ struct irqData {
     uint32 irqCount, abortCount, prefetchCount;
 
     // Standard memory polling.
-    uint32 tracepollcount;
-    memcheck tracepolls[MAX_MEMCHECK];
-    uint32 irqpollcount;
-    memcheck irqpolls[MAX_MEMCHECK];
-    uint32 resumepollcount;
-    memcheck resumepolls[MAX_MEMCHECK];
+    struct pollinfo tracepoll;
+    struct pollinfo irqpoll;
+    struct pollinfo resumepoll;
 
     //
     // MMU tracing specific
@@ -122,7 +127,7 @@ add_trace(struct irqData *data, tracereporter reporter
  ****************************************************************/
 
 int testWirqAvail();
-int checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count);
+int checkPolls(struct irqData *data, uint32 clock, pollinfo *info);
 
 // Contents of register description passed into the exception
 // handlers.  This layout corresponds with the assembler code in

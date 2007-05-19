@@ -32,24 +32,25 @@ LATE_LOAD(FreePhysMem, "coredll")
 static void
 report_memPoll(uint32 msecs, irqData *data, traceitem *item)
 {
-    memcheck *mc = (memcheck*)((uint32)data + item->d0);
-    uint32 clock=item->d1, val=item->d2, mask=item->d3;
+    watchListVar *w = (watchListVar*)item->d0;
+    memcheck *mc = &w->watchlist[item->d1];
+    uint32 clock=item->d2, val=item->d3, mask=item->d4;
     reportWatch(msecs, clock, mc, val, mask);
 }
 
 // Perform a set of memory polls and add to trace buffer.
 int __irq
-checkPolls(struct irqData *data, uint32 clock, memcheck *list, uint32 count)
+checkPolls(struct irqData *data, uint32 clock, pollinfo *info)
 {
     int foundcount = 0;
-    for (uint i=0; i<count; i++) {
-        memcheck *mc = &list[i];
+    for (uint i=0; i<info->count; i++) {
+        memcheck *mc = &info->list[i];
         uint32 val, maskval;
         int ret = testMem(mc, &val, &maskval);
         if (!ret)
             continue;
         foundcount++;
-        ret = add_trace(data, report_memPoll, (uint32)mc - (uint32)data
+        ret = add_trace(data, report_memPoll, (uint32)info->cls, i
                         , clock, val, maskval);
         if (ret)
             // Couldn't add trace - reset compare function.
@@ -72,9 +73,9 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     }
 
     // Irq time memory polling.
-    checkPolls(data, -1, data->irqpolls, data->irqpollcount);
+    checkPolls(data, -1, &data->irqpoll);
     // Trace time memory polling.
-    checkPolls(data, -1, data->tracepolls, data->tracepollcount);
+    checkPolls(data, -1, &data->tracepoll);
 }
 
 extern "C" int __irq
@@ -113,7 +114,7 @@ extern "C" void __irq
 resume_handler(struct irqData *data, struct irqregs *regs)
 {
     add_trace(data, report_resume);
-    checkPolls(data, -1, data->resumepolls, data->resumepollcount);
+    checkPolls(data, -1, &data->resumepoll);
 }
 
 
@@ -158,6 +159,14 @@ printTrace(uint32 msecs, struct irqData *data)
     return 1;
 }
 
+static void
+prepPoll(pollinfo *info, watchListVar *var)
+{
+    memcpy(info->list, var->watchlist, sizeof(info->list));
+    info->count = min(var->watchcount, ARRAY_SIZE(info->list));
+    info->cls = var;
+}
+
 // Called before exceptions are taken over.
 static void
 preLoop(struct irqData *data)
@@ -165,13 +174,9 @@ preLoop(struct irqData *data)
     LastOverflowReport = 0;
 
     // Setup memory tracing.
-    memcpy(data->irqpolls, IRQS.watchlist, sizeof(data->irqpolls));
-    data->irqpollcount = min(IRQS.watchcount, ARRAY_SIZE(data->irqpolls));
-    memcpy(data->tracepolls, TRACES.watchlist, sizeof(data->tracepolls));
-    data->tracepollcount = min(TRACES.watchcount, ARRAY_SIZE(data->tracepolls));
-    memcpy(data->resumepolls, RESUMETRACES.watchlist, sizeof(data->resumepolls));
-    data->resumepollcount = min(RESUMETRACES.watchcount
-                                , ARRAY_SIZE(data->resumepolls));
+    prepPoll(&data->irqpoll, &IRQS);
+    prepPoll(&data->tracepoll, &TRACES);
+    prepPoll(&data->resumepoll, &RESUMETRACES);
 }
 
 // Code called while exceptions are rerouted - should return after
@@ -353,7 +358,7 @@ cmd_wirq(const char *cmd, const char *args)
     TRACES.beginWatch(0);
     RESUMETRACES.beginWatch(0);
 
-    if (data->resumepollcount) {
+    if (data->resumepoll.count) {
         asmVars->dataPhys = memVirtToPhys((uint32)data);
         asmVars->winceResumeVector = hookResume(
             memVirtToPhys((uint32)&code->cCode[offset_asmResumeHandler()]));
