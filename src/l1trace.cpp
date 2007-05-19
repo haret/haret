@@ -130,6 +130,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         if (Lbit(insn)) {
             // ldr
             if (Bbit(insn))
+                // XXX - access could fault
                 val = *(uint8*)newaddr;
             else
                 val = *(uint32*)newaddr;
@@ -149,6 +150,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
                 Rn = addr - offset;
             setReg(regs, mask_Rn(insn), Rn);
         } else if (Wbit(insn))
+            // XXX - addr is an MVA - but reg might be a VA.
             setReg(regs, mask_Rn(insn), addr);
     } else if ((insn & 0x0E000090) == 0x00000090) {
         if (!Pbit(insn) && (Wbit(insn) || !Bbit(insn)))
@@ -191,7 +193,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         return;
     for (uint i=0; i<data->traceCount; i++) {
         irqData::trace_s *t = &data->traceAddrs[i];
-        if (t->start > addr + addrsize || t->end <= addr)
+        if (t->start >= addr + addrsize || t->end <= addr)
             continue;
         if (Lbit(insn)) {
             if (!(t->rw & 1))
