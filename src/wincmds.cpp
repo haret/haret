@@ -162,3 +162,39 @@ playSound(const char *cmd, const char *args)
 REG_CMD(0, "PLAYSOUND", playSound,
         "PLAYSOUND [<seconds>]\n"
         " Plays chord.wav")
+
+// From MSDN docs.
+#define SETPOWERMANAGEMENT 6147
+typedef struct VIDEOPOWER_MANAGEMENT {
+    ULONG Length;
+    ULONG DPMSVersion;
+    ULONG PowerState;
+} VIDEO_POWER_MANAGEMENT, *PVIDEO_POWER_MANAGEMENT;
+
+static void
+LCDonoff(const char *cmd, const char *args)
+{
+    uint32 state;
+    if (!get_expression(&args, &state)) {
+        ScriptError("Expected <state>");
+        return;
+    }
+
+    HDC gdc = GetDC(NULL);
+
+    Output("LcdPower(%d) dc=%p", state, gdc);
+
+    VIDEO_POWER_MANAGEMENT pm;
+    pm.Length = sizeof(pm);
+    pm.PowerState = state;
+    int ret=ExtEscape(gdc, SETPOWERMANAGEMENT, pm.Length, (LPCSTR)&pm, 0, NULL);
+    ReleaseDC(NULL, gdc);
+
+    if (ret < 0)
+        Output("ExtEscape==%d (code %ld)", ret, GetLastError());
+    else
+        Output("ExtEscape==%d", ret);
+}
+REG_CMD(0, "SETLCD", LCDonoff,
+        "SETLCD <state>\n"
+        " Set the LCD power start (1=on, 2=standby, 3=suspend, 4=off)")
