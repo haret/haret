@@ -160,11 +160,12 @@ printTrace(uint32 msecs, struct irqData *data)
 }
 
 static void
-prepPoll(pollinfo *info, watchListVar *var)
+prepPoll(pollinfo *info, watchListVar *var, int first=1)
 {
     memcpy(info->list, var->watchlist, sizeof(info->list));
     info->count = min(var->watchcount, ARRAY_SIZE(info->list));
     info->cls = var;
+    var->beginWatch(first);
 }
 
 // Called before exceptions are taken over.
@@ -174,9 +175,9 @@ preLoop(struct irqData *data)
     LastOverflowReport = 0;
 
     // Setup memory tracing.
-    prepPoll(&data->irqpoll, &IRQS);
-    prepPoll(&data->tracepoll, &TRACES);
-    prepPoll(&data->resumepoll, &RESUMETRACES);
+    prepPoll(&data->irqpoll, &IRQS, 1);
+    prepPoll(&data->tracepoll, &TRACES, 0);
+    prepPoll(&data->resumepoll, &RESUMETRACES, 0);
 }
 
 // Code called while exceptions are rerouted - should return after
@@ -348,21 +349,17 @@ cmd_wirq(const char *cmd, const char *args)
     if (ret)
         goto abort;
 
-    preLoop(data);
-
     ret = prepL1traps(data);
     if (ret)
         goto abort;
-
-    IRQS.beginWatch();
-    TRACES.beginWatch(0);
-    RESUMETRACES.beginWatch(0);
 
     if (data->resumepoll.count) {
         asmVars->dataPhys = memVirtToPhys((uint32)data);
         asmVars->winceResumeVector = hookResume(
             memVirtToPhys((uint32)&code->cCode[offset_asmResumeHandler()]));
     }
+
+    preLoop(data);
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
