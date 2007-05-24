@@ -1,5 +1,6 @@
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
+#include "script.h" // runMemScript
 #include "arch-pxa.h"
 #define CONFIG_PXA27x
 #include "pxa2xx.h" // pxaDMA
@@ -20,6 +21,14 @@ MachinePXA27x::detect()
     return ((p15r0 >> 24) == 'i'
             && ((p15r0 >> 13) & 0x7) == 2
             && ((p15r0 >> 4) & 0x3f) == 17);
+}
+
+void
+MachinePXA27x::init()
+{
+    MachinePXA::init();
+    runMemScript("set II(7) 1\n"    // OS timers
+                 "set II(10) 1\n"); // GPIOx
 }
 
 int

@@ -7,7 +7,9 @@
 # classname, archtype, oeminfos, machtype, [script commands...]
 PLATFORM=PocketPC
 Alpine,     PXA27x  ,PH10C;PH10D,                 HTCALPINE
-Apache,     PXA27x  ,PA10,                        HTCAPACHE,set ramsize 64*1024*1024
+Apache,     PXA27x  ,PA10,                        HTCAPACHE, \
+        set ramsize 64*1024*1024, \
+        set ii(49) 1, addlist IRQS p2v(0x0a000000) 0xff 16 0
 AximX50,    PXA27x  ,Dell Axim X50;Dell Axim X51, X50,       \
         set ramaddr 0xa8000000,set ramsize 64*1024*1024
 AximX5,     PXA     ,Dell Axim X5,                AXIM

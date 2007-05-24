@@ -17,6 +17,7 @@ class MachinePXA27x : public MachinePXA {
 public:
     MachinePXA27x();
     int detect();
+    void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
     virtual const char *getIrqName(uint);
