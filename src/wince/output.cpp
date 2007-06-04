@@ -135,7 +135,7 @@ flushLogFile()
 }
 
 // Close a previously opened log file.
-void
+static void
 closeLogFile()
 {
     if (outputLogfile)
@@ -332,99 +332,93 @@ shutdownHaret()
  ****************************************************************/
 
 static struct ProgressFeedback {
-    HWND pb;
-    int dialogId;
+    HWND window, slider;
     HCURSOR oldCursor;
+    uint lastProgress, lastShownProgress, showStep;
 } progressFeedback;
 
-static BOOL CALLBACK pbDialogFunc (HWND hWnd, UINT message, WPARAM wParam,
-  LPARAM lParam)
+static BOOL CALLBACK
+pbDialogFunc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  switch (message)
-  {
+    switch (message) {
     case WM_INITDIALOG:
-      return TRUE;
+        return TRUE;
 
     case WM_COMMAND:
-      switch (LOWORD (wParam))
-      {
+        switch (LOWORD(wParam)) {
         case IDOK:
         case IDCANCEL:
-          EndDialog (hWnd, LOWORD (wParam));
-          return TRUE;
-      }
-      break;
- }
-  return FALSE;
+            EndDialog(hWnd, LOWORD(wParam));
+            return TRUE;
+        }
+        break;
+    }
+    return FALSE;
 }
-
-static uint LastProgress;
 
 bool InitProgress(int dialogId, uint Max)
 {
 #ifdef USE_WAIT_CURSOR
-  progressFeedback.oldCursor = (HCURSOR)-1;
+    progressFeedback.oldCursor = (HCURSOR)-1;
 #endif
 
-  progressFeedback.dialogId = dialogId;
-  progressFeedback.pb = CreateDialog(hInst, MAKEINTRESOURCE(dialogId), MainWindow,
-                     pbDialogFunc);
-  if (!progressFeedback.pb)
-    return false;
+    progressFeedback.window = CreateDialog(hInst, MAKEINTRESOURCE(dialogId)
+                                           , MainWindow, pbDialogFunc);
+    if (!progressFeedback.window)
+        return false;
 
-  HWND slider = GetDlgItem(progressFeedback.pb, dialogId + 1);
-  if (!slider)
-  {
-    DoneProgress ();
-    progressFeedback.pb = NULL;
-    return false;
-  }
+    progressFeedback.slider = GetDlgItem(progressFeedback.window, dialogId + 1);
+    if (!progressFeedback.slider) {
+        DoneProgress();
+        return false;
+    }
 
 #ifdef USE_WAIT_CURSOR
-  ShowCursor (TRUE);
-  progressFeedback.oldCursor = GetCursor();
-  SetCursor (LoadCursor (NULL, IDC_WAIT));
+    ShowCursor(TRUE);
+    progressFeedback.oldCursor = GetCursor();
+    SetCursor(LoadCursor(NULL, IDC_WAIT));
 #endif
 
-  LastProgress = 0;
-  SendMessage (slider, TBM_SETRANGEMAX, TRUE, Max);
-  SendMessage (slider, TBM_SETTICFREQ, 10, 0);
-  return true;
+    progressFeedback.lastProgress = 0;
+    progressFeedback.lastShownProgress = 0;
+    progressFeedback.showStep = Max/20;
+    SendMessage(progressFeedback.slider, TBM_SETRANGEMAX, TRUE, Max);
+    SendMessage(progressFeedback.slider, TBM_SETTICFREQ, 10, 0);
+    return true;
 }
 
-bool SetProgress (uint Value)
+bool SetProgress(uint Value)
 {
-  if (!progressFeedback.pb)
-    return false;
+    if (!progressFeedback.slider)
+        return false;
 
-  HWND slider = GetDlgItem(progressFeedback.pb, progressFeedback.dialogId + 1);
-  if (!slider)
-    return false;
-
-  LastProgress = Value;
-  SendMessage (slider, TBM_SETSELEND, TRUE, Value);
-  return true;
+    progressFeedback.lastProgress = Value;
+    if (Value < progressFeedback.lastShownProgress
+        || Value >= (progressFeedback.lastShownProgress
+                     + progressFeedback.showStep)) {
+        progressFeedback.lastShownProgress = Value;
+        SendMessage(progressFeedback.slider, TBM_SETSELEND, TRUE, Value);
+    }
+    return true;
 }
 
 bool AddProgress(int add)
 {
-    return SetProgress(LastProgress + add);
+    return SetProgress(progressFeedback.lastProgress + add);
 }
 
-void DoneProgress ()
+void DoneProgress()
 {
-  if (progressFeedback.pb)
-  {
-    DestroyWindow(progressFeedback.pb);
-    progressFeedback.pb = NULL;
-  }
+    if (progressFeedback.window) {
+        DestroyWindow(progressFeedback.window);
+        progressFeedback.window = NULL;
+    }
 
 #ifdef USE_WAIT_CURSOR
-  if (progressFeedback.oldCursor != (HCURSOR)-1)
-  {
-    SetCursor(progressFeedback.oldCursor);
-    progressFeedback.oldCursor = (HCURSOR)-1;
-  }
+    if (progressFeedback.oldCursor != (HCURSOR)-1) {
+        SetCursor(progressFeedback.oldCursor);
+        progressFeedback.oldCursor = (HCURSOR)-1;
+    }
 #endif
 }
 

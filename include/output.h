@@ -36,9 +36,6 @@ void Output(const char *fmt, ...)
 // Send output to screen, output_fn (if set), and/or log (if set)
 #define Screen(fmt, args...) Output(C_SCREEN fmt , ##args )
 
-// Close any previously created log files.
-void closeLogFile();
-// Flush log file writes to disk.
 void flushLogFile();
 
 extern bool InitProgress(int dialogId, uint Max);
