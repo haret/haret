@@ -383,7 +383,6 @@ bool InitProgress(int dialogId, uint Max)
     progressFeedback.lastShownProgress = 0;
     progressFeedback.showStep = Max/20;
     SendMessage(progressFeedback.slider, TBM_SETRANGEMAX, TRUE, Max);
-    SendMessage(progressFeedback.slider, TBM_SETTICFREQ, 10, 0);
     return true;
 }
 
@@ -412,6 +411,7 @@ void DoneProgress()
     if (progressFeedback.window) {
         DestroyWindow(progressFeedback.window);
         progressFeedback.window = NULL;
+        progressFeedback.slider = NULL;
     }
 
 #ifdef USE_WAIT_CURSOR
