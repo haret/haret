@@ -129,7 +129,7 @@ modDump(const char *cmd, const char *args)
     late_CloseToolhelp32Snapshot(hTH);
 }
 REG_CMD(tlhAvail, "LSMOD", modDump,
-        "LSMOD <pid>\n"
+        "LSMOD [<pid>]\n"
         "  List wince modules.")
 
 static void
