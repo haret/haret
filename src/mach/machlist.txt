@@ -8,7 +8,6 @@
 PLATFORM=PocketPC
 Alpine,     PXA27x  ,PH10C;PH10D,                 HTCALPINE
 Apache,     PXA27x  ,PA10,                        HTCAPACHE, \
-        set ramsize 64*1024*1024, \
         set ii(49) 1, addlist IRQS p2v(0x0a000000) 0xff 16 0
 AximX50,    PXA27x  ,Dell Axim X50;Dell Axim X51, X50,       \
         set ramaddr 0xa8000000,set ramsize 64*1024*1024
@@ -32,8 +31,8 @@ HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*
 Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024
 Wizard,     OMAP850 ,WIZA100;WIZA200
 Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
-        set ramsize 64*1024*1024, \
         ibit IRQS 1, addlist IRQS p2v(0x08000004) 0xf000 16 0
+Athena,     PXA     ,ATHE100,                     HTCATHENA
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
 Artemis,    OMAP850 ,ARTE
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
@@ -41,6 +40,7 @@ Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   set ramsize 64*1024*
 e310,       SA      ,Toshiba e310
 e740,       PXA     ,TOSHIBA e740
 Acer_n30,           ,Acer n30 Handheld,           N30
+Mio_P550,   S3c2440 ,Mio P550,                    MIO_P550
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
