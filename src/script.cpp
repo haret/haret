@@ -74,7 +74,7 @@ __findVar(const char *vn, commandBase **vars, int varCount)
 {
     for (int i = 0; i < varCount; i++) {
         variableBase *var = isVar(vars[i]);
-        if (var && !strcasecmp(vn, var->name))
+        if (var && !_stricmp(vn, var->name))
             return var;
     }
     return NULL;
@@ -113,7 +113,7 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
     const char *x = *s;
 
     // Skip spaces at the beginning
-    while (*x && isspace (*x))
+    while (*x && isspace(*x))
         x++;
 
     // If at the end of string, return empty token
@@ -131,7 +131,7 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
         while (*e && (*e != quote))
             e++;
     else if (for_expr)
-        while (*e && isalnum (*e))
+        while (*e && isalnum(*e))
             e++;
     else
         while (*e && !isspace(*e))
@@ -139,8 +139,8 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
 
     if (e >= x + storesize)
         e = x + storesize - 1;
-    memcpy (storage, x, e - x);
-    storage [e - x] = 0;
+    memcpy(storage, x, e - x);
+    storage[e - x] = 0;
 
     if (quote && *e)
         e++;
@@ -154,7 +154,7 @@ static char peek_char (const char **s)
   const char *x = *s;
 
   // Skip spaces at the beginning
-  while (*x && isspace (*x))
+  while (*x && isspace(*x))
     x++;
 
   *s = x;
@@ -234,7 +234,7 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
     {
       // We got a number
       char *err;
-      *v = strtoul (x, &err, 0);
+      *v = strtoul(x, &err, 0);
       if (*err)
       {
         ScriptError("Expected a number, got %s", x);
@@ -745,7 +745,7 @@ cmd_dump(const char *cmd, const char *args)
 
     for (int i = 0; i < commands_count; i++) {
         dumpCommand *hd = isDump(commands_start[i]);
-        if (hd && !strcasecmp(vn, hd->name)) {
+        if (hd && !_stricmp(vn, hd->name)) {
             hd->func(vn, args);
             return;
         }
@@ -820,7 +820,7 @@ cmd_help(const char *cmd, const char *x)
     char vn[MAX_CMDLEN];
     get_token(&x, vn, sizeof(vn));
 
-    if (!strcasecmp(vn, "VARS")) {
+    if (!_stricmp(vn, "VARS")) {
         Output("Name                 Type");
         Output("-------------------- ----------");
         for (int i = 0; i < commands_count; i++) {
@@ -832,7 +832,7 @@ cmd_help(const char *cmd, const char *x)
             Output("%-20s %s\n  %s", var->name, type, var->desc);
         }
     }
-    else if (!strcasecmp (vn, "DUMP"))
+    else if (!_stricmp(vn, "DUMP"))
     {
         for (int i = 0; i < commands_count; i++) {
             dumpCommand *hc = isDump(commands_start[i]);
