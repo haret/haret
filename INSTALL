@@ -1,8 +1,8 @@
 Welcome.
 
-This is HaRET, the Handheld Reverse Engineering Tool. For a detailed description
-see the files in the docs/ directory. This file documents how to build and
-install it.
+This is HaRET, the Handheld Reverse Engineering Tool. For a detailed
+description see the files in the docs/ directory. This file documents
+how to build and install it.
 
 HaRET is now compiled with the gcc toolset.  Previous versions (see
 cvs tag haret-0_3_8 and earlier) made use of the MSVC/ARM toolkit for
@@ -10,14 +10,14 @@ compiling.
 
 The gcc toolset in use is from the cegcc project.  See
 http://cegcc.sourceforge.net/ for more info.  This project is
-currently still in active development (as of 20061203).  One may use
+currently still in active development (as of 20070609).  One may use
 the following steps to obtain the same toolkit the main HaRET
 developers are using:
 
 1 - Obtain cegcc source (svn co
     https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc)
 
-2 - Use revision 836 (svn up -r 836).  This is an optional step, newer
+2 - Use revision 931 (svn up -r 931).  This is an optional step, newer
     releases of cegcc will likely also work.
 
 3 - Optionally alter the build destination by modifying
