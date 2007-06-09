@@ -92,7 +92,7 @@ $(OUT)mach-autogen.o: src/mach/machlist.txt
 	$(Q)tools/buildmachs.py < $^ > $(OUT)mach-autogen.cpp
 	$(call compile,$(OUT)mach-autogen.cpp,$@)
 
-COREOBJS := $(MACHOBJS) haret-res.o \
+COREOBJS := $(MACHOBJS) haret-res.o libcfunc.o \
   script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o \
   linboot.o fbwrite.o font_mini_4x6.o winvectors.o
 
