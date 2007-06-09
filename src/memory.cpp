@@ -34,14 +34,29 @@ REG_VAR_INT(0, "RAMSIZE", memPhysSize
 void
 mem_autodetect(void)
 {
+    // Get OS info
+    OSVERSIONINFOW vi;
+    vi.dwOSVersionInfoSize = sizeof(vi);
+    GetVersionEx(&vi);
+
+    // Get memory info
     MEMORYSTATUS mst;
     STORE_INFORMATION sti;
     mst.dwLength = sizeof(mst);
     GlobalMemoryStatus(&mst);
     GetStoreInformation(&sti);
-    /* WinCE is returning ~1Mb less memory, let's suppose minus kernel size,
-       so we'll round the result up to nearest 8Mb boundary. */
-    memPhysSize = (mst.dwTotalPhys + sti.dwStoreSize + 0x7fffff) & ~0x7fffff;
+
+#define ALIGN(x, d) (((x) + (d) - 1) / (d) * (d))
+
+    if (vi.dwMajorVersion >= 5)
+        // WinCE 5 uses dwTotalPhys to represent memory - align to
+        // nearest 16MB
+        memPhysSize = ALIGN(mst.dwTotalPhys, 16*1024*1024);
+    else
+        // WinCE is returning ~1Mb less memory, let's suppose minus
+        // kernel size, so we'll round the result up to nearest 8MB
+        // boundary.
+        memPhysSize = ALIGN(mst.dwTotalPhys + sti.dwStoreSize, 8*1024*1024);
     Output("WinCE reports memory size %d (phys=%ld store=%ld)"
            , memPhysSize, mst.dwTotalPhys, sti.dwStoreSize);
 }
