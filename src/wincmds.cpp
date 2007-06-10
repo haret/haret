@@ -44,7 +44,7 @@ cmd_LoadLibraryEx(const char *cmd, const char *args)
         return;
     }
     wchar_t wname[MAX_CMDLEN];
-    MultiByteToWideChar(CP_ACP, 0, name, -1, wname, sizeof(wname));
+    mbstowcs(wname, name, ARRAY_SIZE(wname));
 
     Output("Calling LoadLibraryEx on '%ls'", wname);
     HMODULE hMod = late_LoadLibraryExW(wname, 0, LOAD_LIBRARY_AS_DATAFILE);
@@ -83,7 +83,7 @@ DWORD alt_GetSystemPowerStatusEx2(
     PSYSTEM_POWER_STATUS_EX2 pSystemPowerStatusEx2, DWORD dwLen, BOOL fUpdate)
 {
     bool ret = GetSystemPowerStatusEx(
-        (SYSTEM_POWER_STATUS_EX *)&pSystemPowerStatusEx2, fUpdate);
+        (SYSTEM_POWER_STATUS_EX *)pSystemPowerStatusEx2, fUpdate);
     if (ret)
         return sizeof(SYSTEM_POWER_STATUS_EX);
     return 0;
@@ -161,7 +161,7 @@ playSound(const char *cmd, const char *args)
 }
 REG_CMD(0, "PLAYSOUND", playSound,
         "PLAYSOUND [<seconds>]\n"
-        " Plays chord.wav")
+        "  Plays chord.wav")
 
 // From MSDN docs.
 #define SETPOWERMANAGEMENT 6147
@@ -197,4 +197,4 @@ LCDonoff(const char *cmd, const char *args)
 }
 REG_CMD(0, "SETLCD", LCDonoff,
         "SETLCD <state>\n"
-        " Set the LCD power start (1=on, 2=standby, 3=suspend, 4=off)")
+        "  Set the LCD power start (1=on, 2=standby, 3=suspend, 4=off)")
