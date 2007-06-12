@@ -21,12 +21,12 @@
  ****************************************************************/
 
 // RAM start physical address
-uint32 memPhysAddr = 0xa0000000;
+uint32 memPhysAddr = 0xFFFFFFFF;
 // RAM size (autodetected)
 uint32 memPhysSize;
 
 REG_VAR_INT(0, "RAMADDR", memPhysAddr
-            , "Physical RAM start address (default = 0xa0000000)")
+            , "Physical RAM start address")
 REG_VAR_INT(0, "RAMSIZE", memPhysSize
             , "Physical RAM size (default = autodetected)")
 

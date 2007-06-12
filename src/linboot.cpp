@@ -374,6 +374,10 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         Output(C_ERROR "undefined MTYPE");
         return NULL;
     }
+    if (memPhysAddr == 0xFFFFFFFF) {
+        Output(C_ERROR "Please set start of ram (RAMADDR)");
+        return NULL;
+    }
     Output("boot params: RAMADDR=%08x RAMSIZE=%08x MTYPE=%d CMDLINE='%s'"
            , memPhysAddr, memPhysSize, machType, bootCmdline);
     Output("Boot FB feedback: %d", FBDuringBoot);
