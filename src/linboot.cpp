@@ -28,7 +28,7 @@
 // Kernel file name
 static char *bootKernel = "zimage";
 // Initrd file name
-static char *bootInitrd = "initrd";
+static char *bootInitrd = "";
 // Kernel command line
 static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
 // ARM machine type (see linux/arch/arm/tools/mach-types)
@@ -590,7 +590,7 @@ file_open(const char *name)
     fnprepare(name, fn, sizeof(fn));
     FILE *fk = fopen(fn, "rb");
     if (!fk) {
-        Output("Failed to load file %s", fn);
+        Output(C_ERROR "Failed to load file %s", fn);
         return NULL;
     }
     return fk;
@@ -642,10 +642,11 @@ loadDiskKernel()
     // Open initrd file
     FILE *initrdFile = NULL;
     uint32 initrdSize = 0;
-    if (bootInitrd && *bootInitrd) {
+    if (bootInitrd[0]) {
         initrdFile = file_open(bootInitrd);
-        if (initrdFile)
-            initrdSize = get_file_size(initrdFile);
+        if (!initrdFile)
+            return NULL;
+        initrdSize = get_file_size(initrdFile);
     }
 
     // Obtain ram for the kernel

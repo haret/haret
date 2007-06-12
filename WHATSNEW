@@ -1,5 +1,11 @@
 next version <kevin@koconnor.net>
 
+  * The variable INITRD no longer defaults to "initrd".  In order to
+    use an initrd, one must use: set initrd "xxx".  If an initrd is
+    specified, it must be present or the boot will fail.  (This change
+    was made because previously one could erroneously set an initrd to
+    a non-existent file and haret would not complain.)
+
   * RAMADDR no longer defaults to 0xa0000000 on unknown hardware.
     (The devices that use that address are easy to detect, and it
     causes confusing error messages on other devices.)
