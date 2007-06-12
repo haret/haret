@@ -37,8 +37,6 @@ public:
     virtual void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
-    virtual int getBoardID();
-    virtual const char *getIrqName(uint);
     virtual int detect();
     void (*flushCache)(void);
 };

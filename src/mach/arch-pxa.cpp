@@ -1,5 +1,6 @@
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
+#include "script.h" // runMemScript
 #include "arch-pxa.h"
 #define CONFIG_PXA25x
 #include "pxa2xx.h"
@@ -28,6 +29,25 @@ MachinePXA::detect()
                 (((p15r0 >> 13) & 7) == 1) ||   // XScale core version 1
                 (((p15r0 >> 13) & 7) == 2)      // XScale core version 2
                 ));
+}
+
+void
+MachinePXA::init()
+{
+    runMemScript("set ramaddr 0xa0000000\n"
+                 // IRQs
+                 "addlist IRQS p2v(0x40D00000) 0x7f 32 0\n"
+                 "addlist IRQS p2v(0x40E00048) 0 32 0\n"
+                 "addlist IRQS p2v(0x40E0004c) 0 32 0\n"
+                 "addlist IRQS p2v(0x40E00050) 0 32 0\n"
+                 // GPIO levels
+                 "addlist GPIOS p2v(0x40E00000)\n"
+                 "addlist GPIOS p2v(0x40E00004)\n"
+                 "addlist GPIOS p2v(0x40E00008)\n"
+                 // GPIO directions
+                 "addlist GPIOS p2v(0x40E0000C)\n"
+                 "addlist GPIOS p2v(0x40E00010)\n"
+                 "addlist GPIOS p2v(0x40E00014)\n");
 }
 
 int

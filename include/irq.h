@@ -37,7 +37,6 @@ struct traceitem {
     uint32 d0, d1, d2, d3, d4;
 };
 
-static const uint32 MAX_IRQ = 32 + 2 + 120;
 // Maximum number of irq/trace level memory polls available.
 static const uint32 MAX_MEMCHECK = 32;
 // Maximum number of l1trace addresses available.
@@ -88,11 +87,6 @@ struct irqData {
 
     // Intel PXA based chip?
     int isPXA;
-
-    // Irq information.
-    uint8 *irq_ctrl, *gpio_ctrl;
-    uint32 ignoredIrqs[BITMAPSIZE(MAX_IRQ)];
-    uint32 demuxGPIOirq;
 
     // Instruction trace information.
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];

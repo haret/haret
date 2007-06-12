@@ -5,6 +5,7 @@ class MachinePXA : public Machine {
 public:
     MachinePXA();
     int detect();
+    void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
 
@@ -20,7 +21,6 @@ public:
     void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
-    virtual const char *getIrqName(uint);
 
     uint32 *cken, *uhccoms;
 };

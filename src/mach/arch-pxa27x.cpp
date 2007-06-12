@@ -26,9 +26,24 @@ MachinePXA27x::detect()
 void
 MachinePXA27x::init()
 {
-    MachinePXA::init();
-    runMemScript("set II(7) 1\n"    // OS timers
-                 "set II(10) 1\n"); // GPIOx
+    runMemScript("set ramaddr 0xa0000000\n"
+                 // IRQs
+                 "addlist IRQS p2v(0x40D00000) 0x480 32 0\n"
+                 "addlist IRQS p2v(0x40D0009c) 0xfffffffc 32 0\n"
+                 "addlist IRQS p2v(0x40E00048) 0 32 0\n"
+                 "addlist IRQS p2v(0x40E0004c) 0 32 0\n"
+                 "addlist IRQS p2v(0x40E00050) 0 32 0\n"
+                 "addlist IRQS p2v(0x40E00148) 0 32 0\n"
+                 // GPIO levels
+                 "addlist GPIOS p2v(0x40E00000)\n"
+                 "addlist GPIOS p2v(0x40E00004)\n"
+                 "addlist GPIOS p2v(0x40E00008)\n"
+                 "addlist GPIOS p2v(0x40E00100)\n"
+                 // GPIO directions
+                 "addlist GPIOS p2v(0x40E0000C)\n"
+                 "addlist GPIOS p2v(0x40E00010)\n"
+                 "addlist GPIOS p2v(0x40E00014)\n"
+                 "addlist GPIOS p2v(0x40E0010C)\n");
 }
 
 int
@@ -70,26 +85,6 @@ MachinePXA27x::hardwareShutdown()
                        CKEN23_SSP1|
                        CKEN24_CAMERA
                        ));
-}
-
-static const char * const irq_names[] = {
-    "SSP3", "MSL", "USBh2", "USBh1",
-    "Keypad", "MemoryStick", "pI2C", "OS Timer",
-    "GPIO0", "GPIO1", "GPIOx", "USBc",
-    "PMU", "I2S", "AC97", "USIM",
-    "SSP2", "LCD", "I2C", "ICP",
-    "STUART", "BTUART", "FFUART", "MMC",
-    "SSP", "DMA", "TMR0", "TMR1",
-    "TMR2", "TMR3", "RTC0", "RTC1",
-    "TPM", "QCap",
-};
-
-const char *
-MachinePXA27x::getIrqName(uint irq)
-{
-    if (irq >= ARRAY_SIZE(irq_names))
-        return "Unknown";
-    return irq_names[irq];
 }
 
 REGMACHINE(MachinePXA27x)

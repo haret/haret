@@ -15,30 +15,6 @@
 #include "arminsns.h" // getInsnName
 #include "irq.h"
 
-enum {
-    ICHP_VAL_IRQ = 1<<31,
-
-    START_GPIO_IRQS = 34,
-    NR_GPIOx_IRQ = 10,
-
-    IRQ_OFFSET = 0x40D00000,
-
-    IRQ_ICHP_OFFSET = 0x18,
-    IRQ_ICMR_OFFSET = 0x04,
-    IRQ_ICIP_OFFSET = 0x00,
-    IRQ_ICMR2_OFFSET = 0xA0,
-    IRQ_ICIP2_OFFSET = 0x9c,
-
-    GPIO_OFFSET = 0x40E00000,
-
-    GPIO_GEDR0_OFFSET = 0x48,
-    GPIO_GEDR1_OFFSET = 0x4c,
-    GPIO_GEDR2_OFFSET = 0x50,
-    GPIO_GEDR3_OFFSET = 0x148,
-};
-
-#define mask_ICHP_IRQ(ichp) (((ichp)>>16) & ((1<<6)-1))
-
 // The CCNT performance monitoring register
 DEF_GETIRQCPR(get_CCNT, p14, 0, c1, c1, 0)
 // The DBCON software debug register
@@ -95,18 +71,6 @@ report_winceResume(uint32 msecs, irqData *, traceitem *item)
     Output("%06d: %08x: cpu resumed", msecs, 0);
 }
 
-static void
-report_irq(uint32 msecs, irqData *, traceitem *item)
-{
-    uint32 clock = item->d0, irq = item->d1;
-    if (irq >= START_GPIO_IRQS)
-        Output("%06d: %08x: irq %d(gpio %d)"
-               , msecs, clock, irq, irq-START_GPIO_IRQS);
-    else
-        Output("%06d: %08x: irq %d(%s)"
-               , msecs, clock, irq, Mach->getIrqName(irq));
-}
-
 void __irq
 PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 {
@@ -120,27 +84,6 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
     }
 
     set_DBCON(0);
-    uint32 irqs[2] = {
-        (*(uint32*)&data->irq_ctrl[IRQ_ICIP_OFFSET]
-         & *(uint32*)&data->irq_ctrl[IRQ_ICMR_OFFSET]),
-        (*(uint32*)&data->irq_ctrl[IRQ_ICIP2_OFFSET]
-         & *(uint32*)&data->irq_ctrl[IRQ_ICMR2_OFFSET])};
-    for (int i=0; i<START_GPIO_IRQS; i++)
-        if (TESTBIT(irqs, i) && !TESTBIT(data->ignoredIrqs, i))
-            add_trace(data, report_irq, clock, i);
-    if (irqs[0] & 0x400 && data->demuxGPIOirq) {
-        // Gpio activity
-        uint32 gpio_irqs[4] = {
-            *(uint32*)&data->gpio_ctrl[GPIO_GEDR0_OFFSET],
-            *(uint32*)&data->gpio_ctrl[GPIO_GEDR1_OFFSET],
-            *(uint32*)&data->gpio_ctrl[GPIO_GEDR2_OFFSET],
-            *(uint32*)&data->gpio_ctrl[GPIO_GEDR3_OFFSET]};
-        for (int i=0; i<120; i++)
-            if (TESTBIT(gpio_irqs, i) && !TESTBIT(data->ignoredIrqs
-                                                  , START_GPIO_IRQS+i))
-                add_trace(data, report_irq, clock, START_GPIO_IRQS+i);
-    }
-
     // Irq time memory polling.
     checkPolls(data, clock, &data->irqpoll);
     // Trace time memory polling.
@@ -261,24 +204,13 @@ static int testPXAAvail() {
     return testWirqAvail() && testPXA();
 }
 
-// Mask of ignored interrupts (set in script.cpp)
-static uint32 irqIgnore[BITMAPSIZE(MAX_IRQ)];
-static uint32 irqDemuxGPIO = 1;
-static uint32 traceForWatch;
-
-REG_VAR_BITSET(testPXAAvail, "II", irqIgnore, MAX_IRQ,
-               "The list of interrupts to ignore during WI")
-REG_VAR_INT(testPXAAvail, "IRQGPIO", irqDemuxGPIO,
-            "Turns on/off interrupt handler gpio irq demuxing")
-REG_VAR_INT(testPXAAvail, "TRACEFORWATCH", traceForWatch,
-            "Only report memory trace if ADDTRACEWATCH poll succeeds")
-
 // Externally modifiable settings for software debug
 static uint32 irqTrace = 0xFFFFFFFF;
 static uint32 irqTraceMask = 0;
 static uint32 irqTrace2 = 0xFFFFFFFF;
 static uint32 irqTraceType = 2;
 static uint32 irqTrace2Type = 2;
+static uint32 traceForWatch;
 
 REG_VAR_INT(testPXAAvail, "TRACE", irqTrace,
             "Memory location to trace during WI")
@@ -290,6 +222,8 @@ REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
             "1=store only, 2=loads or stores, 3=loads only")
 REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
             "1=store only, 2=loads or stores, 3=loads only")
+REG_VAR_INT(testPXAAvail, "TRACEFORWATCH", traceForWatch,
+            "Only report memory trace if ADDTRACEWATCH poll succeeds")
 
 // Externally modifiable settings for software tracing
 static uint32 insnTrace = 0xFFFFFFFF, insnTraceReenable = 0xFFFFFFFF;
@@ -362,10 +296,6 @@ prepPXAtraps(struct irqData *data)
                , data->insns[1].addr1, data->insns[1].addr2);
     }
 
-    data->gpio_ctrl = memPhysMap(GPIO_OFFSET);
-    data->irq_ctrl = memPhysMap(IRQ_OFFSET);
-    memcpy(data->ignoredIrqs, irqIgnore, sizeof(irqIgnore));
-    data->demuxGPIOirq = irqDemuxGPIO;
     data->traceForWatch = traceForWatch;
 
     return 0;

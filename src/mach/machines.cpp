@@ -41,18 +41,6 @@ Machine::hardwareShutdown()
 }
 
 int
-Machine::getBoardID()
-{
-    return -1;
-}
-
-const char *
-Machine::getIrqName(uint)
-{
-    return "Unknown";
-}
-
-int
 Machine::detect()
 {
     return 0;
