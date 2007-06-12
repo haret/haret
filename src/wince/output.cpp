@@ -457,6 +457,31 @@ REG_CMD_ALT(0, "P|RINT", cmd_print, print,
         "  directly to the network pipe.")
 
 static void
+cmd_msgbox(const char *tok, const char *x)
+{
+    char title[MAX_CMDLEN];
+    char msg[MAX_CMDLEN];
+    uint32 flags = 0;
+
+    get_token(&x, title, sizeof(title));
+    get_token(&x, msg, sizeof(msg));
+    get_expression(&x, &flags);
+
+    wchar_t buffer_t[512];
+    wchar_t buffer_m[512];
+    mbstowcs(buffer_t, title, ARRAY_SIZE(buffer_t));
+    mbstowcs(buffer_m, msg, ARRAY_SIZE(buffer_m));
+        
+    int r = MessageBox(0, buffer_m, buffer_t, flags);
+    sprintf(title, "%d", r);
+    SetVar("RESULT", title);
+}
+REG_CMD(0, "MSGBOX", cmd_msgbox,
+        "MSGBOX <title> <msg> <flags>\n"
+        "  Display a message box. Button and icon appearance specified by flags.\n"
+        "  Store result code to var RESULT.")
+
+static void
 cmd_log(const char *cmd, const char *args)
 {
     char vn[MAX_CMDLEN];
