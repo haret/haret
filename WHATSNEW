@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>
+next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * The variable INITRD no longer defaults to "initrd".  In order to
     use an initrd, one must use: set initrd "xxx".  If an initrd is
@@ -23,6 +23,12 @@ next version <kevin@koconnor.net>
 
   * Haret now runs on wince 2.11 devices.  (Fixed issue which caused
     command dispatch to not work.)
+    
+  * == and != operators added (Example: 'if 1 == 1 print "sure"').
+  
+  * New command: MSGBOX, display message with the given title, text,
+    icon and button, waits for user to click button, stores return code
+    in variable RESULT.
 
 20070606 0.4.8 <kevin@koconnor.net>
 
