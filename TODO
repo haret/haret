@@ -1,14 +1,18 @@
 New features:
 
-* Port commands from gnu-haret to mainline haret.
+* Port commands from gnu-haret to mainline haret.  (eg, pxa register
+  dumping, wincedump, powerdev, irctl, btctl, gsmdev, testril,
+  testirsend)
 
-* Gpio watching infrastructure.  Monitoring of gpios is a critical
-  part of machine discovery.  The current code only supports old PXA
-  gpios.
+* Convert gpio watching for PXA processors to generic scheme.  Extend
+  support to PXA27x processors.
 
 * Document current feature set in wiki.
 
 * Possibly sort help output by command name.
+
+* Possibly allow the current machine definition (Mach) to be
+  explicitly specified by a user command.
 
 
 Misc cleanups:
@@ -44,9 +48,6 @@ Misc cleanups:
 
 * Get linux penguin logo working or remove it.
 
-* Possibly allow the current machine definition (Mach) to be
-  explicitly specified by a user command.
-
 * The strncpy calls (and snprintf, etc) should be audited to ensure
   that a null character is always at the end of the buffer.
 
@@ -69,6 +70,12 @@ Possible features for "wi":
   resume.  Early attempts at this failed because the MMU wasn't on and
   the fault handlers couldn't run.  The current code re-enables traces
   on the first irq.
+
+* Get wirq running on machines that don't have AllocPhysMem.
+
+* Possibly add the ability for watch lists to be conditional on values
+  previously read.  (For example, a gpio level register might only be
+  valid if the gpio direction is set to input.)
 
 
 Possible features for Linux booting:

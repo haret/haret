@@ -1,3 +1,23 @@
+next version <kevin@koconnor.net>
+
+  * RAMADDR no longer defaults to 0xa0000000 on unknown hardware.
+    (The devices that use that address are easy to detect, and it
+    causes confusing error messages on other devices.)
+
+  * PXA irq watching has been modified so that it conforms with other
+    platforms.  This is a user visible change: to ignore interrupts
+    use "IBIT IRQS x" instead of "SET II(x) 1" (x may not be the
+    same).  The new output will only make sense if one is using the
+    haretconsole script.
+
+  * Improve memory detection on wince 5 (and later) devices.  It
+    should no longer be necessary to set RAMSIZE for most devices.
+
+  * New command: LOADFUNC
+
+  * Haret now runs on wince 2.11 devices.  (Fixed issue which caused
+    command dispatch to not work.)
+
 20070606 0.4.8 <kevin@koconnor.net>
 
   * New commands: ATIDBG, ADDR2MOD, PLAYSOUND, SETLCD
