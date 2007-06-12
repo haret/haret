@@ -166,7 +166,8 @@ static char peek_char (const char **s)
 // 0: ()
 // 1: + - | ^
 // 2: * / % &
-// 3: unary+ unary- ~
+// 3: == !=
+// 4: unary+ unary- ~
 
 // Expect to see a ')'
 #define PAREN_EXPECT	1
@@ -194,27 +195,27 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
 
       case '+':
         (*s)++;
-        if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
+        if (!get_expression (s, v, 4, flags & ~PAREN_EAT))
           return false;
         break;
 
       case '-':
         (*s)++;
-        if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
+        if (!get_expression (s, v, 4, flags & ~PAREN_EAT))
           return false;
         *v = (uint32)-(int32)*v;
         break;
 
       case '!':
         (*s)++;
-        if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
+        if (!get_expression (s, v, 4, flags & ~PAREN_EAT))
           return false;
         *v = !*v;
         break;
 
       case '~':
         (*s)++;
-        if (!get_expression (s, v, 3, flags & ~PAREN_EAT))
+        if (!get_expression (s, v, 4, flags & ~PAREN_EAT))
           return false;
         *v = ~*v;
         break;
@@ -254,16 +255,30 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
   while (!unk_op)
   {
     char op = peek_char (s);
+    if ((op == '=' || op == '!') && *(*s + 1) == '=') 
+    {
+      if (priority > 1)
+        return true;
+      *s += 2;
+      if (!get_expression (s, &b, 1, flags & ~PAREN_EAT))
+        return false;
+      if (op == '=')
+        *v = (*v == b);
+      else
+        *v = (*v != b);
+      continue;
+    }
+
     switch (op)
     {
       case '+':
       case '-':
       case '|':
       case '^':
-        if (priority > 1)
+        if (priority > 2)
           return true;
         (*s)++;
-        if (!get_expression (s, &b, 1, flags & ~PAREN_EAT))
+        if (!get_expression (s, &b, 2, flags & ~PAREN_EAT))
           return false;
         switch (op)
         {
@@ -278,10 +293,10 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
       case '/':
       case '%':
       case '&':
-        if (priority > 2)
+        if (priority > 3)
           return true;
         (*s)++;
-        if (!get_expression (s, &b, 2, flags & ~PAREN_EAT))
+        if (!get_expression (s, &b, 3, flags & ~PAREN_EAT))
           return false;
         switch (op)
         {
