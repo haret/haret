@@ -24,7 +24,8 @@ H3600b,     SA      ,Compaq iPAQ H3600
 H3700,      SA      ,Compaq iPAQ H3700
 H3870,      SA      ,Compaq iPAQ H3800
 H3900,      PXA     ,Compaq iPAQ H39,             H3900
-H4000,      PXA     ,hp iPAQ h41;hp iPAQ h43,     H4000
+H4000,      PXA     ,hp iPAQ h41,                 H4000
+H4300,      PXA     ,hp iPAQ h43,                 H4300
 H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
 HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   set ramsize 64*1024*1024
 HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*1024
