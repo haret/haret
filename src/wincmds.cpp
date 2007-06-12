@@ -197,4 +197,4 @@ LCDonoff(const char *cmd, const char *args)
 }
 REG_CMD(0, "SETLCD", LCDonoff,
         "SETLCD <state>\n"
-        "  Set the LCD power start (1=on, 2=standby, 3=suspend, 4=off)")
+        "  Set the LCD power state (1=on, 2=standby, 3=suspend, 4=off)")
