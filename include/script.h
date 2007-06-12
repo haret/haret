@@ -199,5 +199,6 @@ public:
 
 void setupCommands();
 variableBase *FindVar(const char *vn);
+void SetVar(const char *name, const char *val);
 
 #endif /* _SCRIPT_H */

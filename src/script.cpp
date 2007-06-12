@@ -644,6 +644,25 @@ void rwfuncVar::fillVarType(char *buf) {
     sprintf(buf, "rw func(%d)", numargs);
 }
 
+void SetVar(const char *name, const char *val)
+{
+    variableBase *var = FindVar(name);
+    if (var) {
+        var->setVar(val);
+        return;
+    }
+
+    // Need to create a new user variable.
+    UserVars = (commandBase**)
+        realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
+
+    integerVar *iv = new integerVar(0, _strdup(name), 0, 0);
+    iv->isAvail = 1;
+    iv->data = &iv->dynstorage;
+    UserVars[UserVarsCount++] = iv;
+    iv->setVar(val);
+}
+
 static void
 cmd_set(const char *cmd, const char *args)
 {
@@ -652,23 +671,8 @@ cmd_set(const char *cmd, const char *args)
         ScriptError("Expected <varname>");
         return;
     }
-
-    variableBase *var = FindVar(vn);
-    if (var) {
-        // Existing variable - just set it.
-        var->setVar(args);
-        return;
-    }
-
-    // Need to create a new user variable.
-    UserVars = (commandBase**)
-        realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
-
-    integerVar *iv = new integerVar(0, _strdup(vn), 0, 0);
-    iv->isAvail = 1;
-    iv->data = &iv->dynstorage;
-    UserVars[UserVarsCount++] = iv;
-    iv->setVar(args);
+    
+    SetVar(vn, args);
 }
 REG_CMD(0, "S|ET", cmd_set,
         "SET <variable> <value>\n"
