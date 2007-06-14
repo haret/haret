@@ -144,7 +144,7 @@ setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
  ****************************************************************/
 
 // Maximum number of index pages.
-#define MAX_INDEX 5
+#define MAX_INDEX 6
 #define PAGES_PER_INDEX (PAGE_SIZE / sizeof(uint32))
 
 // Data Shared between normal haret code and C preload code.
