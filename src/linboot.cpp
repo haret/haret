@@ -428,11 +428,21 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
            , pgs_initrd->virtLoc, pgs_initrd->physLoc
            , pgs_index->virtLoc, pgs_index->physLoc);
 
-    if (pg_tag->physLoc < memPhysAddr + PHYSOFFSET_TAGS
-        || pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL
-        || (initrdSize
+    if (pg_tag->physLoc < memPhysAddr + PHYSOFFSET_TAGS) {
+        Output(C_ERROR "Allocated memory for tags will overwrite itself");
+        cleanupBootMem(bm);
+        return NULL;
+    }
+
+    if (pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL) {
+        Output(C_ERROR "Allocated memory for kernel will overwrite itself");
+        cleanupBootMem(bm);
+        return NULL;
+    }
+
+    if ((initrdSize
             && pgs_initrd->physLoc < memPhysAddr + PHYSOFFSET_INITRD)) {
-        Output(C_ERROR "Allocated memory will overwrite itself");
+        Output(C_ERROR "Allocated memory for initrd will overwrite itself");
         cleanupBootMem(bm);
         return NULL;
     }
