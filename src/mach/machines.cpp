@@ -97,7 +97,7 @@ findMachineType()
             continue;
         for (uint32 j=0; j<ARRAY_SIZE(m->OEMInfo) && m->OEMInfo[j]; j++) {
             int len = wcslen(m->OEMInfo[j]);
-            if (wcsncmp(oeminfo, m->OEMInfo[j], len) == 0)
+            if (_wcsnicmp(oeminfo, m->OEMInfo[j], len) == 0)
                 // Match
                 return m;
         }
