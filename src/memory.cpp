@@ -15,6 +15,8 @@
 #include "script.h" // REG_VAR_INT
 #include "machines.h" // Mach
 
+// Uncomment to use alternative CreateFileMapping-based allocation method
+//#define USE_MMAP
 
 /****************************************************************
  * Memory setup
@@ -485,7 +487,16 @@ void *
 allocPages(struct pageAddrs *pages, int pageCount)
 {
     int pageBytes = pageCount * PAGE_SIZE;
+#ifndef USE_MMAP
     void *data = VirtualAlloc(NULL, pageBytes, MEM_COMMIT, PAGE_READWRITE);
+#else
+    HANDLE h = CreateFileMapping(
+        (HANDLE)INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+        0, pageBytes, NULL
+    );
+    void *data = MapViewOfFile(h, FILE_MAP_WRITE, 0, 0, 0);
+#endif
+
     if (!data) {
         Output(C_ERROR "Failed to allocate %d pages (code %ld)"
                , pageCount, GetLastError());
