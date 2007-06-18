@@ -464,12 +464,6 @@ memPhysMap(uint32 paddr)
  * Page allocation
  ****************************************************************/
 
-static int physPageComp(const void *e1, const void *e2) {
-    pageAddrs *i1 = (pageAddrs*)e1, *i2 = (pageAddrs*)e2;
-    return (i1->physLoc < i2->physLoc ? -1
-            : (i1->physLoc > i2->physLoc ? 1 : 0));
-}
-
 // Free pages allocated with allocPages()
 void
 freePages(void *data, int pageCount)
@@ -518,9 +512,6 @@ allocPages(struct pageAddrs *pages, int pageCount)
         pd->virtLoc = &((char *)data)[PAGE_SIZE * i];
         pd->physLoc = pfns[i]; // XXX should: x << UserKInfo[KINX_PFN_SHIFT]
     }
-
-    // Sort the pages by physical location.
-    qsort(pages, pageCount, sizeof(pages[0]), physPageComp);
 
     return data;
 }

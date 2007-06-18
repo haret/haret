@@ -420,6 +420,34 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     struct pageAddrs *pg_data = &pages[totalCount-2];
     struct pageAddrs *pg_preload = &pages[totalCount-1];
 
+    // Prevent pages from being overwritten during relocation
+    for (int i=0; i<totalCount; i++) {
+        struct pageAddrs *pg = &pages[i], *ovpg;
+        uint32 relPhys = pg->physLoc - memPhysAddr;
+        // See if this page will be overwritten in preloader.
+        if (relPhys == 0)
+            ovpg = pg_tag;
+        else if (relPhys >= PHYSOFFSET_KERNEL
+                 && relPhys < PHYSOFFSET_KERNEL + kernelSize)
+            ovpg = &pgs_kernel[(relPhys - PHYSOFFSET_KERNEL) / PAGE_SIZE];
+        else if (initrdSize
+                 && (relPhys >= PHYSOFFSET_INITRD
+                     && relPhys < PHYSOFFSET_INITRD + initrdSize))
+            ovpg = &pgs_initrd[(relPhys - PHYSOFFSET_INITRD) / PAGE_SIZE];
+        else
+            // This page wont be overwritten.
+            continue;
+        if (pg == ovpg)
+            // This page will be overwritten by itself - no problem
+            continue;
+        // This page will be overwritten - swap it with the page that
+        // it will be overwritten by and retry.
+        struct pageAddrs tmp = *pg;
+        *pg = *ovpg;
+        *ovpg = tmp;
+        i--;
+    }
+
     Output("Allocated %d pages (tags=%p/%08x kernel=%p/%08x initrd=%p/%08x"
            " index=%p/%08x)"
            , totalCount
@@ -427,25 +455,6 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
            , pgs_kernel->virtLoc, pgs_kernel->physLoc
            , pgs_initrd->virtLoc, pgs_initrd->physLoc
            , pgs_index->virtLoc, pgs_index->physLoc);
-
-    if (pg_tag->physLoc < memPhysAddr + PHYSOFFSET_TAGS) {
-        Output(C_ERROR "Allocated memory for tags will overwrite itself");
-        cleanupBootMem(bm);
-        return NULL;
-    }
-
-    if (pgs_kernel->physLoc < memPhysAddr + PHYSOFFSET_KERNEL) {
-        Output(C_ERROR "Allocated memory for kernel will overwrite itself");
-        cleanupBootMem(bm);
-        return NULL;
-    }
-
-    if ((initrdSize
-            && pgs_initrd->physLoc < memPhysAddr + PHYSOFFSET_INITRD)) {
-        Output(C_ERROR "Allocated memory for initrd will overwrite itself");
-        cleanupBootMem(bm);
-        return NULL;
-    }
 
     // Setup linux tags.
     setup_linux_params(pg_tag->virtLoc, memPhysAddr + PHYSOFFSET_INITRD
