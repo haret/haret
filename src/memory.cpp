@@ -15,9 +15,6 @@
 #include "script.h" // REG_VAR_INT
 #include "machines.h" // Mach
 
-// Uncomment to use alternative CreateFileMapping-based allocation method
-//#define USE_MMAP
-
 /****************************************************************
  * Memory setup
  ****************************************************************/
@@ -468,10 +465,9 @@ memPhysMap(uint32 paddr)
 void
 freePages(void *data, int pageCount)
 {
-    int pageBytes = pageCount * PAGE_SIZE;
-    int ret = VirtualFree(data, pageBytes, MEM_DECOMMIT|MEM_RELEASE);
+    int ret = UnmapViewOfFile(data);
     if (!ret)
-        Output(C_ERROR "VirtualFree failed %p / %d (code %ld)"
+        Output(C_ERROR "UnmapViewOfFile failed %p / %d (code %ld)"
                , data, pageCount, GetLastError());
 }
 
@@ -481,24 +477,27 @@ void *
 allocPages(struct pageAddrs *pages, int pageCount)
 {
     int pageBytes = pageCount * PAGE_SIZE;
-#ifndef USE_MMAP
-    void *data = VirtualAlloc(NULL, pageBytes, MEM_COMMIT, PAGE_READWRITE);
-#else
     HANDLE h = CreateFileMapping(
         (HANDLE)INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
-        0, pageBytes, NULL
-    );
-    void *data = MapViewOfFile(h, FILE_MAP_WRITE, 0, 0, 0);
-#endif
-
-    if (!data) {
+        0, pageBytes, NULL);
+    if (!h) {
         Output(C_ERROR "Failed to allocate %d pages (code %ld)"
                , pageCount, GetLastError());
         return NULL;
     }
 
+    void *data = MapViewOfFile(h, FILE_MAP_WRITE, 0, 0, 0);
+    int ret = CloseHandle(h);
+    if (!data) {
+        Output(C_ERROR "Failed to map %d pages (code %ld)"
+               , pageCount, GetLastError());
+        return NULL;
+    }
+    if (!ret)
+        Output(C_WARN "CloseHandle failed (code %ld)", GetLastError());
+
     DWORD pfns[pageCount];
-    int ret = LockPages(data, pageBytes, pfns, LOCKFLAG_WRITE);
+    ret = LockPages(data, pageBytes, pfns, LOCKFLAG_WRITE);
     if (!ret) {
         Output(C_ERROR "Failed to lock %d pages (code %ld)"
                , pageCount, GetLastError());
