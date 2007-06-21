@@ -938,3 +938,13 @@ REG_CMD(0, "EVALF", cmd_evalf,
         "EVALF <fmt> [<args>...]\n"
         "  Build a string based on <fmt> and <args> using sprintf and\n"
         "  then evaluate the string as a command")
+
+static void
+cmd_exit(const char *cmd, const char *args)
+{
+    shutdownHaret();
+    exit(0);
+}
+REG_CMD(0, "EXIT", cmd_exit,
+        "EXIT\n"
+        "  Terminate HaRET process")
