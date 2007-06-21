@@ -30,6 +30,13 @@ next version <kevin@koconnor.net>, <pmiscml@gmail.com>
     icon and button, waits for user to click button, stores return code
     in variable RESULT.
 
+  * New allocation method (CreateFileMapping), able to handle 20Mb+ initrd's.
+  
+  * Better handling of overlapped memory regions during allocation.
+    
+  * New command: EXIT, terminate HaRET unconditionally. (QUIT just closes
+    network session.)
+
 20070606 0.4.8 <kevin@koconnor.net>
 
   * New commands: ATIDBG, ADDR2MOD, PLAYSOUND, SETLCD
