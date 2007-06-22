@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "xtypes.h" // uint32
 
 // Mark a function that is used in the C preloader.  Note all
@@ -12,3 +13,5 @@ void __preload do_copy(char *dest, const char *src, int count);
 void bootRamLinux(const char *kernel, uint32 kernelSize
                   , const char *initrd, uint32 initrdSize
                   , int bootViaResume=0);
+void bootHandleLinux(FILE *f, int kernelSize, int initrdSize, 
+		     int bootViaResume=0);

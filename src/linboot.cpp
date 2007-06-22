@@ -645,6 +645,44 @@ file_read(FILE *f, char **pages, uint32 size)
     return 0;
 }
 
+
+// Load a kernel (and possibly initrd) from disk into ram and prep it
+// for kernel starting.
+// fKernel is read before fInitrd, and they be the same file
+static bootmem *
+loadHandleKernel(FILE *fKernel, FILE *fInitrd, int kernelSize, int initrdSize)
+{
+    // Obtain ram for the kernel
+    int ret;
+    struct bootmem *bm = NULL;
+    bm = prepForKernel(kernelSize, initrdSize);
+    if (!bm)
+        goto abort;
+
+    InitProgress(DLG_PROGRESS_BOOT, kernelSize + initrdSize);
+
+    // Load kernel
+    ret = file_read(fKernel, bm->kernelPages, kernelSize);
+    if (ret)
+        goto abort;
+    // Load initrd
+    if (fInitrd) {
+        ret = file_read(fInitrd, bm->initrdPages, initrdSize);
+	if (ret)
+    	goto abort;
+    }
+
+    DoneProgress();
+
+    return bm;
+
+abort:
+    DoneProgress();
+
+    cleanupBootMem(bm);
+    return NULL;
+}
+
 // Load a kernel (and possibly initrd) from disk into ram and prep it
 // for kernel starting.
 static bootmem *
@@ -667,44 +705,14 @@ loadDiskKernel()
             return NULL;
         initrdSize = get_file_size(initrdFile);
     }
-
-    // Obtain ram for the kernel
-    int ret;
-    struct bootmem *bm = NULL;
-    bm = prepForKernel(kernelSize, initrdSize);
-    if (!bm)
-        goto abort;
-
-    InitProgress(DLG_PROGRESS_BOOT, kernelSize + initrdSize);
-
-    // Load kernel
-    ret = file_read(kernelFile, bm->kernelPages, kernelSize);
-    if (ret)
-        goto abort;
-    // Load initrd
-    if (initrdFile) {
-        ret = file_read(initrdFile, bm->initrdPages, initrdSize);
-        if (ret)
-            goto abort;
-    }
+    
+    struct bootmem *bm = loadHandleKernel(kernelFile, initrdFile, kernelSize, initrdSize);
 
     fclose(kernelFile);
     if (initrdFile)
         fclose(initrdFile);
 
-    DoneProgress();
-
     return bm;
-
-abort:
-    DoneProgress();
-
-    if (initrdFile)
-        fclose(initrdFile);
-    if (kernelFile)
-        fclose(kernelFile);
-    cleanupBootMem(bm);
-    return NULL;
 }
 
 
@@ -861,6 +869,18 @@ bootRamLinux(const char *kernel, uint32 kernelSize
     copy_pages(bm->kernelPages, kernel, kernelSize);
     copy_pages(bm->initrdPages, initrd, initrdSize);
     DoneProgress();
+
+    // Launch it.
+    tryLaunch(bm, bootViaResume);
+}
+
+void
+bootHandleLinux(FILE *f, int kernelSize, int initrdSize, int bootViaResume)
+{
+    // Load the kernel/initrd/tags/preloader into memory
+    struct bootmem *bm = loadHandleKernel(f, f, kernelSize, initrdSize);
+    if (!bm)
+        return;
 
     // Launch it.
     tryLaunch(bm, bootViaResume);
