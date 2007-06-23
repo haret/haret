@@ -257,10 +257,6 @@ struct irqAsmVars {
     uint32 winceAbortHandler;
     // Standard WinCE prefetch handler.
     uint32 wincePrefetchHandler;
-    // Physical address of irqData data.
-    uint32 dataPhys;
-    // Standard WinCE resume vector.
-    uint32 winceResumeVector;
 };
 
 extern "C" {
@@ -273,13 +269,12 @@ extern "C" {
     extern void irq_chained_handler();
     extern void abort_chained_handler();
     extern void prefetch_chained_handler();
-    extern void resume_chained_handler();
 }
 #define offset_asmIrqVars() (&asmIrqVars - &irq_start)
 #define offset_asmIrqHandler() ((char *)irq_chained_handler - &irq_start)
 #define offset_asmAbortHandler() ((char *)abort_chained_handler - &irq_start)
 #define offset_asmPrefetchHandler() ((char *)prefetch_chained_handler - &irq_start)
-#define offset_asmResumeHandler() ((char *)resume_chained_handler - &irq_start)
+#define offset_cResumeHandler() ((char *)resume_handler - &irq_start)
 #define size_cHandlers() (&irq_end - &irq_start)
 #define size_handlerCode() (uint)(&((irqChainCode*)0)->cCode[size_cHandlers()])
 
@@ -353,13 +348,16 @@ cmd_wirq(const char *cmd, const char *args)
     if (ret)
         goto abort;
 
-    if (data->resumepoll.count) {
-        asmVars->dataPhys = memVirtToPhys((uint32)data);
-        asmVars->winceResumeVector = hookResume(
-            memVirtToPhys((uint32)&code->cCode[offset_asmResumeHandler()]));
-    }
-
     preLoop(data);
+
+    if (data->resumepoll.count) {
+        ret = hookResume(
+            memVirtToPhys((uint32)&code->cCode[offset_cResumeHandler()])
+            , memVirtToPhys((uint32)data)
+            , memVirtToPhys((uint32)data));
+        if (ret)
+            goto abort;
+    }
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
@@ -388,7 +386,7 @@ cmd_wirq(const char *cmd, const char *args)
     return_control();
     Output("Finished restoring windows exception handlers.");
 
-    if (asmVars->winceResumeVector)
+    if (data->resumepoll.count)
         unhookResume();
 
     postLoop(data);

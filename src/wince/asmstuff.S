@@ -5,9 +5,9 @@
 @   For conditions of use see file COPYING
 @
 
-		.macro	CPWAIT
-		mrc	p15, 0, r0, c2, c0, 0
-		mov	r0, r0
+		.macro	CPWAIT reg
+		mrc	p15, 0, \reg, c2, c0, 0
+		mov	\reg, \reg
 		sub 	pc, pc, #4
 		.endm
 
@@ -33,7 +33,7 @@ cpuFlushCache:
 		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
 		mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
 		mcr	p15, 0, r0, c7, c7, 0	@ Invalidate I+D caches & BTB
-		CPWAIT
+		CPWAIT  r0
 
 		mov	pc, lr
 
@@ -55,7 +55,7 @@ cpuFlushCache_xscale:
 		mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
 		mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
 		mcr	p15, 0, r0, c7, c7, 0	@ Invalidate I+D caches & BTB
-		CPWAIT
+		CPWAIT  r0
 
 		mov	pc, lr
 
@@ -87,9 +87,11 @@ stackJumper:
 stack:          .long 0
 data:           .long 0
 execCode:       .long 0
+returnCode:     .long 0
 asm_handler:
         ldr     r0, [pc, #(data - . - 8)]
         ldr     sp, [pc, #(stack - . - 8)]
+        ldr     lr, [pc, #(returnCode - . - 8)]
         ldr     pc, [pc, #(execCode - . - 8)]
 
 @ Code that can disable the MMU and jump to a function.
@@ -122,7 +124,7 @@ mmu_trampoline:
         mcr	p15, 0, r0, c7, c10, 4	@ Drain write buffer
         mcr	p15, 0, r0, c8, c7, 0	@ Invalidate I+D TLB
         mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
-        CPWAIT
+        CPWAIT  r0
 
         @ Jump to code with shared virtual/physical mapping
         add     pc, r4, #(1f - mmu_trampoline)
@@ -133,13 +135,13 @@ mmu_trampoline:
         bic	r0, r0, #5		@ MMU & Dcache off
         bic	r0, r0, #0x1000         @ Icache off
         mcr	p15, 0, r0, c1, c0, 0	@ disable the MMU & caches
-        CPWAIT
+        CPWAIT  r0
 
         mov	r0, #0
         mcr	p15, 0, r0, c13, c0, 0	@ clear PID
         mcr	p15, 0, r0, c8, c7, 0	@ invalidate I+D TLB
         mcr	p15, 0, r0, c7, c5, 0	@ Invalidate I cache & BTB
-        CPWAIT
+        CPWAIT  r0
 
         @ MMU is now disabled.  Call function.
         mov     pc, r6

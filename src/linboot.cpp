@@ -22,6 +22,7 @@
 #include "video.h" // vidGetVRAM
 #include "machines.h" // Mach
 #include "fbwrite.h" // fb_puts
+#include "winvectors.h" // stackJumper_s
 #include "linboot.h"
 #include "resource.h"
 
@@ -310,9 +311,6 @@ preloader(struct preloadData *data)
  ****************************************************************/
 
 extern "C" {
-    // Asm code
-    extern struct stackJumper_s stackJumper;
-
     // Symbols added by linker.
     extern char preload_start;
     extern char preload_end;
@@ -322,16 +320,6 @@ extern "C" {
 #define stackJumperOffset ((char *)&stackJumper - &preload_start)
 #define stackJumperExecOffset (stackJumperOffset        \
     + (uint32)&((stackJumper_s*)0)->asm_handler)
-
-// Layout of an assembler function that can setup a C stack and entry
-// point.  DO NOT CHANGE HERE without also upgrading the assembler
-// code.
-struct stackJumper_s {
-    uint32 stack;
-    uint32 data;
-    uint32 execCode;
-    char asm_handler[1];
-};
 
 // Description of memory alocated by prepForKernel()
 struct bootmem {
@@ -720,32 +708,17 @@ loadDiskKernel()
  * Resume vector hooking
  ****************************************************************/
 
-static uint32 winceResumeAddr = 0xa0040000;
-
 // Setup a kernel in ram and hook the wince resume vector so that it
 // runs on resume.
 static void
-resumeIntoBoot(uint32 physExec)
+resumeIntoBoot(struct bootmem *bm)
 {
-    // Lookup wince resume address and verify it looks sane.
-    uint32 *resume = (uint32*)memPhysMap(winceResumeAddr);
-    if (!resume) {
-        Output(C_ERROR "Could not map addr %08x", winceResumeAddr);
-        return;
-    }
-    // Check for "b 0x41000 ; 0x0" at the address.
-    uint32 old1 = resume[0], old2 = resume[1];
-    if (old1 != 0xea0003fe || old2 != 0x0) {
-        Output(C_ERROR "Unexpected resume vector. (%08x %08x)", old1, old2);
-        return;
-    }
-
     // Overwrite the resume vector.
-    take_control();
-    Mach->flushCache();
-    resume[0] = 0xe51ff004; // ldr pc, [pc, #-4]
-    resume[1] = physExec;
-    return_control();
+    int ret = hookResume(bm->physExec, 0, 0);
+    if (ret) {
+        Output("Failed to hook resume vector");
+        return;
+    }
 
     // Wait for user to suspend/resume
     Screen("Ready to boot.  Please suspend/resume");
@@ -754,11 +727,7 @@ resumeIntoBoot(uint32 physExec)
 
     // Cleanup (if boot failed somehow).
     Output("Timeout. Restoring original resume vector");
-    take_control();
-    Mach->flushCache();
-    resume[0] = old1;
-    resume[1] = old2;
-    return_control();
+    unhookResume();
 }
 
 
@@ -802,7 +771,7 @@ tryLaunch(struct bootmem *bm, int bootViaResume)
 
     Output("Launching to physical address %08x", bm->physExec);
     if (bootViaResume)
-        resumeIntoBoot(bm->physExec);
+        resumeIntoBoot(bm);
     else
         launchKernel(bm);
 

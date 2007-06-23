@@ -15,8 +15,6 @@ dataMVA:                .long 0
 winceIrqHandler:        .long 0
 winceAbortHandler:      .long 0
 wincePrefetchHandler:   .long 0
-dataPhys:               .long 0
-winceResumeVector:      .long 0
         .global irq_chained_handler
 irq_chained_handler:
 	@ Store registers on WINCE stack.
@@ -75,13 +73,5 @@ prefetch_chained_handler:
         @ Return to user code or call wince handler depending if r0 was 0
         ldreq   pc, [pc, #(wincePrefetchHandler - . - 8)]
         subs    pc, r14, #4
-
-        .global resume_chained_handler
-resume_chained_handler:
-        @ Call into C code (sp=stack, r0=data, r1=saved regs)
-        ldr     r0, [pc, #(dataPhys - . - 8)]
-        mov     sp, r0
-        bl      resume_handler
-        ldr     pc, [pc, #(winceResumeVector - . - 8)]
 
         .end

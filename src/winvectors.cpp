@@ -5,6 +5,9 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
+#include <stdlib.h> // malloc
+#include <string.h> // memcpy
+
 #include "memory.h" // memVirtToPhys
 #include "output.h" // Output
 #include "cpu.h" // take_control
@@ -34,22 +37,23 @@ findWinCEirq(uint32 offset)
 }
 
 static uint32 winceResumeAddr = 0xa0040000;
-
 static uint32 *ResumePtr, OldResume[2];
+static struct stackJumper_s *ResumeSJ;
 
 // Setup wince to resume into a haret handler.
-uint32
-hookResume(uint32 handler)
+int
+hookResume(uint32 handler, uint32 stack, uint32 data)
 {
-    if (winceResumeAddr == 0xffffffff)
-        // Nothing to do.
-        return 0;
+    if (winceResumeAddr == 0xffffffff) {
+        Output(C_ERROR "Please specify WinCE physical resume address");
+        return -1;
+    }
 
     // Lookup wince resume address and verify it looks sane.
     ResumePtr = (uint32*)memPhysMap(winceResumeAddr);
     if (!ResumePtr) {
-        Output(C_ERROR "Could not map addr %08x", winceResumeAddr);
-        return 0;
+        Output(C_ERROR "Could not map resume addr %08x", winceResumeAddr);
+        return -1;
     }
     // Check for "b 0x41000 ; 0x0" at the address.
     OldResume[0] = ResumePtr[0];
@@ -57,9 +61,24 @@ hookResume(uint32 handler)
     if (OldResume[0] != 0xea0003fe || OldResume[1] != 0x0) {
         Output(C_ERROR "Unexpected resume vector. (%08x %08x)"
                , OldResume[0], OldResume[1]);
-        ResumePtr = NULL;
-        return -1;
+        goto fail;
     }
+
+    // Allocate and setup C code trampoline
+    ResumeSJ = (stackJumper_s*)malloc(sizeof(*ResumeSJ)*2);
+    if (! ResumeSJ) {
+        Output("Unable to allocate memory for trampoline");
+        goto fail;
+    }
+    if (PAGE_ALIGN((uint32)ResumeSJ) != PAGE_ALIGN((uint32)&ResumeSJ[1]))
+        // Spans a page - move it to start of page.
+        ResumeSJ = (stackJumper_s*)PAGE_ALIGN((uint32)ResumeSJ);
+    memcpy(ResumeSJ, &stackJumper, sizeof(*ResumeSJ));
+    ResumeSJ->stack = stack;
+    ResumeSJ->data = data;
+    ResumeSJ->execCode = handler;
+    ResumeSJ->returnCode = winceResumeAddr + 0x1000;
+    handler = retryVirtToPhys((uint32)ResumeSJ->asm_handler);
 
     Output("Redirecting resume (%p) to %08x", ResumePtr, handler);
 
@@ -69,7 +88,12 @@ hookResume(uint32 handler)
     ResumePtr[0] = 0xe51ff004; // ldr pc, [pc, #-4]
     ResumePtr[1] = handler;
     return_control();
-    return winceResumeAddr + 0x1000;
+    return 0;
+fail:
+    free(ResumeSJ);
+    ResumeSJ = NULL;
+    ResumePtr = NULL;
+    return -1;
 }
 
 void
@@ -85,4 +109,8 @@ unhookResume()
     ResumePtr[0] = OldResume[0];
     ResumePtr[1] = OldResume[1];
     return_control();
+
+    free(ResumeSJ);
+    ResumeSJ = NULL;
+    ResumePtr = NULL;
 }
