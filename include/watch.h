@@ -5,7 +5,7 @@
 
 // Main definition of a memory polling request.
 struct memcheck {
-    uint32 isCP : 1;
+    uint32 isInsn : 1;
     uint32 readSize : 2;
     uint32 trySuppress : 1, setCmp : 1, trySuppressNext : 1;
     uint32 cmpVal;

@@ -38,7 +38,7 @@ enum MemOps {
 static inline uint32 __irq
 doRead(struct memcheck *mc)
 {
-    if (mc->isCP)
+    if (mc->isInsn)
         return runArmInsn(mc->insn, 0);
     switch (mc->readSize) {
     default:
@@ -85,7 +85,7 @@ reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
         _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
     else
         _snprintf(header, sizeof(header), "%06d:", msecs);
-    if (mc->isCP)
+    if (mc->isInsn)
         Output("%s insn %08x=%08x (%08x)", header, mc->insn, newval, maskval);
     else
         Output("%s mem %p=%08x (%08x)", header, mc->addr, newval, maskval);
@@ -96,12 +96,15 @@ watchListVar::setVarItem(void *p, const char *args)
 {
     // Parse args
     uint32 addr;
-    uint32 isCP = 0, mask = 0, size = 32, hasComp=0, cmpVal=0;
+    uint32 isInsn = 0, mask = 0, size = 32, hasComp=0, cmpVal=0;
 
     char nexttoken[16];
     const char *nextargs = args;
-    if (!get_token(&nextargs, nexttoken, sizeof(nexttoken))
-        && strcasecmp(nexttoken, "CP") == 0) {
+    if (get_token(&nextargs, nexttoken, sizeof(nexttoken))) {
+        ScriptError("Expected <addr> or CP or CPSR or SPSR");
+        return false;
+    }
+    if (strcasecmp(nexttoken, "CP") == 0) {
         // CP watch.
         uint cp, op1, CRn, CRm, op2;
         args = nextargs;
@@ -111,8 +114,15 @@ watchListVar::setVarItem(void *p, const char *args)
             ScriptError("Expected CP <cp#> <op1> <CRn> <CRm> <op2>");
             return false;
         }
-        addr = buildArmInsn(0, cp, op1, CRn, CRm, op2);
-        isCP = 1;
+        addr = buildArmCPInsn(0, cp, op1, CRn, CRm, op2);
+        isInsn = 1;
+        if (get_expression(&args, &mask) && get_expression(&args, &cmpVal))
+            hasComp = 1;
+    } else if (strcasecmp(nexttoken, "CPSR") == 0
+               || strcasecmp(nexttoken, "SPSR") == 0) {
+        args = nextargs;
+        addr = buildArmMRSInsn(nexttoken[0] == 'S');
+        isInsn = 1;
         if (get_expression(&args, &mask) && get_expression(&args, &cmpVal))
             hasComp = 1;
     } else {
@@ -138,7 +148,7 @@ watchListVar::setVarItem(void *p, const char *args)
     // Update structure.
     memcheck *mc = (memcheck*)p;
     memset(mc, 0, sizeof(*mc));
-    mc->isCP = isCP;
+    mc->isInsn = isInsn;
     mc->addr = (char *)addr;
     mc->mask = ~mask;
     mc->readSize = size;
@@ -172,7 +182,7 @@ watchListVar::beginWatch(int isStart)
         mc->trySuppress = 0;
         uint32 val, tmp;
         testMem(mc, &val, &tmp);
-        if (mc->isCP) {
+        if (mc->isInsn) {
             Output("Watching %s(%02d): Insn %08x = %08x"
                    , name, i, mc->insn, val);
         } else {
@@ -240,12 +250,13 @@ REG_VAR_WATCHLIST(
     "List of GPIOs to watch\n"
     "  List of <addr> [<mask> [<32|16|8> [<cmpValue>]]] 4-tuples.\n"
     "  OR      CP <cp#> <op1> <CRn> <CRm> <op2> [<mask> [<cmpValue>]] 7-tuples\n"
+    "  OR      [C|S]PSR [<mask> [<cmpValue>]] 2-tuples\n"
     "    <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
     "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
     "    <32|16|8>  specifies the memory access type (default 32)\n"
     "    <cmpValue> when specified forces a report if read value doesn't\n"
     "               equal that value (default is to report on change)\n"
-    "    Alternatively, one may specify a coprocessor to watch")
+    "  One may watch either a memory address or an internal register")
 
 static void
 cmd_watch(const char *cmd, const char *args)

@@ -44,7 +44,7 @@ runArmInsn(uint32 insn, uint32 r0)
 }
 
 uint32
-buildArmInsn(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2)
+buildArmCPInsn(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2)
 {
     if (cp > 15 || op1 > 7 || CRn > 15 || CRm > 15 || op2 > 7)
         return 0;
@@ -57,12 +57,22 @@ buildArmInsn(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2)
     return insn;
 }
 
+uint32
+buildArmMRSInsn(uint spsr)
+{
+    // Create the instruction
+    uint32 insn = 0xe10f0000;  // MRS
+    if (spsr)
+        insn |= 1<<22;
+    return insn;
+}
+
 // Read or modify a coprocessor register
 static uint32
 getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
 {
     uint32 ret = 0xffffffff;
-    uint32 insn = buildArmInsn(setval, cp, op1, CRn, CRm, op2);
+    uint32 insn = buildArmCPInsn(setval, cp, op1, CRn, CRm, op2);
     if (!insn)
         return ret;
 

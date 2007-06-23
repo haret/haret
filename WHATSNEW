@@ -1,5 +1,9 @@
 next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
+  * One can now watch the CPSR and SPSR registers via the standard
+    watch methods.  For example:
+      addlist resumetraces cpsr
+
   * The variable INITRD no longer defaults to "initrd".  In order to
     use an initrd, one must use: set initrd "xxx".  If an initrd is
     specified, it must be present or the boot will fail.  (This change
@@ -23,17 +27,17 @@ next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * Haret now runs on wince 2.11 devices.  (Fixed issue which caused
     command dispatch to not work.)
-    
+
   * == and != operators added (Example: 'if 1 == 1 print "sure"').
-  
+
   * New command: MSGBOX, display message with the given title, text,
     icon and button, waits for user to click button, stores return code
     in variable RESULT.
 
   * New allocation method (CreateFileMapping), able to handle 20Mb+ initrd's.
-  
+
   * Better handling of overlapped memory regions during allocation.
-    
+
   * New command: EXIT, terminate HaRET unconditionally. (QUIT just closes
     network session.)
 
