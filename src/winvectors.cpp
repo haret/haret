@@ -8,6 +8,7 @@
 #include <stdlib.h> // malloc
 #include <string.h> // memcpy
 
+#include "script.h" // REG_VAR_INT
 #include "memory.h" // memVirtToPhys
 #include "output.h" // Output
 #include "cpu.h" // take_control
@@ -36,7 +37,9 @@ findWinCEirq(uint32 offset)
     return (uint32 *)(&irq_table[offset + ins_offset]);
 }
 
-static uint32 winceResumeAddr = 0xa0040000;
+static uint32 winceResumeAddr = 0xffffffff;
+REG_VAR_INT(0, "RESUMEADDR", winceResumeAddr
+            , "Location of wince resume handler")
 static uint32 *ResumePtr, OldResume[2];
 static struct stackJumper_s *ResumeSJ;
 
