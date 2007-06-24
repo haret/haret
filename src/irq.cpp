@@ -340,6 +340,8 @@ cmd_wirq(const char *cmd, const char *args)
            , asmVars->dataMVA
            , size_cHandlers(), size_handlerCode());
 
+    preLoop(data);
+
     ret = prepPXAtraps(data);
     if (ret)
         goto abort;
@@ -347,8 +349,6 @@ cmd_wirq(const char *cmd, const char *args)
     ret = prepL1traps(data);
     if (ret)
         goto abort;
-
-    preLoop(data);
 
     if (data->resumepoll.count) {
         ret = hookResume(

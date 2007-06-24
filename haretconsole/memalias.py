@@ -253,8 +253,7 @@ re_detect = re.compile(r"^Detected machine (?P<name>.*)/(?P<arch>.*)"
                        r" \(Plat=.*\)$")
 re_begin = re.compile(r"^Beginning memory tracing\.$")
 re_watch = re.compile(r"^Watching (?P<type>.*)\((?P<pos>\d+)\):"
-                      r" Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)"
-                      r" = (?P<val>.*)$")
+                      r" Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)$")
 re_mem = re.compile(TIMEPRE_S + r"mem (?P<vaddr>.*)=(?P<val>.*)"
                     r" \((?P<mask>.*)\)$")
 

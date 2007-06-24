@@ -180,15 +180,13 @@ watchListVar::beginWatch(int isStart)
     memcheck *mc = watchlist;
     for (uint i=0; i<watchcount; i++, mc++) {
         mc->trySuppress = 0;
-        uint32 val, tmp;
-        testMem(mc, &val, &tmp);
         if (mc->isInsn) {
-            Output("Watching %s(%02d): Insn %08x = %08x"
-                   , name, i, mc->insn, val);
+            Output("Watching %s(%02d): Insn %08x"
+                   , name, i, mc->insn);
         } else {
             uint32 paddr = memVirtToPhys((uint32)mc->addr);
-            Output("Watching %s(%02d): Addr %p(@%08x) = %08x"
-                   , name, i, mc->addr, paddr, val);
+            Output("Watching %s(%02d): Addr %p(@%08x)"
+                   , name, i, mc->addr, paddr);
         }
     }
 }
