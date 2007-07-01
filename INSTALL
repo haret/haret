@@ -1,7 +1,7 @@
 Welcome.
 
-This is HaRET, the Handheld Reverse Engineering Tool. For a detailed
-description see the files in the docs/ directory. This file documents
+This is HaRET, the Handheld Reverse Engineering Tool.  For a detailed
+description see the files in the docs/ directory.  This file documents
 how to build and install it.
 
 HaRET is now compiled with the gcc toolset.  Previous versions (see
@@ -9,27 +9,36 @@ cvs tag haret-0_3_8 and earlier) made use of the MSVC/ARM toolkit for
 compiling.
 
 The gcc toolset in use is from the cegcc project.  See
-http://cegcc.sourceforge.net/ for more info.  This project is
-currently still in active development (as of 20070609).  One may use
-the following steps to obtain the same toolkit the main HaRET
-developers are using:
+http://cegcc.sourceforge.net/ for more info.  The cegcc project is in
+active development (as of 20070701).  The recommended way to build
+haret is with the prebuilt cegcc rpms found at:
+
+http://sourceforge.net/project/showfiles.php?group_id=173455
+
+Obtain the cegcc-mingw32ce package (version 0.50 is known to work) and
+install it.  After installing cegcc, one should be able to compile
+haret (cd /path/to/haret; make).
+
+It is also possible to build the cegcc toolkit from source.  (Building
+cegcc take a long time and a lot of disk space.)  It is recommended
+that you read the cegcc documentation if you wish to do this.  The
+following steps may also help:
 
 1 - Obtain cegcc source (svn co
-    https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc)
+    https://svn.sourceforge.net/svnroot/cegcc/trunk/cegcc).  Revision
+    931 is known to work (svn up -r 931), however later versions
+    should also work.
 
-2 - Use revision 931 (svn up -r 931).  This is an optional step, newer
-    releases of cegcc will likely also work.
-
-3 - Optionally alter the build destination by modifying
+2 - Optionally alter the build destination by modifying
     src/mingw32ce.sh.  If you do this, be sure to modify HaRET's
     makefile so that the BASE setting is the same.
 
-4 - Build the cegcc toolset (cd src; ./build-mingw32ce.sh)
+3 - Build the cegcc toolset (cd src; ./build-mingw32ce.sh)
 
-5 - Wait for toolchain to build.  The build may fail when trying to
+4 - Wait for toolchain to build.  The build may fail when trying to
     build gdb, but this isn't a problem.
 
-6 - Build HaRET (cd /path/to/haret; make)
+5 - Build HaRET (cd /path/to/haret; make)
 
 The HaRET tool should work on WinCE (2.10 or later) based ARM
 processors (arm v4 or later).
