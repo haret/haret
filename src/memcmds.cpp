@@ -14,6 +14,11 @@
 #include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "resource.h" // DLG_PROGRESS
 
+
+/****************************************************************
+ * Reading values from memory
+ ****************************************************************/
+
 static uchar dump_char (uchar c)
 {
   if ((c < 32) || (c >= 127))
@@ -80,9 +85,8 @@ memDump(uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
 // Dump a portion of physical memory to file
 static void memPhysDump(uint32 paddr, uint32 size)
 {
-    while (size)
-    {
-        uint8 *vaddr = memPhysMap (paddr);
+    while (size) {
+        uint8 *vaddr = memPhysMap(paddr);
         uint32 bytes = PHYS_CACHE_SIZE - (PHYS_CACHE_MASK & (uint32)vaddr);
         if (bytes > size)
             bytes = size;
@@ -114,6 +118,11 @@ REG_CMD(0, "PD|UMP", cmd_memaccess,
         "[V|P]DUMP <addr> <size>\n"
         "  Dump an area of memory in hexadecimal/char format from\n"
         "  given [V]irtual or [P]hysical address.")
+
+
+/****************************************************************
+ * Writing values to memory
+ ****************************************************************/
 
 // Fill given number of words in virtual memory with given value
 static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
@@ -199,6 +208,11 @@ REG_CMD(0, "PFW", cmd_memfill,
         "  The [B]yte/[H]alfword/[W]ord suffixes selects the size of\n"
         "  <value> and in which units the <count> is measured.")
 
+
+/****************************************************************
+ * Dumping memory directly to file
+ ****************************************************************/
+
 static bool memWrite (FILE *f, uint32 addr, uint32 size)
 {
   while (size)
@@ -226,33 +240,9 @@ static bool memWrite (FILE *f, uint32 addr, uint32 size)
   return true;
 }
 
-// Write a portion of virtual memory to file
-static bool memVirtWriteFile (const char *fn, uint32 addr, uint32 size)
-{
-  FILE *f = fopen (fn, "wb");
-  if (!f)
-  {
-    Output(C_ERROR "Cannot write file %s", fn);
-    return false;
-  }
-
-  if (!memWrite (f, addr, size))
-    return false;
-
-  fclose (f);
-  return true;
-}
-
 // Write a portion of physical memory to file
-static bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
+static bool memPhysWriteFile (FILE *f, uint32 addr, uint32 size)
 {
-  FILE *f = fopen (fn, "wb");
-  if (!f)
-  {
-    Output(C_ERROR "Cannot write file %s", fn);
-    return false;
-  }
-
   while (size)
   {
     uint8 *vaddr = memPhysMap (addr);
@@ -263,8 +253,6 @@ static bool memPhysWriteFile (const char *fn, uint32 addr, uint32 size)
     size -= sz;
     addr += sz;
   }
-
-  fclose (f);
   return true;
 }
 
@@ -285,15 +273,28 @@ cmd_memtofile(const char *tok, const char *args)
     }
 
     fnprepare(rawfn, fn, sizeof(fn));
+    FILE *f = fopen(fn, "wb");
+    if (!f) {
+        Output(C_ERROR "Cannot write file %s", fn);
+        return;
+    }
+
     if (virt)
-        memVirtWriteFile (fn, addr, size);
+        memWrite(f, addr, size);
     else
-        memPhysWriteFile (fn, addr, size);
+        memPhysWriteFile(f, addr, size);
+
+    fclose(f);
 }
 REG_CMD_ALT(0, "PWF", cmd_memtofile, pwf, 0)
 REG_CMD(0, "VWF", cmd_memtofile,
         "[V|P]WF <filename> <addr> <size>\n"
         "  Write a portion of [V]irtual or [P]hysical memory to given file.")
+
+
+/****************************************************************
+ * Dump mmu table
+ ****************************************************************/
 
 static inline char *__flags_cb(char *p, uint32 &d)
 {
@@ -477,6 +478,11 @@ REG_DUMP(0, "MMU", memDumpMMU,
          "MMU [1]\n"
          "  Show virtual memory map (4Gb address space). One may give an\n"
          "  optional argument to trim output to the l1 tables.")
+
+
+/****************************************************************
+ * Memory access variables
+ ****************************************************************/
 
 static uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
 {
