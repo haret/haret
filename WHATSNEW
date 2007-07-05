@@ -1,5 +1,11 @@
 next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
+  * Reads and writes to invalid memory should now be caught in haret.
+    This used to work in haret v0.38 and earlier (when haret was
+    compiled with the MS compiler), but broke in cegcc versions.
+    Support for catching access violations is now available with the
+    cegcc compiler.
+
   * One can now watch the CPSR and SPSR registers via the standard
     watch methods.  For example:
       addlist resumetraces cpsr

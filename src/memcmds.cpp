@@ -11,6 +11,7 @@
 #include "memory.h" // memPhysMap
 #include "script.h" // ScriptError
 #include "cpu.h" // DEF_GETCPR
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "resource.h" // DLG_PROGRESS
 
 static uchar dump_char (uchar c)
@@ -50,9 +51,9 @@ memDump(uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
         }
 
         uint32 d;
-        try {
+        TRY_EXCEPTION_HANDLER {
             d = *(uint32 *)(vaddr + offs);
-        } catch (...) {
+        } CATCH_EXCEPTION_HANDLER {
             Output(C_ERROR "EXCEPTION while reading from address %p",
                    vaddr + offs);
             return;
@@ -117,12 +118,12 @@ REG_CMD(0, "PD|UMP", cmd_memaccess,
 // Fill given number of words in virtual memory with given value
 static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
 {
-  try
+  TRY_EXCEPTION_HANDLER
   {
     while (wcount--)
       *vaddr++ = value;
   }
-  catch (...)
+  CATCH_EXCEPTION_HANDLER
   {
     Output(C_ERROR "EXCEPTION while writing %08x to address %p",
       value, vaddr);
@@ -203,11 +204,11 @@ static bool memWrite (FILE *f, uint32 addr, uint32 size)
   while (size)
   {
     uint32 wc, sz = (size > 0x1000) ? 0x1000 : size;
-    try
+    TRY_EXCEPTION_HANDLER
     {
       wc = fwrite ((void *)addr, 1, sz, f);
     }
-    catch (...)
+    CATCH_EXCEPTION_HANDLER
     {
       wc = 0;
       Output(C_ERROR "Exception caught!");
@@ -377,11 +378,11 @@ memDumpMMU(const char *tok, const char *args)
   // Previous 1st and 2nd level descriptors
   uint32 pL1 = 0xffffffff;
   uint32 pL2 = 0xffffffff;
-  uint mb;
+  uint mb = 0;
 
   // Walk down the 1st level descriptor table
   InitProgress(DLG_PROGRESS, 0x1000);
-  try
+  TRY_EXCEPTION_HANDLER
   {
     for (mb = 0; mb < 0x1000; mb++)
     {
@@ -464,7 +465,7 @@ memDumpMMU(const char *tok, const char *args)
       pL1 = l1d;
     }
   }
-  catch (...)
+  CATCH_EXCEPTION_HANDLER
   {
     Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
   }

@@ -19,6 +19,7 @@
 #include "script.h" // REG_CMD, setupCommands
 #include "haret.h" // hInst, MainWindow
 #include "cpu.h" // printWelcome
+#include "exceptions.h" // init_ehandling
 #include "output.h"
 
 //#define USE_WAIT_CURSOR
@@ -262,6 +263,8 @@ prepThread()
     // where this isn't the default.)
     TlsSetValue(outTls, 0);
 
+    init_thread_ehandling();
+
     // All wince 3.0 and later machines are automatically in "kernel
     // mode".  We enable kernel mode by default to make older PDAs
     // (ce2.x) work.
@@ -290,6 +293,8 @@ setupHaret()
     TlsSetValue(outTls, 0);
 
     Output("\n===== HaRET %s =====", VERSION);
+
+    init_ehandling();
 
     // Prep for per-thread output function.
     prepThread();

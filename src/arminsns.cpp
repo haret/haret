@@ -9,6 +9,7 @@
 #include "output.h" // Output
 #include "irq.h" // __irq
 #include "script.h" // REG_VAR_RWFUNC
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "arminsns.h"
 
 
@@ -77,9 +78,9 @@ getSetCP(uint setval, uint cp, uint op1, uint CRn, uint CRm, uint op2, uint val)
         return ret;
 
     // Run the instruction
-    try {
+    TRY_EXCEPTION_HANDLER {
         ret = runArmInsn(insn, val);
-    } catch (...) {
+    } CATCH_EXCEPTION_HANDLER {
         Output(C_ERROR "EXCEPTION on access to coprocessor %d register %d"
                , cp, CRn);
     }
