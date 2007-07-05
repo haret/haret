@@ -20,7 +20,7 @@ install it.  After installing cegcc, one should be able to compile
 haret (cd /path/to/haret; make).
 
 It is also possible to build the cegcc toolkit from source.  (Building
-cegcc take a long time and a lot of disk space.)  It is recommended
+cegcc takes a long time and a lot of disk space.)  It is recommended
 that you read the cegcc documentation if you wish to do this.  The
 following steps may also help:
 
