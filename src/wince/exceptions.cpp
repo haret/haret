@@ -8,12 +8,13 @@ static DWORD handler_tls;
 
 void start_ehandling(struct eh_data *d)
 {
+    d->old_handler = (struct eh_data*)TlsGetValue(handler_tls);
     TlsSetValue(handler_tls, d);
 }
 
 void end_ehandling(struct eh_data *d)
 {
-    TlsSetValue(handler_tls, NULL);
+    TlsSetValue(handler_tls, d->old_handler);
 }
 
 void init_thread_ehandling(void)
@@ -26,7 +27,7 @@ void init_ehandling(void)
     handler_tls = TlsAlloc();
 }
 
-extern "C" long
+extern "C" EXCEPTION_DISPOSITION
 eh_handler(struct _EXCEPTION_RECORD *ExceptionRecord,
            void *EstablisherFrame,
            struct _CONTEXT *ContextRecord,
@@ -39,14 +40,10 @@ eh_handler(struct _EXCEPTION_RECORD *ExceptionRecord,
     }
     end_ehandling(d);
 
-    // XXX
-    longjmp(d->env, 1);
-
     ContextRecord->Pc = (ulong)longjmp;
     ContextRecord->R0 = (ulong)d->env;
     ContextRecord->R1 = 1;
-    Output("Leaving handler");
-    return EXCEPTION_CONTINUE_EXECUTION;
+    return ExceptionContinueExecution;
 }
 
 __asm__(

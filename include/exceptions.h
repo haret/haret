@@ -2,6 +2,7 @@
 
 struct eh_data {
     jmp_buf env;
+    struct eh_data *old_handler;
 };
 
 #define TRY_EXCEPTION_HANDLER                   \
