@@ -27,6 +27,28 @@ static uchar dump_char (uchar c)
     return c;
 }
 
+// Read from virtual memory with exception protection
+static uint32 memRead(uint8 *vaddr, int wordsize)
+{
+    uint32 rv = 0;
+    TRY_EXCEPTION_HANDLER {
+        switch (wordsize) {
+        case MO_SIZE8:
+            rv = *(uint8*)vaddr;
+            break;
+        case MO_SIZE16:
+            rv = *(uint16*)vaddr;
+            break;
+        default:
+            rv = *(uint32*)vaddr;
+            break;
+        }
+    } CATCH_EXCEPTION_HANDLER {
+        Output(C_ERROR "EXCEPTION while reading from address %p", vaddr);
+    }
+    return rv;
+}
+
 static bool alignMemAddr(uint32 *addrLoc)
 {
     if (*addrLoc & 3) {
@@ -55,14 +77,7 @@ memDump(uint8 *vaddr, uint32 size, uint32 base = (uint32)-1)
             Output("%08x |\t", base + offs);
         }
 
-        uint32 d;
-        TRY_EXCEPTION_HANDLER {
-            d = *(uint32 *)(vaddr + offs);
-        } CATCH_EXCEPTION_HANDLER {
-            Output(C_ERROR "EXCEPTION while reading from address %p",
-                   vaddr + offs);
-            return;
-        }
+        uint32 d = memRead(vaddr + offs, MO_SIZE32);
         Output(" %08x\t", d);
 
         chrdump[(offs & 15) + 0] = dump_char((d      ) & 0xff);
@@ -125,33 +140,48 @@ REG_CMD(0, "PD|UMP", cmd_memaccess,
  ****************************************************************/
 
 // Fill given number of words in virtual memory with given value
-static void memFill (uint32 *vaddr, uint32 wcount, uint32 value)
+static void memFill(uint8 *vaddr, uint32 wcount, uint32 value, int wordsize)
 {
-  TRY_EXCEPTION_HANDLER
-  {
-    while (wcount--)
-      *vaddr++ = value;
-  }
-  CATCH_EXCEPTION_HANDLER
-  {
-    Output(C_ERROR "EXCEPTION while writing %08x to address %p",
-      value, vaddr);
-  }
+    TRY_EXCEPTION_HANDLER {
+        switch (wordsize) {
+        case MO_SIZE8:
+            while (wcount--) {
+                *(uint8*)vaddr = value;
+                vaddr += 1;
+            }
+            break;
+        case MO_SIZE16:
+            while (wcount--) {
+                *(uint16*)vaddr = value;
+                vaddr += 2;
+            }
+            break;
+        default:
+            while (wcount--) {
+                *(uint32*)vaddr = value;
+                vaddr += 4;
+            }
+            break;
+        }
+    } CATCH_EXCEPTION_HANDLER {
+        Output(C_ERROR "EXCEPTION while writing %08x to address %p",
+               value, vaddr);
+    }
 }
 
 // Fill given number of words in physical memory with given value
-static void memPhysFill (uint32 paddr, uint32 wcount, uint32 value)
+static void memPhysFill(uint32 paddr, uint32 wcount, uint32 value, int wordsize)
 {
   while (wcount)
   {
-    uint32 *vaddr = (uint32 *)memPhysMap (paddr);
+    uint8 *vaddr = memPhysMap (paddr);
     // We are guaranteed to have 32K ahead
-    uint32 words = 8 * 1024;
+    uint32 words = (32 * 1024) >> wordsize;
     if (words > wcount)
       words = wcount;
-    memFill (vaddr, words, value);
+    memFill (vaddr, words, value, wordsize);
     wcount -= words;
-    paddr += words << 2;
+    paddr += words << wordsize;
   }
 }
 
@@ -159,41 +189,32 @@ static void
 cmd_memfill(const char *tok, const char *x)
 {
     uint32 addr, size, value;
-
     char fill_type = toupper(tok[0]);
     char fill_size = toupper(tok[2]);
+    int wordsize = MO_SIZE32;
 
     if (!get_expression(&x, &addr)
         || !get_expression(&x, &size)
-        || !get_expression(&x, &value))
-    {
+        || !get_expression(&x, &value)) {
         ScriptError("Expected <addr> <size> <value>");
         return;
     }
 
-    switch (fill_size)
-    {
+    switch (fill_size) {
     case 'B':
-        value &= 0xff;
-        value = value | (value << 8) | (value << 16) | (value << 24);
-        size = (size + 3) >> 2;
+        wordsize = MO_SIZE8;
         break;
-
     case 'H':
-        value &= 0xffff;
-        value = value | (value << 16);
-        size = (size + 1) >> 1;
+        wordsize = MO_SIZE16;
         break;
     }
 
-    switch (fill_type)
-    {
+    switch (fill_type) {
     case 'V':
-        memFill((uint32 *)addr, size, value);
+        memFill((uint8*)addr, size, value, wordsize);
         break;
-
     case 'P':
-        memPhysFill(addr, size, value);
+        memPhysFill(addr, size, value, wordsize);
         break;
     }
 }
@@ -484,75 +505,54 @@ REG_DUMP(0, "MMU", memDumpMMU,
  * Memory access variables
  ****************************************************************/
 
-static uint32 memScrVMB (bool setval, uint32 *args, uint32 val)
+static uint32 memVar(int phys, int wordsize
+                     , bool setval, uint32 *args, uint32 val)
 {
-  uint8 *mem = (uint8 *)args [0];
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    uint8 *vaddr;
+    if (phys)
+        vaddr = memPhysMap(args[0]);
+    else
+        vaddr = (uint8*)args[0];
+    if (setval) {
+        memFill(vaddr, 1, val, wordsize);
+        return 0;
+    }
+    return memRead(vaddr, wordsize);
+}
+
+static uint32 memScrVMB(bool setval, uint32 *args, uint32 val)
+{
+    return memVar(0, MO_SIZE8, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "VMB", memScrVMB, 1, "Virtual Memory Byte access")
 
-static uint32 memScrVMH (bool setval, uint32 *args, uint32 val)
+static uint32 memScrVMH(bool setval, uint32 *args, uint32 val)
 {
-  uint16 *mem = (uint16 *)args [0];
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    return memVar(0, MO_SIZE16, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "VMH", memScrVMH, 1, "Virtual Memory Halfword access")
 
-static uint32 memScrVMW (bool setval, uint32 *args, uint32 val)
+static uint32 memScrVMW(bool setval, uint32 *args, uint32 val)
 {
-  uint32 *mem = (uint32 *)args [0];
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    return memVar(0, MO_SIZE32, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "VMW", memScrVMW, 1, "Virtual Memory Word access")
 
-static uint32 memScrPMB (bool setval, uint32 *args, uint32 val)
+static uint32 memScrPMB(bool setval, uint32 *args, uint32 val)
 {
-  uint8 *mem = (uint8 *)memPhysMap (args [0]);
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    return memVar(1, MO_SIZE8, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "PMB", memScrPMB, 1, "Physical Memory Byte access")
 
 static uint32 memScrPMH (bool setval, uint32 *args, uint32 val)
 {
-  uint16 *mem = (uint16 *)memPhysMap (args [0]);
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    return memVar(1, MO_SIZE16, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "PMH", memScrPMH, 1, "Physical Memory Halfword access")
 
 static uint32 memScrPMW (bool setval, uint32 *args, uint32 val)
 {
-  uint32 *mem = (uint32 *)memPhysMap (args [0]);
-  if (setval)
-  {
-    *mem = val;
-    return 0;
-  }
-  return *mem;
+    return memVar(1, MO_SIZE32, setval, args, val);
 }
 REG_VAR_RWFUNC(0, "PMW", memScrPMW, 1, "Physical Memory Word access")
 
