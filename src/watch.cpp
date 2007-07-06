@@ -28,13 +28,6 @@ alt_SleepTillTick()
 }
 LATE_LOAD_ALT(SleepTillTick, "coredll")
 
-// Types of memory accesses.
-enum MemOps {
-    MO_READ8 = 1,
-    MO_READ16 = 2,
-    MO_READ32 = 3,
-};
-
 static inline uint32 __irq
 doRead(struct memcheck *mc)
 {
@@ -42,11 +35,11 @@ doRead(struct memcheck *mc)
         return runArmInsn(mc->insn, 0);
     switch (mc->readSize) {
     default:
-    case MO_READ32:
+    case MO_SIZE32:
         return *(uint32*)mc->addr;
-    case MO_READ16:
+    case MO_SIZE16:
         return *(uint16*)mc->addr;
-    case MO_READ8:
+    case MO_SIZE8:
         return *(uint8*)mc->addr;
     }
 }
@@ -137,9 +130,9 @@ watchListVar::setVarItem(void *p, const char *args)
             hasComp = 1;
     }
     switch (size) {
-    case 32: size=MO_READ32; break;
-    case 16: size=MO_READ16; break;
-    case 8: size=MO_READ8; break;
+    case 32: size=MO_SIZE32; break;
+    case 16: size=MO_SIZE16; break;
+    case 8: size=MO_SIZE8; break;
     default:
         ScriptError("Expected <32|16|8>");
         return false;

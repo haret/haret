@@ -62,6 +62,13 @@ typedef uint32 mmuL2Desc;
 // Autodetect physical memory size.
 void mem_autodetect(void);
 
+// Types of memory accesses.
+enum MemOps {
+    MO_SIZE8 = 0,
+    MO_SIZE16 = 1,
+    MO_SIZE32 = 2,
+};
+
 // Map physical memory to a virtual address. The function ensures
 // that at least 32K memory ahead of given address is available
 extern uint8 *memPhysMap (uint32 paddr);
