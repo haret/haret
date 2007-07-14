@@ -336,6 +336,9 @@ shutdownHaret()
  * Progress bar functions
  ****************************************************************/
 
+// Maximum number of updates to the progress bar.
+enum { PB_MAXSTEPS = 20 };
+
 static struct ProgressFeedback {
     HWND window, slider;
     HCURSOR oldCursor;
@@ -386,8 +389,8 @@ bool InitProgress(int dialogId, uint Max)
 
     progressFeedback.lastProgress = 0;
     progressFeedback.lastShownProgress = 0;
-    progressFeedback.showStep = Max/20;
-    SendMessage(progressFeedback.slider, TBM_SETRANGEMAX, TRUE, Max);
+    progressFeedback.showStep = Max / PB_MAXSTEPS;
+    SendMessage(progressFeedback.slider, TBM_SETRANGEMAX, TRUE, PB_MAXSTEPS);
     return true;
 }
 
@@ -397,11 +400,10 @@ bool SetProgress(uint Value)
         return false;
 
     progressFeedback.lastProgress = Value;
-    if (Value < progressFeedback.lastShownProgress
-        || Value >= (progressFeedback.lastShownProgress
-                     + progressFeedback.showStep)) {
-        progressFeedback.lastShownProgress = Value;
-        SendMessage(progressFeedback.slider, TBM_SETSELEND, TRUE, Value);
+    uint stepval = Value / progressFeedback.showStep;
+    if (stepval != progressFeedback.lastShownProgress) {
+        progressFeedback.lastShownProgress = stepval;
+        SendMessage(progressFeedback.slider, TBM_SETSELEND, TRUE, stepval);
     }
     return true;
 }
