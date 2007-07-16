@@ -47,6 +47,14 @@ next version <kevin@koconnor.net>, <pmiscml@gmail.com>
   * New command: EXIT, terminate HaRET unconditionally. (QUIT just closes
     network session.)
 
+  * BootBundle (former 'linload') support reimplemented, it's now much
+    more scalable and can handle big initrd's (up to ~22Mb was tested).
+    The functionality is now builtin to standard haret executable, and
+    bundle is created by just concatenenating haret.exe, zImage, initrd
+    a script, and a special trailer (and haret on startup check if this
+    tariler exists to decide if this is BootBundle or normal executable). 
+    There's a tools/make-bootbundle.py utility which does all the work.
+
 20070606 0.4.8 <kevin@koconnor.net>
 
   * New commands: ATIDBG, ADDR2MOD, PLAYSOUND, SETLCD
