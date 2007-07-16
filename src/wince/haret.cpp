@@ -36,7 +36,7 @@ static bool try_linboot(void);
 HINSTANCE hInst;
 HWND MainWindow = 0;
 struct linload_header {
-    char siganture[8];
+    char signature[8];
     int kernelSize;
     int initrdSize;
     int scriptSize;
@@ -174,7 +174,7 @@ static bool try_linboot(void)
     int len = fread(&header, sizeof(struct linload_header), 1, exeFile);
     if (len != 1)
 	fatal(C_ERROR "Could not read trailer");
-    if (strncmp(header.siganture, "HARET", 5))
+    if (strncmp(header.signature, "HARET", 5))
 	//fatal(C_ERROR "Could not find trailer signature");
 	return false;
 	
