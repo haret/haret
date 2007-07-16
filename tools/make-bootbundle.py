@@ -13,9 +13,9 @@ if len(sys.argv) != 5:
 os.system("cat %s %s %s %s> bootbundle.exe"  % (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
 
 exe = open("bootbundle.exe", "r+b")
-kernelSt = os.stat(sys.argv[1])
-initrdSt = os.stat(sys.argv[2])
-scriptSt = os.stat(sys.argv[3])
+kernelSt = os.stat(sys.argv[2])
+initrdSt = os.stat(sys.argv[3])
+scriptSt = os.stat(sys.argv[4])
 
 exe.seek(0, 2)
 exe.write("HARET1\0\0")
