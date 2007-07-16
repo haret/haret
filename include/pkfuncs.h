@@ -23,6 +23,12 @@ BOOL VirtualCopy(LPVOID,LPVOID,DWORD,DWORD);
 #define LOCKFLAG_WRITE 0x001
 #define LOCKFLAG_READ  0x004
 
+WINBASEAPI DWORD SetSystemMemoryDivision(DWORD);
+#define SYSMEM_CHANGED 0
+#define SYSMEM_MUSTREBOOT 1
+#define SYSMEM_REBOOTPENDING 2
+#define SYSMEM_FAILED 3
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
