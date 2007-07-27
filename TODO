@@ -51,6 +51,11 @@ Misc cleanups:
 * The strncpy calls (and snprintf, etc) should be audited to ensure
   that a null character is always at the end of the buffer.
 
+* It has been suggested that haret should be compiled with the C
+  compiler instead of C++.  This will be a significant amount of work
+  without much gain.  However, it will likely reduce the final binary
+  size.
+
 
 Possible features for "wi":
 
@@ -82,10 +87,7 @@ Possible features for Linux booting:
 
 * Verify linux booting from resume code.
 
-* Possibly allow PHYSOFFSET_KERNEL (et al.) be set via commands.  It
-  may also be necessary to handle the "overwriting memory" case -
-  possibly by just allocating additional pages and discarding pages
-  that are too low.
+* Possibly allow PHYSOFFSET_KERNEL (et al.) to be set via commands.
 
 * Possibly allow the ability to launch an arbitrary binary (by
   disabling tag generation, specifying a destination address, and a
