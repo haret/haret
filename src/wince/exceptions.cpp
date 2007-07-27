@@ -35,7 +35,8 @@ eh_handler(struct _EXCEPTION_RECORD *ExceptionRecord,
 {
     struct eh_data *d = (struct eh_data*)TlsGetValue(handler_tls);
     if (! d) {
-        Output(C_ERROR "Terminating haret due to unhandled exception");
+        Output(C_ERROR "Terminating haret due to unhandled exception"
+               " (pc=%08lx)", ContextRecord->Pc);
         exit(1);
     }
     end_ehandling(d);
