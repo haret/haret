@@ -21,6 +21,7 @@ bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
 int get_token(const char **s, char *storage, int storesize, int for_expr=0);
 void ScriptError(const char *fmt, ...)
     __attribute__ ((format (printf, 1, 2)));
+int arg_snprintf(char *buf, int len, const char *args);
 // Maximum command line supported
 static const int MAX_CMDLEN = 512;
 

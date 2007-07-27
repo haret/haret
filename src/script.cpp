@@ -16,6 +16,7 @@
 #include "xtypes.h"
 #include "cbitmap.h" // TEST/SET/CLEARBIT
 #include "output.h" // Output, fnprepare
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "script.h"
 
 
@@ -364,6 +365,30 @@ error:
   }
 
   return true;
+}
+
+// Convert an format and arg list on the command line into a string
+// using snprintf.
+int
+arg_snprintf(char *buf, int len, const char *args)
+{
+    // Extract fmt and args
+    char fmt[MAX_CMDLEN];
+    get_token(&args, fmt, sizeof(fmt));
+    uint32 fmtargs[4];
+    for (uint i = 0; i < ARRAY_SIZE(fmtargs); i++)
+        if (!get_expression(&args, &fmtargs[i]))
+            break;
+
+    // Build command string
+    int rv = 0;
+    TRY_EXCEPTION_HANDLER {
+        _snprintf(buf, len, fmt, fmtargs[0], fmtargs[1], fmtargs[2], fmtargs[3]);
+    } CATCH_EXCEPTION_HANDLER {
+        Output(C_ERROR "EXCEPTION formatting '%s'", fmt);
+        rv = -1;
+    }
+    return rv;
 }
 
 // Compare the token to a mask that separates the mandatory part from
@@ -918,18 +943,11 @@ REG_CMD(0, "IF", cmd_test,
 static void
 cmd_evalf(const char *cmd, const char *args)
 {
-    // Extract fmt and args
-    char fmt[MAX_CMDLEN];
-    get_token(&args, fmt, sizeof(fmt));
-    uint32 fmtargs[4];
-    for (uint i = 0; i < ARRAY_SIZE(fmtargs); i++)
-        if (!get_expression(&args, &fmtargs[i]))
-            break;
-
     // Build command string
     char cmdstr[MAX_CMDLEN];
-    _snprintf(cmdstr, sizeof(cmdstr), fmt
-              , fmtargs[0], fmtargs[1], fmtargs[2], fmtargs[3]);
+    int ret = arg_snprintf(cmdstr, sizeof(cmdstr), args);
+    if (ret)
+        return;
 
     // Run command
     scrInterpret(cmdstr, ScriptLine);

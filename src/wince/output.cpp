@@ -435,24 +435,17 @@ void DoneProgress()
  ****************************************************************/
 
 static void
-cmd_print(const char *tok, const char *x)
+cmd_print(const char *tok, const char *args)
 {
-    bool msg = (toupper(tok[0]) == 'M');
-    char arg[MAX_CMDLEN];
-    get_token(&x, arg, sizeof(arg));
-    uint32 args[4];
-    for (uint i = 0; i < ARRAY_SIZE(args); i++)
-        if (!get_expression(&x, &args[i]))
-            break;
+    char buf[MAX_CMDLEN];
+    int ret = arg_snprintf(buf, sizeof(buf), args);
+    if (ret)
+        return;
 
-    const char *fmt = arg;
-    char tmp[200];
-    if (msg) {
-        _snprintf(tmp, sizeof(tmp), C_INFO "%s", arg);
-        fmt = tmp;
-    }
-
-    Output(fmt, args[0], args[1], args[2], args[3]);
+    if (toupper(tok[0]) == 'M')
+        Output(C_INFO "%s", buf);
+    else
+        Output("%s", buf);
 }
 REG_CMD(0, "M|ESSAGE", cmd_print,
         "MESSAGE <strformat> [<numarg1> [<numarg2> ... [<numarg4>]]]\n"
