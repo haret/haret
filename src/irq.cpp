@@ -128,7 +128,7 @@ int testWirqAvail() {
     return late_AllocPhysMem && late_FreePhysMem;
 }
 
-REG_VAR_WATCHLIST(testWirqAvail, "IRQS", IRQS,
+REG_VAR_WATCHLIST(0, "IRQS", IRQS,
                   "List of IRQs to watch (see var GPIOS for format)");
 REG_VAR_WATCHLIST(testWirqAvail, "TRACES", TRACES,
                   "List of memory addresses to trace during wirq"
