@@ -13,7 +13,7 @@
 #include "memory.h"
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
-#include "machines.h" // Mach
+
 
 /****************************************************************
  * Memory setup
@@ -621,20 +621,19 @@ retryVirtToPhys(uint32 vaddr)
     for (;;) {
         // Touch the page.
         uint32 dummy;
-        dummy = *(volatile uint32*)(vaddr + count);
+        dummy = *(volatile uint8*)vaddr;
         // Try to find the physical address.
         uint32 paddr = memVirtToPhys(vaddr);
         if (paddr != (uint32)-1)
             // Common case - address found.
             return paddr;
-        count += sizeof(uint32);
-        if (count >= PAGE_SIZE)
+        if (count++ >= 100)
             // Too many tries - just give up.
             break;
         // Ughh. Some Wince versions mess with the page tables in
         // weird ways - invalidate the D TLB for the address and try
         // again.
-        set_invDTLB(MVAddr(vaddr + count));
+        set_invDTLB(MVAddr(vaddr));
     }
     return (uint32)-1;
 }
