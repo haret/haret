@@ -38,7 +38,7 @@ setupCommands()
     for (int i = 0; i < commands_count; i++) {
         commandBase *x = commands_start[i];
         if (x->testAvail) {
-            Output("Testing for command %s", x->name);
+            //Output("Testing for command %s", x->name);
             int ret = x->testAvail();
             if (!ret) {
                 Output("Not registering command %s", x->name);

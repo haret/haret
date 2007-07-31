@@ -6,8 +6,7 @@
 */
 
 #include <string.h> // strlen, memmove
-#include <stdarg.h>
-#include <stdlib.h>
+#include <stdlib.h> // realloc, free
 
 #include "xtypes.h"
 #include "terminal.h"
