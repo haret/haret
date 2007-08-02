@@ -76,8 +76,7 @@ REG_CMD(tlhAvail, "KILL", cmd_kill,
 static void
 psDump(const char *cmd, const char *args)
 {
-    HANDLE hTH = late_CreateToolhelp32Snapshot(
-        TH32CS_SNAPPROCESS|TH32CS_SNAPHEAPLIST, 0);
+    HANDLE hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hTH == INVALID_HANDLE_VALUE) {
         Output("Unable to create tool help snapshot");
         return;
