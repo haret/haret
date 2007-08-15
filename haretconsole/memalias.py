@@ -114,10 +114,15 @@ RegsList['Hermes'] = Regs_Hermes
 ######################################################################
 
 Regs_omap850 = {
+    0xfffecb00: ("IH1", (lambda bit: "IH1-%d" % bit)),
+    0xfffe0000: ("IH2", (lambda bit: "IH2-%d" % bit)),
+    0xfffe0100: ("IH2", (lambda bit: "IH2-%d" % (bit + 32))),
     0xfffbc000: ("GPIO0", (lambda bit: "GPIO%d" % bit)),
     0xfffbc800: ("GPIO1", (lambda bit: "GPIO%d" % (bit + 32))),
     0xfffbd000: ("GPIO2", (lambda bit: "GPIO%d" % (bit + 64))),
     0xfffbd800: ("GPIO3", (lambda bit: "GPIO%d" % (bit + 96))),
+    0xfffbe000: ("GPIO4", (lambda bit: "GPIO%d" % (bit + 128))),
+    0xfffbe800: ("GPIO5", (lambda bit: "GPIO%d" % (bit + 160))),
     }
 RegsList['ARCH:OMAP850'] = Regs_omap850
 
