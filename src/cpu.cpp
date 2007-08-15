@@ -50,6 +50,8 @@ static char *cpu_id()
     case 3: PUTS ("5 "); break;
     case 4: PUTS ("5T "); break;
     case 5: PUTS ("5TE "); break;
+    case 6: PUTS ("5TEJ "); break;
+    case 7: PUTS ("6 "); break;
     default: PUTSF ("unknown(%d) ", (p15r0 >> 16) & 15); break;
   }
 
