@@ -43,7 +43,16 @@ MachinePXA27x::init()
                  "addlist GPIOS p2v(0x40E0000C)\n"
                  "addlist GPIOS p2v(0x40E00010)\n"
                  "addlist GPIOS p2v(0x40E00014)\n"
-                 "addlist GPIOS p2v(0x40E0010C)\n");
+                 "addlist GPIOS p2v(0x40E0010C)\n"
+                 // GPIO alt functions
+                 "addlist GPIOS p2v(0x40E00054)\n"
+                 "addlist GPIOS p2v(0x40E00058)\n"
+                 "addlist GPIOS p2v(0x40E0005c)\n"
+                 "addlist GPIOS p2v(0x40E00060)\n"
+                 "addlist GPIOS p2v(0x40E00064)\n"
+                 "addlist GPIOS p2v(0x40E00068)\n"
+                 "addlist GPIOS p2v(0x40E0006c)\n"
+                 "addlist GPIOS p2v(0x40E00070)\n");
 }
 
 int

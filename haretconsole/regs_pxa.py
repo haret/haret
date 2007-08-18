@@ -6,6 +6,8 @@
 
 import memalias
 regOneBits = memalias.regOneBits
+regTwoBits = memalias.regTwoBits
+
 
 ######################################################################
 # PXA
@@ -38,6 +40,15 @@ Regs_pxa27x = {
     0x40E00010: ("GPDR1", regOneBits("GPIO", 32)),
     0x40E00014: ("GPDR2", regOneBits("GPIO", 64)),
     0x40E0010C: ("GPDR3", regOneBits("GPIO", 96)),
+
+    0x40E00054: ("GAFR0_L", regTwoBits("AF")),
+    0x40E00058: ("GAFR0_U", regTwoBits("AF", 16)),
+    0x40E0005c: ("GAFR1_L", regTwoBits("AF", 32)),
+    0x40E00060: ("GAFR1_U", regTwoBits("AF", 48)),
+    0x40E00064: ("GAFR2_L", regTwoBits("AF", 64)),
+    0x40E00068: ("GAFR2_U", regTwoBits("AF", 80)),
+    0x40E0006c: ("GAFR3_L", regTwoBits("AF", 96)),
+    0x40E00070: ("GAFR3_U", regTwoBits("AF", 112)),
     }
 memalias.RegsList['ARCH:PXA27x'] = Regs_pxa27x
 

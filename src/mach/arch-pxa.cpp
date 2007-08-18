@@ -47,7 +47,14 @@ MachinePXA::init()
                  // GPIO directions
                  "addlist GPIOS p2v(0x40E0000C)\n"
                  "addlist GPIOS p2v(0x40E00010)\n"
-                 "addlist GPIOS p2v(0x40E00014)\n");
+                 "addlist GPIOS p2v(0x40E00014)\n"
+                 // GPIO alt functions
+                 "addlist GPIOS p2v(0x40E00054)\n"
+                 "addlist GPIOS p2v(0x40E00058)\n"
+                 "addlist GPIOS p2v(0x40E0005c)\n"
+                 "addlist GPIOS p2v(0x40E00060)\n"
+                 "addlist GPIOS p2v(0x40E00064)\n"
+                 "addlist GPIOS p2v(0x40E00068)\n");
 }
 
 int
