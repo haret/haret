@@ -32,7 +32,17 @@ MachineS3c2442::init()
                  "addlist GPIOS p2v(0x56000054)\n"
                  "addlist GPIOS p2v(0x56000064)\n"
                  "addlist GPIOS p2v(0x56000074)\n"
-                 "addlist GPIOS p2v(0x560000d4)\n");
+                 "addlist GPIOS p2v(0x560000d4)\n"
+                 // GPIO functions
+                 "addlist GPIOS p2v(0x56000000)\n"
+                 "addlist GPIOS p2v(0x56000010)\n"
+                 "addlist GPIOS p2v(0x56000020)\n"
+                 "addlist GPIOS p2v(0x56000030)\n"
+                 "addlist GPIOS p2v(0x56000040)\n"
+                 "addlist GPIOS p2v(0x56000050)\n"
+                 "addlist GPIOS p2v(0x56000060)\n"
+                 "addlist GPIOS p2v(0x56000070)\n"
+                 "addlist GPIOS p2v(0x560000d0)\n");
 }
 
 static inline uint32 s3c_readl(volatile uint32 *base, uint32 reg)
