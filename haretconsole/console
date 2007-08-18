@@ -3,6 +3,10 @@
 # Script that can connect to haret via telnet and read/write commands
 # to it.  It supports using the "readline" library which permits up
 # arrow and down arrow capabilities.
+#
+# (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
+#
+# This file may be distributed under the terms of the GNU GPL license.
 
 import sys
 import telnetlib
@@ -15,6 +19,7 @@ import dis
 import memalias
 
 HARETPORT = 9999
+
 
 ######################################################################
 # Command loop
@@ -48,7 +53,7 @@ class Prompts(cmd.Cmd):
                 self.exit()
             self.logfile.write(newdata)
             curtime = time.time()
-            if curtime > lastflushtime + 3:
+            if curtime > lastflushtime + 0.5:
                 self.logfile.flush()
                 lastflushtime = curtime
             self.buf += newdata
