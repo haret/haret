@@ -97,41 +97,51 @@ class memDisplay:
             self.type = " " + type
         self.pos = pos
         self.name = reginfo[0]
-        self.bits = reginfo[1]
+        self.bitdefs = reginfo[1]
     # Return a string representation of a set of changed bits.
-    def getValue(self, desc, bits, mask, val):
+    def getValue(self, desc, bits, val, changed, add_il):
         count = 0
         outval = 0
         pos = []
-        bits &= mask
         for i in range(32):
             bit = 1<<i
             if bit & bits:
                 if bit & val:
                     outval |= 1<<count
-                pos.append(i)
+                if bit & changed:
+                    pos.append(i)
                 count += 1
-        ignorelist = " ".join(["%d" % (self.pos*32+i) for i in pos])
-        return " %s(%s)=%d" % (desc, ignorelist, outval)
+        if add_il:
+            ignorelist = " ".join(["%d" % (self.pos*32+i) for i in pos])
+            return " %s(%s)=%x" % (desc, ignorelist, outval)
+        return " %s=%x" % (desc, outval)
     # Main function call into this class - display a mem trace line
     def displayFunc(self, m):
         val = int(m.group('val'), 16)
-        mask = int(m.group('mask'), 16)
-        if not self.bits or not mask:
-            print "%s%s %8s=%08x (%08x)" % (
-                getClock(m), self.type, self.name, val, mask)
-        origmask = mask
+        changed = int(m.group('changed'), 16)
         out = ""
-        for bits, desc in self.bits:
-            if bits & mask:
-                out += self.getValue(desc, bits, mask, val)
-                mask &= ~bits
-        if mask:
-            print "%s%s %8s=%08x (%08x)%s" % (
-                getClock(m), self.type, self.name, val, origmask, out)
-        else:
+        notfirst = 1
+        if not changed:
+            # Start of trace - show all bit defs, but don't show the
+            # list of bits to ignore.
+            changed = val
+            notfirst = 0
+        unnamedbits = changed
+        for bits, desc in self.bitdefs:
+            if bits & changed:
+                out += self.getValue(desc, bits, val, changed, notfirst)
+                unnamedbits &= ~bits
+        if unnamedbits:
+            # Not all changed bits are named - come up with a "dummy"
+            # name for the remaining bits.
+            out += self.getValue("?", ~0, val&unnamedbits, unnamedbits, notfirst)
+        if notfirst:
             print "%s%s %8s:%s" % (
-                getClock(m), self.type, self.name, out)
+                getClock(m), self.type, self.name, out,)
+        else:
+            # Show register value along with any additional info
+            print "%s%s %8s=%08x:%s" % (
+                getClock(m), self.type, self.name, val, out,)
 
 # Default memory tracing line if no custom register specified.
 def defaultFunc(m):
@@ -153,7 +163,7 @@ re_begin = re.compile(r"^Beginning memory tracing\.$")
 re_watch = re.compile(r"^Watching (?P<type>.*)\((?P<pos>\d+)\):"
                       r" Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)$")
 re_mem = re.compile(TIMEPRE_S + r"mem (?P<vaddr>.*)=(?P<val>.*)"
-                    r" \((?P<mask>.*)\)$")
+                    r" \((?P<changed>.*)\)$")
 
 # Storage of known named registers that are being "watched"
 VirtMap = {}
@@ -165,7 +175,13 @@ def handleWatch(m):
     paddr = int(m.group('paddr'), 16)
     reginfo = ArchRegs.get(paddr)
     if reginfo is not None:
+        # Found a named register
         md = memDisplay(reginfo, m.group('type'), int(m.group('pos')))
+        VirtMap[vaddr] = md.displayFunc
+    else:
+        # No named register - invent a "dummy" one
+        md = memDisplay((m.group('vaddr'), ()), m.group('type')
+                        , int(m.group('pos')))
         VirtMap[vaddr] = md.displayFunc
     print m.string
 
