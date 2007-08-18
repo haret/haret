@@ -1,5 +1,10 @@
 # Utility to parse out memory dumps from haret and translate them into
 # register names.
+#
+# (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
+#
+# This file may be distributed under the terms of the GNU GPL license.
+
 import re
 
 # Regs_xxx = {addr: name, ...}
@@ -10,128 +15,9 @@ import re
 
 RegsList = {}
 
-
-######################################################################
-# PXA
-######################################################################
-
-irqs1 = (
-    (0, "SSP3"), (1, "MSL"), (2, "USBh2"), (3, "USBh1"),
-    (4, "Keypad"), (5, "MemoryStick"), (6, "pI2C"), (7, "OS Timer"),
-    (8, "GPIO0"), (9, "GPIO1"), (10, "GPIOx"), (11, "USBc"),
-    (12, "PMU"), (13, "I2S"), (14, "AC97"), (15, "USIM"),
-    (16, "SSP2"), (17, "LCD"), (18, "I2C"), (19, "ICP"),
-    (20, "STUART"), (21, "BTUART"), (22, "FFUART"), (23, "MMC"),
-    (24, "SSP"), (25, "DMA"), (26, "TMR0"), (27, "TMR1"),
-    (28, "TMR2"), (29, "TMR3"), (30, "RTC0"), (31, "RTC1"))
-irqs2 = ((0, "TPM"), (1, "QCap"))
-
-Regs_pxa27x = {
-    0x40D00000: ("ICIP", irqs1), 0x40D0009C: ("ICIP2", irqs2),
-    0x40E00048: ("GEDR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E0004c: ("GEDR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00050: ("GEDR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E00148: ("GEDR3", (lambda bit: "GPIO%d" % (bit+96))),
-
-    0x40E00000: ("GPLR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E00004: ("GPLR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00008: ("GPLR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E00100: ("GPLR3", (lambda bit: "GPIO%d" % (bit+96))),
-
-    0x40E0000C: ("GPDR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E00010: ("GPDR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00014: ("GPDR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E0010C: ("GPDR3", (lambda bit: "GPIO%d" % (bit+96))),
-    }
-RegsList['ARCH:PXA27x'] = Regs_pxa27x
-
-# HTC Apache specific registers
-Regs_Apache = Regs_pxa27x.copy()
-Regs_Apache.update({
-    0x0a000000: ("cpldirq", (lambda bit: "CPLD%d" % bit)),
-    })
-RegsList['Apache'] = Regs_Apache
-
-# PXA 26x registers
-irqs1 = (
-    (7, "HW uart"),
-    (8, "GPIO0"), (9, "GPIO1"), (10, "GPIOx"), (11, "USB"),
-    (12, "PMU"), (13, "I2S"), (14, "AC97"), (15, "aSSP"),
-    (16, "nSSP"), (17, "LCD"), (18, "I2C"), (19, "ICP"),
-    (20, "STUART"), (21, "BTUART"), (22, "FFUART"), (23, "MMC"),
-    (24, "SSP"), (25, "DMA"), (26, "TMR0"), (27, "TMR1"),
-    (28, "TMR2"), (29, "TMR3"), (30, "RTC0"), (31, "RTC1"))
-Regs_pxa = Regs_pxa27x.copy()
-Regs_pxa.update({
-    0x40D00000: ("ICIP", irqs1)
-    })
-RegsList['ARCH:PXA'] = Regs_pxa
-
-
-######################################################################
-# s3c24xx
-######################################################################
-
-irqs = (
-    (31, "INT_ADC"), (30, "INT_RTC"), (29, "INT_SPI1"), (28, "INT_UART0"),
-    (27, "INT_IIC"), (26, "INT_USBH"), (25, "INT_USBD"), (24, "INT_NFCON"),
-    (23, "INT_UART1"), (22, "INT_SPI0"), (21, "INT_SDI"), (20, "INT_DMA3"),
-    (19, "INT_DMA2"), (18, "INT_DMA1"), (17, "INT_DMA0"), (16, "INT_LCD"),
-    (15, "INT_UART2"), (14, "INT_TIMER4"),
-    (13, "INT_TIMER3"), (12, "INT_TIMER2"),
-    (11, "INT_TIMER1"), (10, "INT_TIMER0"), (9, "INT_WDT"), (8, "INT_TICK"),
-    (7, "nBATT_FLT"), (6, "INT_CAM"), (5, "EINT8_23"), (4, "EINT4_7"),
-    (3, "EINT3"), (2, "EINT2"), (1, "EINT1"), (0, "EINT0"))
-
-Regs_s3c2442 = {
-    0x4A000010: ("INTPND", irqs),
-    0x56000004: ("GPADAT", (lambda bit: "GPA%d" % bit)),
-    0x56000014: ("GPBDAT", (lambda bit: "GPB%d" % bit)),
-    0x56000024: ("GPCDAT", (lambda bit: "GPC%d" % bit)),
-    0x56000034: ("GPDDAT", (lambda bit: "GPD%d" % bit)),
-    0x56000044: ("GPEDAT", (lambda bit: "GPE%d" % bit)),
-    0x56000054: ("GPFDAT", (lambda bit: "GPF%d" % bit)),
-    0x56000064: ("GPGDAT", (lambda bit: "GPG%d" % bit)),
-    0x56000074: ("GPHDAT", (lambda bit: "GPH%d" % bit)),
-    0x560000d4: ("GPJDAT", (lambda bit: "GPJ%d" % bit)),
-    0x56000080: ("MISCCR", (("22-20", "BATT_FUNC"),
-                            (19, "OFFREFRESH"),
-                            (18, "nEN_SCLK1"))),
-    0x560000a8: ("EINTPEND", (lambda bit: "EINT%d" % bit)),
-    }
-RegsList['ARCH:s3c2442'] = Regs_s3c2442
-
-# HTC Hermes specific registers
-Regs_Hermes = Regs_s3c2442.copy()
-Regs_Hermes.update({
-    0x08000004: ("cpldirq", (lambda bit: "CPLD%d" % bit)),
-    })
-RegsList['Hermes'] = Regs_Hermes
-
-
-######################################################################
-# omap850
-######################################################################
-
-Regs_omap850 = {
-    0xfffecb00: ("IH1", (lambda bit: "IH1-%d" % bit)),
-    0xfffe0000: ("IH2", (lambda bit: "IH2-%d" % bit)),
-    0xfffe0100: ("IH2", (lambda bit: "IH2-%d" % (bit + 32))),
-    0xfffbc014: ("GIRQ1", (lambda bit: "GPIO%d" % bit)),
-    0xfffbc814: ("GIRQ2", (lambda bit: "GPIO%d" % (bit + 32))),
-    0xfffbd014: ("GIRQ3", (lambda bit: "GPIO%d" % (bit + 64))),
-    0xfffbd814: ("GIRQ4", (lambda bit: "GPIO%d" % (bit + 96))),
-    0xfffbe014: ("GIRQ5", (lambda bit: "GPIO%d" % (bit + 128))),
-    0xfffbe814: ("GIRQ6", (lambda bit: "GPIO%d" % (bit + 160))),
-
-    0xfffbc000: ("GPIO1", (lambda bit: "GPIO%d" % bit)),
-    0xfffbc800: ("GPIO2", (lambda bit: "GPIO%d" % (bit + 32))),
-    0xfffbd000: ("GPIO3", (lambda bit: "GPIO%d" % (bit + 64))),
-    0xfffbd800: ("GPIO4", (lambda bit: "GPIO%d" % (bit + 96))),
-    0xfffbe000: ("GPIO5", (lambda bit: "GPIO%d" % (bit + 128))),
-    0xfffbe800: ("GPIO6", (lambda bit: "GPIO%d" % (bit + 160))),
-    }
-RegsList['ARCH:OMAP850'] = Regs_omap850
+import regs_pxa
+import regs_s3c
+import regs_omap
 
 
 ######################################################################
