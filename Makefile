@@ -21,7 +21,7 @@ LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 
 LIBS = -lwinsock
 
-all: $(OUT) $(OUT)haret.exe
+all: $(OUT) $(OUT)haret.exe $(OUT)haretconsole.tar.gz
 
 # Run with "make V=1" to see the actual compile commands
 ifdef V
@@ -117,6 +117,14 @@ $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 $(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
 
 linload: $(OUT)linload.exe
+
+####### Haretconsole tar files
+
+HC_FILES := README console *.py arm-linux-objdump
+
+$(OUT)haretconsole.tar.gz: $(wildcard $(addprefix haretconsole/, $(HC_FILES)))
+	@echo "  Creating tar $@"
+	$(Q)tar cfz $@ $^
 
 ####### Generic rules
 clean:
