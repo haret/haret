@@ -5,6 +5,8 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import memalias
+regOneBits = memalias.regOneBits
+regTwoBits = memalias.regTwoBits
 
 
 ######################################################################
@@ -24,25 +26,34 @@ irqs = (
 
 Regs_s3c2442 = {
     0x4A000010: ("INTPND", irqs),
-    0x56000004: ("GPADAT", (lambda bit: "GPA%d" % bit)),
-    0x56000014: ("GPBDAT", (lambda bit: "GPB%d" % bit)),
-    0x56000024: ("GPCDAT", (lambda bit: "GPC%d" % bit)),
-    0x56000034: ("GPDDAT", (lambda bit: "GPD%d" % bit)),
-    0x56000044: ("GPEDAT", (lambda bit: "GPE%d" % bit)),
-    0x56000054: ("GPFDAT", (lambda bit: "GPF%d" % bit)),
-    0x56000064: ("GPGDAT", (lambda bit: "GPG%d" % bit)),
-    0x56000074: ("GPHDAT", (lambda bit: "GPH%d" % bit)),
-    0x560000d4: ("GPJDAT", (lambda bit: "GPJ%d" % bit)),
+    0x56000004: ("GPADAT", regOneBits("GPA")),
+    0x56000014: ("GPBDAT", regOneBits("GPB")),
+    0x56000024: ("GPCDAT", regOneBits("GPC")),
+    0x56000034: ("GPDDAT", regOneBits("GPD")),
+    0x56000044: ("GPEDAT", regOneBits("GPE")),
+    0x56000054: ("GPFDAT", regOneBits("GPF")),
+    0x56000064: ("GPGDAT", regOneBits("GPG")),
+    0x56000074: ("GPHDAT", regOneBits("GPH")),
+    0x560000d4: ("GPJDAT", regOneBits("GPJ")),
+    0x56000000: ("GPACON", regTwoBits("GDA")),
+    0x56000010: ("GPBCON", regTwoBits("GDB")),
+    0x56000020: ("GPCCON", regTwoBits("GDC")),
+    0x56000030: ("GPDCON", regTwoBits("GDD")),
+    0x56000040: ("GPECON", regTwoBits("GDE")),
+    0x56000050: ("GPFCON", regTwoBits("GDF")),
+    0x56000060: ("GPGCON", regTwoBits("GDG")),
+    0x56000070: ("GPHCON", regTwoBits("GDH")),
+    0x560000d0: ("GPJCON", regTwoBits("GDJ")),
     0x56000080: ("MISCCR", (("22-20", "BATT_FUNC"),
                             (19, "OFFREFRESH"),
                             (18, "nEN_SCLK1"))),
-    0x560000a8: ("EINTPEND", (lambda bit: "EINT%d" % bit)),
+    0x560000a8: ("EINTPEND", regOneBits("EINT")),
     }
 memalias.RegsList['ARCH:s3c2442'] = Regs_s3c2442
 
 # HTC Hermes specific registers
 Regs_Hermes = Regs_s3c2442.copy()
 Regs_Hermes.update({
-    0x08000004: ("cpldirq", (lambda bit: "CPLD%d" % bit)),
+    0x08000004: ("cpldirq", regOneBits("CPLD")),
     })
 memalias.RegsList['Hermes'] = Regs_Hermes

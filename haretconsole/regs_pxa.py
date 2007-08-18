@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import memalias
+regOneBits = memalias.regOneBits
 
 ######################################################################
 # PXA
@@ -23,27 +24,27 @@ irqs2 = ((0, "TPM"), (1, "QCap"))
 
 Regs_pxa27x = {
     0x40D00000: ("ICIP", irqs1), 0x40D0009C: ("ICIP2", irqs2),
-    0x40E00048: ("GEDR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E0004c: ("GEDR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00050: ("GEDR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E00148: ("GEDR3", (lambda bit: "GPIO%d" % (bit+96))),
+    0x40E00048: ("GEDR0", regOneBits("GPIO")),
+    0x40E0004c: ("GEDR1", regOneBits("GPIO", 32)),
+    0x40E00050: ("GEDR2", regOneBits("GPIO", 64)),
+    0x40E00148: ("GEDR3", regOneBits("GPIO", 96)),
 
-    0x40E00000: ("GPLR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E00004: ("GPLR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00008: ("GPLR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E00100: ("GPLR3", (lambda bit: "GPIO%d" % (bit+96))),
+    0x40E00000: ("GPLR0", regOneBits("GPIO")),
+    0x40E00004: ("GPLR1", regOneBits("GPIO", 32)),
+    0x40E00008: ("GPLR2", regOneBits("GPIO", 64)),
+    0x40E00100: ("GPLR3", regOneBits("GPIO", 96)),
 
-    0x40E0000C: ("GPDR0", (lambda bit: "GPIO%d" % bit)),
-    0x40E00010: ("GPDR1", (lambda bit: "GPIO%d" % (bit+32))),
-    0x40E00014: ("GPDR2", (lambda bit: "GPIO%d" % (bit+64))),
-    0x40E0010C: ("GPDR3", (lambda bit: "GPIO%d" % (bit+96))),
+    0x40E0000C: ("GPDR0", regOneBits("GPIO")),
+    0x40E00010: ("GPDR1", regOneBits("GPIO", 32)),
+    0x40E00014: ("GPDR2", regOneBits("GPIO", 64)),
+    0x40E0010C: ("GPDR3", regOneBits("GPIO", 96)),
     }
 memalias.RegsList['ARCH:PXA27x'] = Regs_pxa27x
 
 # HTC Apache specific registers
 Regs_Apache = Regs_pxa27x.copy()
 Regs_Apache.update({
-    0x0a000000: ("cpldirq", (lambda bit: "CPLD%d" % bit)),
+    0x0a000000: ("cpldirq", regOneBits("CPLD")),
     })
 memalias.RegsList['Apache'] = Regs_Apache
 

@@ -15,6 +15,17 @@ import re
 
 RegsList = {}
 
+# Helper - create description for registers that are composed of an
+# incrementing list of one bit fields.
+def regOneBits(name, start=0):
+    return tuple([(i, "%s%d" % (name, i + start)) for i in range(32)])
+
+# Helper - create description for registers that are composed of an
+# incrementing list of two bit fields.
+def regTwoBits(name, start=0):
+    return tuple([("%d,%d" % (i, i+1), "%s%d" % (name, i/2 + start))
+                  for i in range(0, 32, 2)])
+
 import regs_pxa
 import regs_s3c
 import regs_omap
@@ -24,15 +35,11 @@ import regs_omap
 # Register list pre-processing
 ######################################################################
 
-# Parse a bit name description.  It can accept a function that
-# converts a number to a name or a list of bit/name 2-tuples that
-# describes a bit.  The description can be an integer bit number or a
-# string description of a set of bits (a comma separated list and/or
-# hyphen separated range).
+# Parse a bit name description.  It accepts a list of bit/name
+# 2-tuples that describes a bit.  The description can be an integer
+# bit number or a string description of a set of bits (a comma
+# separated list and/or hyphen separated range).
 def parsebits(defs):
-    if type(defs) != type(()):
-        # lambda
-        return tuple([((1<<i), defs(i)) for i in range(32)])
     out = ()
     for desc, val in defs:
         if type(desc) == type(1):
