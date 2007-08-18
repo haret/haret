@@ -2,6 +2,10 @@
 
 # Script that can process the output from haret's "wi" command and
 # dissasemble the software trace events.
+#
+# (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
+#
+# This file may be distributed under the terms of the GNU GPL license.
 
 import sys
 import re

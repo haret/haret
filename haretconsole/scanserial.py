@@ -2,6 +2,10 @@
 
 # Script that can decode a raw haret log of traces into a list of
 # read/written serial strings.
+#
+# (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
+#
+# This file may be distributed under the terms of the GNU GPL license.
 
 import sys
 import re
