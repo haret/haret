@@ -15,9 +15,11 @@ should be in the path, in the current directory, or in the directory
 the console script is located in.
 
 
-There are two additional helper scripts in the directory.  The
+There are three additional helper scripts in the directory.  The
 "dis.py" script can be used to disassemble the output from the raw
 "haretlog" files that the console program produces.  The
 "scanserial.py" script is a simple program that also takes a haretlog
 file as input - it can produce strings from a "wi" command trace of a
-serial port.
+serial port.  Finally, "transmem.py" can convert the output from "PD"
+back into binary format - it is useful for feeding binary output back
+into programs like objdump.
