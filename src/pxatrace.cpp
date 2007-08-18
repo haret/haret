@@ -71,6 +71,7 @@ report_winceResume(uint32 msecs, irqData *, traceitem *item)
     Output("%06d: %08x: cpu resumed", msecs, 0);
 }
 
+// PXA specific handler for IRQ events
 void __irq
 PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 {
@@ -114,7 +115,6 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
     set_DBCON(0);
     int count = checkPolls(data, clock, &data->tracepoll);
     set_DBCON(data->dbcon);
-
     if (data->traceForWatch && !count)
         return 1;
 
@@ -210,7 +210,6 @@ static uint32 irqTraceMask = 0;
 static uint32 irqTrace2 = 0xFFFFFFFF;
 static uint32 irqTraceType = 2;
 static uint32 irqTrace2Type = 2;
-static uint32 traceForWatch;
 
 REG_VAR_INT(testPXAAvail, "TRACE", irqTrace,
             "Memory location to trace during WI")
@@ -222,8 +221,6 @@ REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
             "1=store only, 2=loads or stores, 3=loads only")
 REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
             "1=store only, 2=loads or stores, 3=loads only")
-REG_VAR_INT(testPXAAvail, "TRACEFORWATCH", traceForWatch,
-            "Only report memory trace if ADDTRACEWATCH poll succeeds")
 
 // Externally modifiable settings for software tracing
 static uint32 insnTrace = 0xFFFFFFFF, insnTraceReenable = 0xFFFFFFFF;
@@ -252,6 +249,7 @@ REG_VAR_INT(testPXAAvail, "INSN2REG2", insnTrace2Reg2,
 #define mask_DBCON_E1(val) (((val) & (0x3))<<2)
 #define DBCON_MASKBIT (1<<8)
 
+// Prepare for PXA specific memory tracing and breaking points.
 int
 prepPXAtraps(struct irqData *data)
 {
@@ -295,8 +293,6 @@ prepPXAtraps(struct irqData *data)
                , data->insns[0].addr1, data->insns[0].addr2
                , data->insns[1].addr1, data->insns[1].addr2);
     }
-
-    data->traceForWatch = traceForWatch;
 
     return 0;
 }

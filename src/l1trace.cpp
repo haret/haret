@@ -35,6 +35,7 @@ newAddr(struct irqData *data, uint i) {
     return data->redirectVAddrBase + ONEMEG * i;
 }
 
+// Alter MMU table so that certain memory accesses will fault.
 void
 startL1traps(struct irqData *data)
 {
@@ -56,6 +57,7 @@ startL1traps(struct irqData *data)
     }
 }
 
+// Return MMU table to its original state
 void __irq
 stopL1traps(struct irqData *data)
 {
@@ -84,6 +86,8 @@ report_giveup(uint32 msecs, irqData *, traceitem *item)
            , msecs, 0);
 }
 
+// A problem occurred during emulation - try to report the problem and
+// turn off future traps.
 static void __irq
 giveUp(struct irqData *data)
 {
@@ -101,12 +105,15 @@ report_memAccess(uint32 msecs, irqData *, traceitem *item)
            , msecs, pc, insn, getInsnName(insn), val, addr);
 }
 
+// Attempt to emulate a memory access fault, and then report the event
+// to the user.
 static void __irq
 tryEmulate(struct irqData *data, struct irqregs *regs
            , uint32 addr, uint32 newaddr)
 {
     uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
     uint32 insn = *(uint32*)old_pc;
+    int count;
 
     if (--data->max_l1trace == 0)
         goto fail;
@@ -188,18 +195,30 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     } else
         goto fail;
 
-    // See if this instruction should be reported
-    if (isIgnoredAddr(data, old_pc))
+    //
+    // Event reporting
+    //
+
+    // Trace time memory polling.
+    count = checkPolls(data, -1, &data->tracepoll);
+    if (data->traceForWatch && !count)
+        // Further reporting disabled
         return;
+    if (isIgnoredAddr(data, old_pc))
+        // Not interested in this address
+        return;
+
     for (uint i=0; i<data->traceCount; i++) {
         irqData::trace_s *t = &data->traceAddrs[i];
         if (t->start >= addr + addrsize || t->end <= addr)
             continue;
         if (Lbit(insn)) {
             if (!(t->rw & 1))
+                // Not interested in reads
                 break;
         } else {
             if (!(t->rw & 2))
+                // Not interested in writes
                 break;
         }
         // Report insn
@@ -207,6 +226,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         break;
     }
     return;
+
 fail:
     add_trace(data, report_memAccess, addr, old_pc, insn
               , getReg(regs, mask_Rd(insn))
@@ -224,6 +244,8 @@ static inline int __irq addrmatch(uint32 addr1, uint32 addr2) {
     return ((addr1 ^ addr2) & TOPBITS) == 0;
 }
 
+// Called during memory access faults - it determines if the fault was
+// caused by our MMU table manipulations.
 int __irq
 L1_abort_handler(struct irqData *data, struct irqregs *regs)
 {
@@ -248,6 +270,9 @@ report_prefetch(uint32 msecs, irqData *, traceitem *item)
            , msecs, 0, addr);
 }
 
+// Handler for instruction fetch faults - this is here to catch the
+// unlikely event that code jumps to an area of memory that is being
+// watched.
 int __irq
 L1_prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
@@ -335,11 +360,17 @@ static uint32 ignoreAddrCount;
 REG_VAR_INTLIST(testWirqAvail, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
                 "List of pc addresses to ignore when tracing")
 
+static uint32 traceForWatch;
+REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
+            "Only report memory trace if ADDTRACEWATCH poll succeeds")
+
 
 /****************************************************************
  * Tracing setup
  ****************************************************************/
 
+// Manipulate IRQ time memory polling structures so that the memory
+// polls don't access the memory areas that are being made to fault.
 static void
 alterTracePoint(struct irqData *data, memcheck *mc)
 {
@@ -349,10 +380,12 @@ alterTracePoint(struct irqData *data, memcheck *mc)
             mc->addr = (char *)(newAddr(data, i) | (addr & BOTBITS));
 }
 
+// Prepare for memory tracing.
 int
 prepL1traps(struct irqData *data)
 {
-    // Copy ignoreaddr values (note pxatrace uses this too)
+    // Copy ignoreaddr values (note pxatrace uses these too)
+    data->traceForWatch = traceForWatch;
     data->ignoreAddrCount = ignoreAddrCount;
     memcpy(data->ignoreAddr, ignoreAddr, sizeof(data->ignoreAddr));
 
