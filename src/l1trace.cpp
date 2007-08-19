@@ -101,8 +101,9 @@ static void
 report_memAccess(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 addr=item->d0, pc=item->d1, insn=item->d2, val=item->d3;
-    Output("%06d: debug %08x: %08x(%s) %08x %08x"
-           , msecs, pc, insn, getInsnName(insn), val, addr);
+    uint32 changed=item->d4;
+    Output("%06d: mmutrace %08x: %08x(%s) %08x %08x (%08x)"
+           , msecs, pc, insn, getInsnName(insn), addr, val, changed);
 }
 
 // Attempt to emulate a memory access fault, and then report the event
@@ -111,9 +112,14 @@ static void __irq
 tryEmulate(struct irqData *data, struct irqregs *regs
            , uint32 addr, uint32 newaddr)
 {
+    uint32 spsr = get_SPSR();
     uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
-    uint32 insn = *(uint32*)old_pc;
+    uint32 insn = 0;
     int count;
+    if (spsr & (1<<5))
+        // Don't know how to handle thumb mode.
+        goto fail;
+    insn = *(uint32*)old_pc;
 
     if (--data->max_l1trace == 0)
         goto fail;
@@ -209,20 +215,26 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         return;
 
     for (uint i=0; i<data->traceCount; i++) {
-        irqData::trace_s *t = &data->traceAddrs[i];
-        if (t->start >= addr + addrsize || t->end <= addr)
+        memcheck *t = &data->traceAddrs[i];
+        if (t->addr >= addr + addrsize || t->endaddr <= addr)
             continue;
         if (Lbit(insn)) {
             if (!(t->rw & 1))
                 // Not interested in reads
-                break;
+                continue;
         } else {
             if (!(t->rw & 2))
                 // Not interested in writes
-                break;
+                continue;
         }
-        // Report insn
-        add_trace(data, report_memAccess, addr, old_pc, insn, val);
+
+        uint32 shift = 8 * (addr & 3);
+        uint32 mask = ((1 << (8 * addrsize)) - 1) << shift;
+        uint32 changed;
+        if (testChanged(t, val << shift, mask, &changed))
+            // Report insn
+            add_trace(data, report_memAccess, addr, old_pc, insn
+                      , val, changed >> shift);
         break;
     }
     return;
@@ -238,6 +250,8 @@ fail:
 
 // Obtain the Fault Address Register.
 DEF_GETIRQCPR(get_FAR, p15, 0, c6, c0, 0)
+// Get the Fault Status Register.
+DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
 
 // Check if two addresses are in the same 1Meg range.
 static inline int __irq addrmatch(uint32 addr1, uint32 addr2) {
@@ -250,6 +264,10 @@ int __irq
 L1_abort_handler(struct irqData *data, struct irqregs *regs)
 {
     if (!data->alterCount)
+        return 0;
+    uint32 fsr = get_FSR();
+    if ((fsr & 0xd) != 0x5)
+        // Not a "section translation fault".
         return 0;
     uint32 faultaddr = get_FAR();
     for (uint i=0; i<data->alterCount; i++)
@@ -301,25 +319,34 @@ REG_VAR_INT(testWirqAvail, "MAXL1TRACE", MaxL1Trace,
 class traceListVar : public listVarBase {
 public:
     uint32 tracecount;
-    irqData::trace_s traces[MAX_L1TRACE];
+    memcheck traces[MAX_L1TRACE];
     traceListVar(predFunc ta, const char *n, const char *d)
         : listVarBase(ta, n, d
                       , &tracecount, (void*)traces, sizeof(traces[0])
                       , ARRAY_SIZE(traces)) { }
     bool setVarItem(void *p, const char *args) {
-        irqData::trace_s *t = (irqData::trace_s*)p;
-        if (!get_expression(&args, &t->start)) {
+        memcheck *t = (memcheck*)p;
+        memset(t, 0, sizeof(*t));
+        if (!get_expression(&args, &t->addr)) {
             ScriptError("Expected <start>");
             return false;
         }
         const char *flags = "rw";
         char _flags[16];
         uint32 addrsize = 1;
+        uint32 mask = 0;
         if (get_expression(&args, &addrsize))
-            if (!get_token(&args, _flags, sizeof(_flags)))
+            if (!get_token(&args, _flags, sizeof(_flags))) {
                 flags = _flags;
-        t->end = t->start + addrsize;
-        if ((t->start & TOPBITS) != ((t->end - 1) & TOPBITS)) {
+                if (get_expression(&args, &mask)) {
+                    t->trySuppressNext = 1;
+                    t->setCmp = 1;
+                    get_suppress(args, t);
+                }
+            }
+        t->mask = ~mask;
+        t->endaddr = t->addr + addrsize;
+        if ((t->addr & TOPBITS) != ((t->endaddr - 1) & TOPBITS)) {
             ScriptError("Address range must be within a 1Meg section");
             return false;
         }
@@ -332,28 +359,39 @@ public:
     }
     void showVar(const char *args) {
         for (uint i=0; i<tracecount; i++) {
-            irqData::trace_s *t = &traces[i];
+            memcheck *t = &traces[i];
             char flags[3], *f = flags;
             if (t->rw & 1)
                 *f++ = 'r';
             if (t->rw & 2)
                 *f++ = 'w';
             *f = '\0';
-            Output("%03d: 0x%08x %d %s", i, t->start, t->end - t->start, flags);
+            char buf[32];
+            Output("%03d: 0x%08x %d %s %08x %s"
+                   , i, t->addr, t->endaddr - t->addr, flags
+                   , ~t->mask, disp_suppress(t, buf));
         }
     }
     void fillVarType(char *buf) {
         strcpy(buf, "trace list");
     }
 };
-__REG_VAR(traceListVar, MMUTrace,
-          testWirqAvail,
-          "MMUTRACE",
-          "Memory locations to trace during WI.\n"
-          "  List of <start> [<size> [<rw>]] triples where <start> is a\n"
-          "  virtual address to trace, <size> is the number of bytes in the\n"
-          "  range to trace (default 1), and <rw> is a string (eg, 'r') that\n"
-          "  determines if reads and/or writes are reported (default 'rw').")
+__REG_VAR(
+    traceListVar, MMUTrace,
+    testWirqAvail,
+    "MMUTRACE",
+    "Memory locations to trace during WI.\n"
+    "  List of <start> [<size> [<rw> [<mask> [<cmpValue>]]]] 5-tuples\n"
+    "    <start>    is a virtual address to trace\n"
+    "    <size>     is the number of bytes in the range to trace (default 1)\n"
+    "    <rw>       is a string (eg, 'r') that determines if reads and/or\n"
+    "               writes are reported (default 'rw')\n"
+    "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
+    "    <cmpValue> report only when value doesn't equal this value - one\n"
+    "               may also specify 'last' or 'none' (default is 'last' if\n"
+    "               <mask> is set - report on change.  Otherwise the default\n"
+    "               is 'none' - always report every event)\n"
+    "  Note that <mask> and <cmpValue> work on 32-bit aligned values.")
 
 static uint32 ignoreAddr[MAX_IGNOREADDR];
 static uint32 ignoreAddrCount;
@@ -374,10 +412,9 @@ REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
 static void
 alterTracePoint(struct irqData *data, memcheck *mc)
 {
-    uint32 addr = (uint32)mc->addr;
     for (uint i=0; i<data->alterCount; i++)
-        if (addrmatch(data->alterVAddrs[i], addr))
-            mc->addr = (char *)(newAddr(data, i) | (addr & BOTBITS));
+        if (addrmatch(data->alterVAddrs[i], mc->addr))
+            mc->addr = newAddr(data, i) | (mc->addr & BOTBITS);
 }
 
 // Prepare for memory tracing.
@@ -412,8 +449,8 @@ prepL1traps(struct irqData *data)
     // Determine which 1Meg sections need to be altered
     uint32 count = 0;
     for (uint i=0; i<data->traceCount; i++) {
-        irqData::trace_s *t = &data->traceAddrs[i];
-        uint32 vaddr = t->start & TOPBITS;
+        memcheck *t = &data->traceAddrs[i];
+        uint32 vaddr = t->addr & TOPBITS;
 
         // See if this vaddr already done.
         int found = 0;

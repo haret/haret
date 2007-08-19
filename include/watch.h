@@ -8,17 +8,23 @@ struct memcheck {
     uint32 isInsn : 1;
     uint32 readSize : 2;
     uint32 trySuppress : 1, setCmp : 1, trySuppressNext : 1;
+    uint32 rw : 2;
     uint32 cmpVal;
     uint32 mask;
     union {
-        char *addr;
+        uint32 addr;
         uint32 insn;
     };
+    uint32 endaddr;
 };
 
-int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval);
+int testChanged(struct memcheck *mc, uint32 curval, uint32 extramask
+                , uint32 *pchanged);
+int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged);
 void reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
-                 , uint32 newval, uint32 maskval);
+                 , uint32 newval, uint32 changed);
+void get_suppress(const char *args, memcheck *mc);
+const char *disp_suppress(memcheck *mc, char *buf);
 
 // Give up rest of time slice.
 extern void (*late_SleepTillTick)();

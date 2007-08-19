@@ -34,8 +34,8 @@ report_memPoll(uint32 msecs, irqData *data, traceitem *item)
 {
     watchListVar *w = (watchListVar*)item->d0;
     memcheck *mc = &w->watchlist[item->d1];
-    uint32 clock=item->d2, val=item->d3, mask=item->d4;
-    reportWatch(msecs, clock, mc, val, mask);
+    uint32 clock=item->d2, val=item->d3, changed=item->d4;
+    reportWatch(msecs, clock, mc, val, changed);
 }
 
 // Perform a set of memory polls and add to trace buffer.
@@ -45,13 +45,13 @@ checkPolls(struct irqData *data, uint32 clock, pollinfo *info)
     int foundcount = 0;
     for (uint i=0; i<info->count; i++) {
         memcheck *mc = &info->list[i];
-        uint32 val, maskval;
-        int ret = testMem(mc, &val, &maskval);
+        uint32 val, changed;
+        int ret = testMem(mc, &val, &changed);
         if (!ret)
             continue;
         foundcount++;
         ret = add_trace(data, report_memPoll, (uint32)info->cls, i
-                        , clock, val, maskval);
+                        , clock, val, changed);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;

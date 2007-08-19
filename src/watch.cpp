@@ -44,24 +44,49 @@ doRead(struct memcheck *mc)
     }
 }
 
-// Read a memory area and check for a change.
 int __irq
-testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
+testChanged(struct memcheck *mc, uint32 curval, uint32 extramask
+            , uint32 *pchanged)
 {
-    uint32 curval = doRead(mc);
-    uint32 maskedval = 0;
+    uint32 changed = 0;
     if (mc->trySuppress) {
-        maskedval = (curval ^ mc->cmpVal) & mc->mask;
-        if (maskedval == 0)
+        changed = (curval ^ mc->cmpVal) & (mc->mask & extramask);
+        if (changed == 0)
             // No change in value.
             return 0;
     }
     if (mc->setCmp)
         mc->cmpVal = curval;
     mc->trySuppress = mc->trySuppressNext;
-    *pnewval = curval;
-    *pmaskval = maskedval;
+    *pchanged = changed;
     return 1;
+}
+
+// Read a memory area and check for a change.
+int __irq
+testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged)
+{
+    uint32 curval = doRead(mc);
+    if (testChanged(mc, curval, 0xFFFFFFFF, pchanged)) {
+        *pnewval = curval;
+        return 1;
+    }
+    return 0;
+}
+
+void
+reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
+            , uint32 newval, uint32 changed)
+{
+    char header[64];
+    if (clock != (uint32)-1)
+        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
+    else
+        _snprintf(header, sizeof(header), "%06d:", msecs);
+    if (mc->isInsn)
+        Output("%s insn %08x=%08x (%08x)", header, mc->insn, newval, changed);
+    else
+        Output("%s mem %08x=%08x (%08x)", header, mc->addr, newval, changed);
 }
 
 
@@ -70,26 +95,43 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pmaskval)
  ****************************************************************/
 
 void
-reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
-            , uint32 newval, uint32 maskval)
+get_suppress(const char *args, memcheck *mc)
 {
-    char header[64];
-    if (clock != (uint32)-1)
-        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
-    else
-        _snprintf(header, sizeof(header), "%06d:", msecs);
-    if (mc->isInsn)
-        Output("%s insn %08x=%08x (%08x)", header, mc->insn, newval, maskval);
-    else
-        Output("%s mem %p=%08x (%08x)", header, mc->addr, newval, maskval);
+    char nexttoken[16];
+    const char *nextargs = args;
+    if (get_token(&nextargs, nexttoken, sizeof(nexttoken)))
+        return;
+    if (strcasecmp(nexttoken, "last") == 0) {
+        mc->trySuppressNext = 1;
+        mc->setCmp = 1;
+    } else if (strcasecmp(nexttoken, "none") == 0) {
+        mc->trySuppressNext = 0;
+        mc->setCmp = 0;
+    } else if (get_expression(&args, &mc->cmpVal)) {
+        mc->trySuppressNext = 1;
+        mc->setCmp = 0;
+    }
+}
+
+const char *
+disp_suppress(memcheck *mc, char *buf)
+{
+    if (!mc->trySuppressNext)
+        return "none";
+    if (mc->setCmp)
+        return "last";
+    sprintf(buf, "%d", mc->cmpVal);
+    return buf;
 }
 
 bool
 watchListVar::setVarItem(void *p, const char *args)
 {
     // Parse args
-    uint32 addr;
-    uint32 isInsn = 0, mask = 0, size = 32, hasComp=0, cmpVal=0;
+    uint32 mask = 0, size = 32;
+    memcheck *mc = (memcheck*)p;
+    memset(mc, 0, sizeof(*mc));
+    mc->trySuppressNext = 1;
 
     char nexttoken[16];
     const char *nextargs = args;
@@ -107,47 +149,38 @@ watchListVar::setVarItem(void *p, const char *args)
             ScriptError("Expected CP <cp#> <op1> <CRn> <CRm> <op2>");
             return false;
         }
-        addr = buildArmCPInsn(0, cp, op1, CRn, CRm, op2);
-        isInsn = 1;
-        if (get_expression(&args, &mask) && get_expression(&args, &cmpVal))
-            hasComp = 1;
+        mc->addr = buildArmCPInsn(0, cp, op1, CRn, CRm, op2);
+        mc->isInsn = 1;
+        if (get_expression(&args, &mask))
+            get_suppress(args, mc);
     } else if (strcasecmp(nexttoken, "CPSR") == 0
                || strcasecmp(nexttoken, "SPSR") == 0) {
         args = nextargs;
-        addr = buildArmMRSInsn(nexttoken[0] == 'S');
-        isInsn = 1;
-        if (get_expression(&args, &mask) && get_expression(&args, &cmpVal))
-            hasComp = 1;
+        mc->addr = buildArmMRSInsn(nexttoken[0] == 'S');
+        mc->isInsn = 1;
+        if (get_expression(&args, &mask))
+            get_suppress(args, mc);
     } else {
         // Normal address watch
-        if (!get_expression(&args, &addr)) {
+        if (!get_expression(&args, &mc->addr)) {
             ScriptError("Expected <addr>");
             return false;
         }
 
-        if (get_expression(&args, &mask) && get_expression(&args, &size)
-            && get_expression(&args, &cmpVal))
-            hasComp = 1;
+        if (get_expression(&args, &mask) && get_expression(&args, &size))
+            get_suppress(args, mc);
     }
+
     switch (size) {
-    case 32: size=MO_SIZE32; break;
-    case 16: size=MO_SIZE16; break;
-    case 8: size=MO_SIZE8; break;
+    case 32: mc->readSize=MO_SIZE32; break;
+    case 16: mc->readSize=MO_SIZE16; break;
+    case 8: mc->readSize=MO_SIZE8; break;
     default:
         ScriptError("Expected <32|16|8>");
         return false;
     }
-
-    // Update structure.
-    memcheck *mc = (memcheck*)p;
-    memset(mc, 0, sizeof(*mc));
-    mc->isInsn = isInsn;
-    mc->addr = (char *)addr;
     mc->mask = ~mask;
-    mc->readSize = size;
-    mc->trySuppressNext = 1;
-    mc->setCmp = !hasComp;
-    mc->cmpVal = cmpVal;
+
     return true;
 }
 
@@ -155,9 +188,16 @@ void
 watchListVar::showVar(const char *args)
 {
     memcheck *mc = watchlist;
-    for (uint i=0; i<watchcount; i++, mc++)
-        Output("%2d: 0x%p %08x %2d"
-               , i, mc->addr, ~mc->mask, 4<<mc->readSize);
+    for (uint i=0; i<watchcount; i++, mc++) {
+        char cmpBuf[32];
+        if (mc->isInsn)
+            Output("%2d: insn %08x %08x %s"
+                   , i, mc->insn, ~mc->mask, disp_suppress(mc, cmpBuf));
+        else
+            Output("%2d: 0x%08x %08x %2d %s"
+                   , i, mc->addr, ~mc->mask, 4<<mc->readSize
+                   , disp_suppress(mc, cmpBuf));
+    }
 }
 
 void watchListVar::fillVarType(char *buf) {
@@ -177,8 +217,8 @@ watchListVar::beginWatch(int isStart)
             Output("Watching %s(%02d): Insn %08x"
                    , name, i, mc->insn);
         } else {
-            uint32 paddr = memVirtToPhys((uint32)mc->addr);
-            Output("Watching %s(%02d): Addr %p(@%08x)"
+            uint32 paddr = memVirtToPhys(mc->addr);
+            Output("Watching %s(%02d): Addr %08x(@%08x)"
                    , name, i, mc->addr, paddr);
         }
     }
@@ -245,8 +285,9 @@ REG_VAR_WATCHLIST(
     "    <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
     "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
     "    <32|16|8>  specifies the memory access type (default 32)\n"
-    "    <cmpValue> when specified forces a report if read value doesn't\n"
-    "               equal that value (default is to report on change)\n"
+    "    <cmpValue> report only when read value doesn't equal this value - one\n"
+    "               may also specify 'last' or 'none' (default is 'last'\n"
+    "               - report on change)\n"
     "  One may watch either a memory address or an internal register")
 
 static void
@@ -269,11 +310,11 @@ cmd_watch(const char *cmd, const char *args)
     for (;;) {
         for (uint i=0; i<wl->watchcount; i++) {
             memcheck *mc = &wl->watchlist[i];
-            uint32 val, maskval;
-            int ret = testMem(mc, &val, &maskval);
+            uint32 val, changed;
+            int ret = testMem(mc, &val, &changed);
             if (!ret)
                 continue;
-            reportWatch(cur_time - start_time, -1, mc, val, maskval);
+            reportWatch(cur_time - start_time, -1, mc, val, changed);
         }
 
         cur_time = GetTickCount();

@@ -123,13 +123,6 @@ REG_DUMP(0, "CP", cpuDumpCP,
  * Instruction/register analysis
  ****************************************************************/
 
-// Get the SPSR register
-static inline uint32 __irq get_SPSR(void) {
-    uint32 val;
-    asm volatile("mrs %0, spsr" : "=r" (val));
-    return val;
-}
-
 // Return the value of a given register.
 uint32 __irq
 getReg(struct irqregs *regs, uint32 nr)

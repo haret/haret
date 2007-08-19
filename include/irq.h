@@ -75,7 +75,7 @@ struct irqData {
     uint32 redirectVAddrBase;
     uint32 alterCount, alterVAddrs[MAX_L1TRACE];
     uint32 traceCount;
-    struct trace_s { uint32 start, end, rw; } traceAddrs[MAX_L1TRACE];
+    memcheck traceAddrs[MAX_L1TRACE];
     uint32 max_l1trace;
 
     uint32 ignoreAddr[MAX_IGNOREADDR];
@@ -145,6 +145,13 @@ struct irqregs {
 
 // Get pid - can't use haret's because it isn't in this irq section.
 DEF_GETIRQCPR(get_PID, p15, 0, c13, c0, 0)
+
+// Get the SPSR register
+static inline uint32 __irq get_SPSR(void) {
+    uint32 val;
+    asm volatile("mrs %0, spsr" : "=r" (val));
+    return val;
+}
 
 // Return the Modified Virtual Address (MVA) of a given address.
 // (Can't use haret's because it needs to be in the __irq section.)
