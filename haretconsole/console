@@ -27,6 +27,12 @@ HARETPORT = 9999
 
 class Prompts(cmd.Cmd):
     def __init__(self, host, port):
+        abbrev = (('wirq', 2), ('watch', 1))
+        for name, minlen in abbrev:
+            for i in range(minlen, len(name)+1):
+                shortname = name[:i]
+                self.__dict__['do_'+shortname] = (
+                    (lambda l, sn=shortname: self.cmd_wirq(sn + ' ' + l)))
         cmd.Cmd.__init__(self)
         self.link = telnetlib.Telnet(host, port)
         self.buf = ""
@@ -84,12 +90,9 @@ class Prompts(cmd.Cmd):
         self.sendAndProcess(line)
     def emptyline(self):
         self.default("")
-    def do_wi(self, line):
+    def cmd_wirq(self, line):
         self.proc = dis.procline
-        self.sendAndProcess("wi " + line)
-    def do_watch(self, line):
-        self.proc = dis.procline
-        self.sendAndProcess("watch " + line)
+        self.sendAndProcess(line)
     def do_help(self, line):
         self.default("help " + line)
     def do_quit(self, line):
