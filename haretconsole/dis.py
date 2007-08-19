@@ -43,11 +43,11 @@ def dis(insn):
     l = os.popen(BINLOC + " " + OBJDUMPARGS + " " + f.name)
     lines = l.readlines()
     f.close()
-    out = "disassemble error"
+    out = "%08x (??)" % (insn,)
     for line in lines:
         if line[:5] == '   0:':
             parts = line[5:].strip().split(None, 2)
-            out = "%s %-6s %s" % tuple(parts)
+            out = "%-6s %s" % tuple(parts[1:])
             break
     InsnCache[insn] = out
     return out
@@ -55,6 +55,9 @@ def dis(insn):
 TIMEPRE_S = memalias.TIMEPRE_S
 re_debug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
                       r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
+re_trace = re.compile(TIMEPRE_S + r'mmutrace (?P<addr>.*):'
+                      r' (?P<insn>.*)\(.*\) (?P<vaddr>.*) (?P<val>.*)'
+                      r' \((?P<changed>.*)\)$')
 re_irq = re.compile(TIMEPRE_S + r'(?P<data>(irq |insn |cpu resumed).*)$')
 getClock = memalias.getClock
 
@@ -63,25 +66,40 @@ def transRegVal(reg, val):
 
 def procline(line):
     m = re_debug.match(line)
-    if m is None:
-        m = re_irq.match(line)
-        if m is not None:
-            print getClock(m), m.group('data')
+    if m is not None:
+        insn = int(m.group('insn'), 16)
+        iname = dis(insn)
+        Rd = (insn >> 12) & 0xF
+        Rn = (insn >> 16) & 0xF
+        Rdval = transRegVal(Rd, m.group('Rd'))
+        Rnval = transRegVal(Rn, m.group('Rn'))
+        if Rd == Rn:
+            regs = Rdval
         else:
-            memalias.procline(line)
+            regs = Rdval + " " + Rnval
+        print "%s %s: %-21s # %s" % (
+            getClock(m), m.group('addr'), iname, regs)
         return
-    insn = int(m.group('insn'), 16)
-    iname = dis(insn)
-    Rd = (insn >> 12) & 0xF
-    Rn = (insn >> 16) & 0xF
-    Rdval = transRegVal(Rd, m.group('Rd'))
-    Rnval = transRegVal(Rn, m.group('Rn'))
-    if Rd == Rn and Rdval == Rnval:
-        regs = Rdval
+
+    m = re_trace.match(line)
+    if m is not None:
+        insn = int(m.group('insn'), 16)
+        iname = dis(insn)
+        changed = int(m.group('changed'), 16)
+        if changed:
+            changed = " (%08x)" % changed
+        else:
+            changed = ""
+        print "%s %s: %-21s # a=%s v=%s%s" % (
+            getClock(m), m.group('addr'), iname
+            , m.group('vaddr'), m.group('val'), changed)
+        return
+
+    m = re_irq.match(line)
+    if m is not None:
+        print getClock(m), m.group('data')
     else:
-        regs = Rdval + " " + Rnval
-    print "%s %s: %-30s # %s" % (
-        getClock(m), m.group('addr'), iname, regs)
+        memalias.procline(line)
 
 def main():
     lines = sys.stdin.readlines()
