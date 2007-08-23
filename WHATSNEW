@@ -1,7 +1,15 @@
 next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
+  * Enhanced "mmutrace" capabilities - it is now possible to ignore
+    accesses based on the value read/written.
+
+  * Improved OMAP850 support.  The commands "watch GPIOS" and "wirq"
+    should work by default.  Also, the omap850 is now properly
+    recognized with an arm926 cpu core and cache flushing works
+    correctly.
+
   * Reads and writes to invalid memory should now be caught in haret.
-    This used to work in haret v0.38 and earlier (when haret was
+    This used to work in haret v0.3.8 and earlier (when haret was
     compiled with the MS compiler), but broke in cegcc versions.
     Support for catching access violations is now available with the
     cegcc compiler.
@@ -37,23 +45,25 @@ next version <kevin@koconnor.net>, <pmiscml@gmail.com>
   * == and != operators added (Example: 'if 1 == 1 print "sure"').
 
   * New command: MSGBOX, display message with the given title, text,
-    icon and button, waits for user to click button, stores return code
-    in variable RESULT.
+    icon and button, waits for user to click button, stores return
+    code in variable RESULT.
 
-  * New allocation method (CreateFileMapping), able to handle 20Mb+ initrd's.
+  * New allocation method (CreateFileMapping), able to handle 20Mb+
+    initrd's.
 
   * Better handling of overlapped memory regions during allocation.
 
-  * New command: EXIT, terminate HaRET unconditionally. (QUIT just closes
-    network session.)
+  * New command: EXIT, terminate HaRET unconditionally. (QUIT just
+    closes network session.)
 
   * BootBundle (former 'linload') support reimplemented, it's now much
-    more scalable and can handle big initrd's (up to ~22Mb was tested).
-    The functionality is now builtin to standard haret executable, and
-    bundle is created by just concatenenating haret.exe, zImage, initrd
-    a script, and a special trailer (and haret on startup check if this
-    tariler exists to decide if this is BootBundle or normal executable). 
-    There's a tools/make-bootbundle.py utility which does all the work.
+    more scalable and can handle big initrd's (up to ~22Mb was
+    tested).  The functionality is now builtin to standard haret
+    executable, and bundle is created by just concatenating haret.exe,
+    zImage, initrd a script, and a special trailer (and haret on
+    startup check if this trailer exists to decide if this is
+    BootBundle or normal executable).  There's a
+    tools/make-bootbundle.py utility which does all the work.
 
 20070606 0.4.8 <kevin@koconnor.net>
 
