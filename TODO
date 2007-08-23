@@ -17,9 +17,6 @@ New features:
 
 Misc cleanups:
 
-* omap850 uses an arm926 processor - not an arm920t.  Also, the arm926
-  should have a different cpu flush cache routine.
-
 * Scan all L1 based 1meg virtual->physical mappings at startup.  This
   will make memPhysMap_section available even in critical sections
   where the code can't call into wince.
@@ -76,11 +73,6 @@ Possible features for "wi":
 * Possibly add the ability for watch lists to be conditional on values
   previously read.  (For example, a gpio level register might only be
   valid if the gpio direction is set to input.)
-
-* It would be nice if the "mmutrace" feature could implement an
-  optional value masking and change detection.  That is, it could
-  ignore writes of certain values to memory areas and also ignore
-  redundant reads/writes.
 
 
 Possible features for Linux booting:
