@@ -1,0 +1,78 @@
+#include "cpu.h" // DEF_GETCPR
+#include "arch-arm.h"
+
+// Assembler functions
+extern "C" {
+    void cpuFlushCache_arm920();
+    void cpuFlushCache_arm926();
+    void cpuFlushCache_arm6();
+}
+
+DEF_GETCPR(get_p15r0, 15, 0, c0, c0, 0)
+
+
+/****************************************************************
+ * ARM 920t
+ ****************************************************************/
+
+Machine920t::Machine920t()
+{
+    name = "Generic ARM 920t";
+    flushCache = cpuFlushCache_arm920;
+}
+
+int
+Machine920t::detect()
+{
+    uint32 p15r0 = get_p15r0();
+    return ((p15r0 >> 24) == 'A'
+            && ((p15r0 >> 20) & 0xf) == 1
+            && ((p15r0 >> 16) & 0xf) == 2
+            && ((p15r0 >> 4) & 0xfff) == 0x920);
+}
+
+REGMACHINE(Machine920t)
+
+
+/****************************************************************
+ * ARM 926
+ ****************************************************************/
+
+Machine926::Machine926()
+{
+    name = "Generic ARM 926";
+    flushCache = cpuFlushCache_arm926;
+}
+
+int
+Machine926::detect()
+{
+    uint32 p15r0 = get_p15r0();
+    return ((p15r0 >> 24) == 'A'
+            && ((p15r0 >> 20) & 0xf) == 0
+            && ((p15r0 >> 16) & 0xf) == 6
+            && ((p15r0 >> 4) & 0xfff) == 0x926);
+}
+
+REGMACHINE(Machine926)
+
+
+/****************************************************************
+ * ARM v6
+ ****************************************************************/
+
+MachineArmV6::MachineArmV6()
+{
+    name = "Generic ARM v6";
+    flushCache = cpuFlushCache_arm6;
+}
+
+int
+MachineArmV6::detect()
+{
+    uint32 p15r0 = get_p15r0();
+    return ((p15r0 >> 24) == 'A'
+            && ((p15r0 >> 16) & 0xf) == 7);
+}
+
+REGMACHINE(MachineArmV6)
