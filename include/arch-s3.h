@@ -1,5 +1,5 @@
 // Definitions for Samsung s3c24xx chips.
-#include "arch-920t.h" // Machine920t
+#include "arch-arm.h" // Machine920t
 
 class MachineS3c2442 : public Machine920t {
 public:

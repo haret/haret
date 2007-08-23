@@ -1,7 +1,7 @@
 // Definitions for Texas Instruments OMAP processors.
-#include "arch-920t.h" // Machine920t
+#include "arch-arm.h" // Machine926
 
-class MachineOMAP850 : public Machine920t {
+class MachineOMAP850 : public Machine926 {
 public:
     MachineOMAP850();
     int detect();
