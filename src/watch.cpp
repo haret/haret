@@ -131,6 +131,7 @@ watchListVar::setVarItem(void *p, const char *args)
     uint32 mask = 0, size = 32;
     memcheck *mc = (memcheck*)p;
     memset(mc, 0, sizeof(*mc));
+    mc->setCmp = 1;
     mc->trySuppressNext = 1;
 
     char nexttoken[16];
