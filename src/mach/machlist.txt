@@ -37,7 +37,8 @@ Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
         set resumeaddr 0x30100000
 Athena,     PXA     ,ATHE100,                     HTCATHENA
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
-Artemis,    OMAP850 ,ARTE
+Artemis,    OMAP850 ,ARTE,                        ARTEMIS
+Herald,     OMAP850 ,HERA,                        HERALD
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
 Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   set ramsize 64*1024*1024
 e310,       SA      ,Toshiba e310
