@@ -195,7 +195,7 @@ watchListVar::showVar(const char *args)
                    , i, mc->insn, ~mc->mask, disp_suppress(mc, cmpBuf));
         else
             Output("%2d: 0x%08x %08x %2d %s"
-                   , i, mc->addr, ~mc->mask, 4<<mc->readSize
+                   , i, mc->addr, ~mc->mask, 8<<mc->readSize
                    , disp_suppress(mc, cmpBuf));
     }
 }
