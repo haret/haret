@@ -1,0 +1,11 @@
+The file include/mach-types.h is auto generated.
+
+To regenerate, obtain the script arch/arm/tools/gen-mach-types from a
+Linux source tar.  Then obtain the latest list of arm machine types
+via:
+
+wget 'http://www.arm.linux.org.uk/developer/machines/download.php'
+
+then process it with something like:
+
+awk -f ./gen-mach-types < download.php > mach-types.h
