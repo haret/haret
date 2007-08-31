@@ -324,6 +324,7 @@ public:
         : listVarBase(ta, n, d
                       , &tracecount, (void*)traces, sizeof(traces[0])
                       , ARRAY_SIZE(traces)) { }
+    variableBase *newVar() { return new traceListVar(0, "", ""); };
     bool setVarItem(void *p, const char *args) {
         memcheck *t = (memcheck*)p;
         memset(t, 0, sizeof(*t));
@@ -381,17 +382,17 @@ __REG_VAR(
     testWirqAvail,
     "MMUTRACE",
     "Memory locations to trace during WI.\n"
-    "  List of <start> [<size> [<rw> [<mask> [<cmpValue>]]]] 5-tuples\n"
-    "    <start>    is a virtual address to trace\n"
-    "    <size>     is the number of bytes in the range to trace (default 1)\n"
-    "    <rw>       is a string (eg, 'r') that determines if reads and/or\n"
-    "               writes are reported (default 'rw')\n"
-    "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
-    "    <cmpValue> report only when value doesn't equal this value - one\n"
-    "               may also specify 'last' or 'none' (default is 'last' if\n"
-    "               <mask> is set - report on change.  Otherwise the default\n"
-    "               is 'none' - always report every event)\n"
-    "  Note that <mask> and <cmpValue> work on 32-bit aligned values.")
+    "  List of <start> [<size> [<rw> [<mask> [<ignVal>]]]] 5-tuples\n"
+    "    <start>  is a virtual address to trace\n"
+    "    <size>   is the number of bytes in the range to trace (default 1)\n"
+    "    <rw>     is a string (eg, 'r') that determines if reads and/or\n"
+    "             writes are reported (default 'rw')\n"
+    "    <mask>   is a bitmask to ignore when detecting a change (default 0)\n"
+    "    <ignVal> report only when value doesn't equal this value - one\n"
+    "             may also specify 'last' or 'none' (default is 'last' if\n"
+    "             <mask> is set - report on change.  Otherwise the default\n"
+    "             is 'none' - always report every event)\n"
+    "  Note that <mask> and <ignVal> work on 32-bit aligned values.")
 
 static uint32 ignoreAddr[MAX_IGNOREADDR];
 static uint32 ignoreAddrCount;
