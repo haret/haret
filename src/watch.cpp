@@ -101,10 +101,10 @@ get_suppress(const char *args, memcheck *mc)
     const char *nextargs = args;
     if (get_token(&nextargs, nexttoken, sizeof(nexttoken)))
         return;
-    if (strcasecmp(nexttoken, "last") == 0) {
+    if (_stricmp(nexttoken, "last") == 0) {
         mc->trySuppressNext = 1;
         mc->setCmp = 1;
-    } else if (strcasecmp(nexttoken, "none") == 0) {
+    } else if (_stricmp(nexttoken, "none") == 0) {
         mc->trySuppressNext = 0;
         mc->setCmp = 0;
     } else if (get_expression(&args, &mc->cmpVal)) {
@@ -140,7 +140,7 @@ watchListVar::setVarItem(void *p, const char *args)
         ScriptError("Expected <addr> or CP or CPSR or SPSR");
         return false;
     }
-    if (strcasecmp(nexttoken, "CP") == 0) {
+    if (_stricmp(nexttoken, "CP") == 0) {
         // CP watch.
         uint cp, op1, CRn, CRm, op2;
         args = nextargs;
@@ -154,8 +154,8 @@ watchListVar::setVarItem(void *p, const char *args)
         mc->isInsn = 1;
         if (get_expression(&args, &mask))
             get_suppress(args, mc);
-    } else if (strcasecmp(nexttoken, "CPSR") == 0
-               || strcasecmp(nexttoken, "SPSR") == 0) {
+    } else if (_stricmp(nexttoken, "CPSR") == 0
+               || _stricmp(nexttoken, "SPSR") == 0) {
         args = nextargs;
         mc->addr = buildArmMRSInsn(nexttoken[0] == 'S');
         mc->isInsn = 1;
@@ -225,7 +225,7 @@ watchListVar::beginWatch(int isStart)
     }
 }
 
-watchListVar *
+static watchListVar *
 FindWatchVar(const char **args)
 {
     char varname[32];
@@ -280,15 +280,15 @@ REG_CMD_ALT(0, "WBIT", ignoreBit, watch,
 REG_VAR_WATCHLIST(
     0, "GPIOS", GPIOS,
     "List of GPIOs to watch\n"
-    "  List of <addr> [<mask> [<32|16|8> [<cmpValue>]]] 4-tuples.\n"
-    "  OR      CP <cp#> <op1> <CRn> <CRm> <op2> [<mask> [<cmpValue>]] 7-tuples\n"
-    "  OR      [C|S]PSR [<mask> [<cmpValue>]] 2-tuples\n"
-    "    <addr>     is a virtual address to watch (can use P2V(physaddr))\n"
-    "    <mask>     is a bitmask to ignore when detecting a change (default 0)\n"
-    "    <32|16|8>  specifies the memory access type (default 32)\n"
-    "    <cmpValue> report only when read value doesn't equal this value - one\n"
-    "               may also specify 'last' or 'none' (default is 'last'\n"
-    "               - report on change)\n"
+    "  List of <addr> [<mask> [<32|16|8> [<ignVal>]]] 4-tuples.\n"
+    "  OR      CP <cp#> <op1> <CRn> <CRm> <op2> [<mask> [<ignVal>]] 7-tuples\n"
+    "  OR      [C|S]PSR [<mask> [<ignVal>]] 2-tuples\n"
+    "    <addr>    is a virtual address to watch (can use P2V(physaddr))\n"
+    "    <mask>    is a bitmask to ignore when detecting a change (default 0)\n"
+    "    <32|16|8> specifies the memory access type (default 32)\n"
+    "    <ignVal>  report only when read value doesn't equal this value - one\n"
+    "              may also specify 'last' or 'none' (default is 'last'\n"
+    "              - report on change)\n"
     "  One may watch either a memory address or an internal register")
 
 static void
