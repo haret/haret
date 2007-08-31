@@ -48,9 +48,9 @@ mem_autodetect(void)
 #define ALIGN(x, d) (((x) + (d) - 1) / (d) * (d))
 
     if (vi.dwMajorVersion >= 5)
-        // WinCE 5 uses dwTotalPhys to represent memory - align to
-        // nearest 16MB
-        memPhysSize = ALIGN(mst.dwTotalPhys, 16*1024*1024);
+        // WinCE 5 uses dwTotalPhys to represent memory, but reserves
+        // a good chunk for itself - align to nearest 16MB
+        memPhysSize = ALIGN(mst.dwTotalPhys + 8*1024*1024, 16*1024*1024);
     else
         // WinCE is returning ~1Mb less memory, let's suppose minus
         // kernel size, so we'll round the result up to nearest 8MB
