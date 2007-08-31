@@ -12,6 +12,7 @@
 #include <stdarg.h> // va_list
 #include <string.h> // strchr, memcpy, memset
 #include <stdlib.h> // free
+#include <typeinfo> // typeid
 
 #include "xtypes.h"
 #include "cbitmap.h" // TEST/SET/CLEARBIT
@@ -89,6 +90,17 @@ FindVar(const char *vn)
     if (v)
         return v;
     return __findVar(vn, UserVars, UserVarsCount);
+}
+
+// Create a new user defined variable.
+static void AddVar(const char *name, variableBase *v)
+{
+    UserVars = (commandBase**)
+        realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
+    UserVars[UserVarsCount++] = v;
+    v->name = _strdup(name);
+    v->desc = "User Variable";
+    v->isAvail = 1;
 }
 
 // Translate a variable to an integer for argument parsing.
@@ -543,6 +555,9 @@ void variableBase::showVar(const char *s) {
 void variableBase::clearVar(const char *s) {
     ScriptError("Can not clear `%s' variable", name);
 }
+variableBase *variableBase::newVar() {
+    return NULL;
+}
 
 bool integerVar::getVar(const char **s, uint32 *v) {
     *v = *data;
@@ -693,14 +708,10 @@ void SetVar(const char *name, const char *val)
     }
 
     // Need to create a new user variable.
-    UserVars = (commandBase**)
-        realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
-
-    integerVar *iv = new integerVar(0, _strdup(name), 0, 0);
-    iv->isAvail = 1;
+    integerVar *iv = new integerVar(0, "", 0, 0);
     iv->data = &iv->dynstorage;
-    UserVars[UserVarsCount++] = iv;
     iv->setVar(val);
+    AddVar(name, iv);
 }
 
 static void
@@ -772,6 +783,73 @@ cmd_addlist(const char *cmd, const char *args)
 REG_CMD(0, "ADDLIST", cmd_addlist,
         "ADDLIST <variable> <value>\n"
         "  Add an item to a list variable.");
+
+static void
+cmd_joinlist(const char *cmd, const char *args)
+{
+    char destname[MAX_CMDLEN];
+    if (get_token(&args, destname, sizeof(destname), 1)) {
+        ScriptError("Expected <dest list>");
+        return;
+    }
+    commandBase *rawvar = FindVar(destname);
+    listVarBase *destvar = dynamic_cast<listVarBase*>(rawvar);
+    if (!destvar) {
+        if (rawvar) {
+            ScriptError("Expected list variable");
+            return;
+        }
+        const char *tmp = args;
+        char peek[MAX_CMDLEN];
+        if (get_token(&tmp, peek, sizeof(peek), 1)) {
+            ScriptError("Expected <source list1>");
+            return;
+        }
+        listVarBase *peekvar = dynamic_cast<listVarBase*>(FindVar(peek));
+        if (!peekvar) {
+            ScriptError("Expected <source list1>");
+            return;
+        }
+        destvar = static_cast<listVarBase*>(peekvar->newVar());
+        if (!destvar) {
+            ScriptError("Unable to allocate new variable %s", destname);
+            return;
+        }
+        AddVar(destname, destvar);
+    }
+
+    for (;;) {
+        char srcvarname[MAX_CMDLEN];
+        if (get_token(&args, srcvarname, sizeof(srcvarname), 1))
+            // Done
+            return;
+        rawvar = FindVar(srcvarname);
+        if (!rawvar) {
+            ScriptError("Expected <source list> instead of %s", srcvarname);
+            return;
+        }
+        if (typeid(*rawvar) != typeid(*destvar)) {
+            ScriptError("Type mismatch on list variable %s", srcvarname);
+            return;
+        }
+        listVarBase *srcvar = static_cast<listVarBase*>(rawvar);
+
+        uint cnt = *srcvar->count;
+        uint copycnt = min(cnt, destvar->maxavail - *destvar->count);
+        void *p = (char *)destvar->data + destvar->datasize * (*destvar->count);
+        memcpy(p, srcvar->data, destvar->datasize * copycnt);
+        *destvar->count += copycnt;
+        if (cnt != copycnt) {
+            Output(C_WARN "Truncating list '%s' to %d"
+                   , destname, destvar->maxavail);
+            return;
+        }
+    }
+}
+REG_CMD(0, "JOINLIST", cmd_joinlist,
+        "JOINLIST <dest list> <source list1> [<source list2> ...]\n"
+        "  Join one or more lists together.  If <dest list> doesn't exist\n"
+        "  it is created.");
 
 
 /****************************************************************
@@ -869,6 +947,14 @@ cmd_help(const char *cmd, const char *x)
         Output("-------------------- ----------");
         for (int i = 0; i < commands_count; i++) {
             variableBase *var = isVar(commands_start[i]);
+            if (!var || !var->desc)
+                continue;
+            char type[variableBase::MAXTYPELEN];
+            var->fillVarType(type);
+            Output("%-20s %s\n  %s", var->name, type, var->desc);
+        }
+        for (int i = 0; i < UserVarsCount; i++) {
+            variableBase *var = static_cast<variableBase*>(UserVars[i]);
             if (!var || !var->desc)
                 continue;
             char type[variableBase::MAXTYPELEN];

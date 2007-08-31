@@ -113,6 +113,7 @@ public:
     virtual void setVar(const char *args);
     virtual void showVar(const char *args);
     virtual void clearVar(const char *args);
+    virtual variableBase *newVar();
     static const int MAXTYPELEN = 16;
     virtual void fillVarType(char *buf) { }
 };
