@@ -93,13 +93,16 @@ FindVar(const char *vn)
 }
 
 // Create a new user defined variable.
-static void AddVar(const char *name, variableBase *v)
+static void AddVar(const char *name, variableBase *v, const char *desc=NULL)
 {
     UserVars = (commandBase**)
         realloc(UserVars, sizeof(UserVars[0]) * (UserVarsCount + 1));
     UserVars[UserVarsCount++] = v;
     v->name = _strdup(name);
-    v->desc = "User Variable";
+    if (! desc)
+        v->desc = "User Variable";
+    else
+        v->desc = _strdup(desc);
     v->isAvail = 1;
 }
 
@@ -722,12 +725,52 @@ cmd_set(const char *cmd, const char *args)
         ScriptError("Expected <varname>");
         return;
     }
-    
+
     SetVar(vn, args);
 }
 REG_CMD(0, "S|ET", cmd_set,
         "SET <variable> <value>\n"
         "  Assign a value to a variable. Use HELP VARS for a list of variables.")
+
+static void
+cmd_newvar(const char *cmd, const char *args)
+{
+    char vn[MAX_CMDLEN], tn[MAX_CMDLEN];
+    if (get_token(&args, vn, sizeof(vn), 1)
+        || get_token(&args, tn, sizeof(tn), 1)) {
+        ScriptError("Expected <varname>");
+        return;
+    }
+    variableBase *var = FindVar(tn);
+    if (!var) {
+        ScriptError("Expected <varname>");
+        return;
+    }
+    variableBase *newvar = FindVar(vn);
+    if (newvar) {
+        ScriptError("Variable already exists");
+        return;
+    }
+
+    newvar = var->newVar();
+    if (!newvar) {
+        char type[variableBase::MAXTYPELEN];
+        var->fillVarType(type);
+        Output(C_WARN "Unable to clone variables of type %s", type);
+        return;
+    }
+
+    char desc[MAX_CMDLEN];
+    if (get_token(&args, desc, sizeof(desc)))
+        AddVar(vn, newvar);
+    else
+        AddVar(vn, newvar, desc);
+}
+REG_CMD(0, "NEWVAR", cmd_newvar,
+        "NEWVAR <varname> <template var> [<desc>]\n"
+        "  Create a new variable of the same type as <template var>.  If\n"
+        "  <desc> is specified the variable will show this description in\n"
+        "  HELP VARS output.")
 
 static void
 cmd_showvar(const char *cmd, const char *args)
@@ -848,8 +891,8 @@ cmd_joinlist(const char *cmd, const char *args)
 }
 REG_CMD(0, "JOINLIST", cmd_joinlist,
         "JOINLIST <dest list> <source list1> [<source list2> ...]\n"
-        "  Join one or more lists together.  If <dest list> doesn't exist\n"
-        "  it is created.");
+        "  Append one or more lists to another list.  If <dest list> doesn't\n"
+        "  exist it is created.");
 
 
 /****************************************************************
