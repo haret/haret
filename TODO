@@ -4,9 +4,6 @@ New features:
   dumping, wincedump, powerdev, irctl, btctl, gsmdev, testril,
   testirsend)
 
-* Convert gpio watching for PXA processors to generic scheme.  Extend
-  support to PXA27x processors.
-
 * Document current feature set in wiki.
 
 * Possibly sort help output by command name.
@@ -55,6 +52,8 @@ Misc cleanups:
   compiler instead of C++.  This will be a significant amount of work
   without much gain.  However, it will likely reduce the final binary
   size.
+
+* Remove old PXA gpio watching code (wgpio)?
 
 
 Possible features for "wi":

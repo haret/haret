@@ -1,7 +1,19 @@
 next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
+  * New command "newvar" that enhances memory watching.  It is now
+    possible to dynamically create new lists - for example:
+        newvar CLOCKS GPIOS 'Architecture clock registers'
+        addlist CLOCKS p2v(0x41300000)
+    will allow one to be able to later run "watch clocks".
+
+  * New command "joinlist" - this allows one to append multiple watch
+    lists into a single list.  For example:
+        joinlist mylist gpios clocks
+
   * Enhanced "mmutrace" capabilities - it is now possible to ignore
-    accesses based on the value read/written.
+    accesses based on the value read/written.  For example:
+        addlist mmutrace p2v(0x56000024) 4 rw 0xffffe7ff
+    will watch the address but only report when bits 11/12 change.
 
   * Improved OMAP850 support.  The commands "watch GPIOS" and "wirq"
     should work by default.  Also, the omap850 is now properly
