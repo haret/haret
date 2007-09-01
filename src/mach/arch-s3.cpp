@@ -10,13 +10,6 @@ MachineS3c2442::MachineS3c2442()
     CPUInfo[0] = L"SC32442";
 }
 
-int
-MachineS3c2442::detect()
-{
-    // TODO - need to implement detection system.
-    return 0;
-}
-
 void
 MachineS3c2442::init()
 {

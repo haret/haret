@@ -4,7 +4,6 @@
 class MachineS3c2442 : public Machine920t {
 public:
     MachineS3c2442();
-    int detect();
     void init();
     int preHardwareShutdown();
     void hardwareShutdown();
