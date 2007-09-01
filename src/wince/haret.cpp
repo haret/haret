@@ -15,7 +15,7 @@
  */
 
 #include <windows.h>
-#include "pkfuncs.h"
+#include "pwindbas.h" // SetSystemMemoryDivision
 #include <stdio.h> // _snwprintf
 #include <wctype.h> // iswspace
 
