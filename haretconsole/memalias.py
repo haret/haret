@@ -49,7 +49,12 @@ def parsebits(defs):
         for bit in desc.split(','):
             bitrange = bit.split('-', 1)
             if len(bitrange) > 1:
-                bits += tuple(range(int(bitrange[0]), int(bitrange[1])-1, -1))
+                start = int(bitrange[0])
+                end = int(bitrange[1])
+                if start > end:
+                    bits += tuple(range(end, start+1))
+                else:
+                    bits += tuple(range(start, end+1))
             else:
                 bits += (int(bit),)
         mask = 0
@@ -167,9 +172,10 @@ TIMEPRE_S = r'^(?P<time>[0-9]+): ((?P<clock>[0-9a-f]+): )?'
 re_detect = re.compile(r"^Detected machine (?P<name>.*)/(?P<arch>.*)"
                        r" \(Plat=.*\)$")
 re_begin = re.compile(r"^Beginning memory tracing\.$")
-re_watch = re.compile(r"^Watching (?P<type>.*)\((?P<pos>\d+)\):"
-                      r" Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)$")
-re_mem = re.compile(TIMEPRE_S + r"mem (?P<vaddr>.*)=(?P<val>.*)"
+re_watch = re.compile(r"^Watching (?P<type>.*)\((?P<pos>\d+)\): ("
+                      r"Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)|"
+                      r"Insn (?P<insn>.*))$")
+re_mem = re.compile(TIMEPRE_S + r"(?P<type>insn|mem) (?P<vaddr>.*)=(?P<val>.*)"
                     r" \((?P<changed>.*)\)$")
 
 # Storage of known named registers that are being "watched"
@@ -178,18 +184,21 @@ VirtMap = {}
 ArchRegs = {}
 
 def handleWatch(m):
-    vaddr = m.group('vaddr')
-    paddr = int(m.group('paddr'), 16)
-    reginfo = ArchRegs.get(paddr)
+    name = m.group('vaddr')
+    if name is not None:
+        key = int(m.group('paddr'), 16)
+    else:
+        name = key = "insn:"+m.group('insn')
+    reginfo = ArchRegs.get(key)
     if reginfo is not None:
         # Found a named register
         md = memDisplay(reginfo, m.group('type'), int(m.group('pos')))
-        VirtMap[vaddr] = md.displayFunc
+        VirtMap[name] = md.displayFunc
     else:
         # No named register - invent a "dummy" one
-        md = memDisplay((m.group('vaddr'), ()), m.group('type')
+        md = memDisplay((name, ()), m.group('type')
                         , int(m.group('pos')))
-        VirtMap[vaddr] = md.displayFunc
+        VirtMap[name] = md.displayFunc
     print m.string
 
 def handleBegin(m):
@@ -209,7 +218,10 @@ def handleDetect(m):
 def procline(line):
     m = re_mem.match(line)
     if m:
-        func = VirtMap.get(m.group('vaddr'), defaultFunc)
+        name = m.group('vaddr')
+        if m.group('type') == 'insn':
+            name = "insn:"+name
+        func = VirtMap.get(name, defaultFunc)
         func(m)
         return
     m = re_watch.match(line)

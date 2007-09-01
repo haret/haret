@@ -58,7 +58,7 @@ re_debug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
 re_trace = re.compile(TIMEPRE_S + r'mmutrace (?P<addr>.*):'
                       r' (?P<insn>.*)\(.*\) (?P<vaddr>.*) (?P<val>.*)'
                       r' \((?P<changed>.*)\)$')
-re_irq = re.compile(TIMEPRE_S + r'(?P<data>(irq |insn |cpu resumed).*)$')
+re_irq = re.compile(TIMEPRE_S + r'(?P<data>(irq |cpu resumed).*)$')
 getClock = memalias.getClock
 
 def transRegVal(reg, val):
