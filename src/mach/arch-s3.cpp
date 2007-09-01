@@ -7,6 +7,7 @@ MachineS3c2442::MachineS3c2442()
 {
     name = "Generic Samsung s3c24xx";
     archname = "s3c2442";
+    CPUInfo[0] = L"SC32442";
 }
 
 int
@@ -118,3 +119,5 @@ MachineS3c2442::hardwareShutdown()
     s3c24xxShutdownDMA(channels);
     ResetUHC(uhcmap);
 }
+
+REGMACHINE(MachineS3c2442)
