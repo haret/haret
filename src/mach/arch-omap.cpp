@@ -5,13 +5,7 @@ MachineOMAP850::MachineOMAP850()
 {
     name = "Generic TI OMAP";
     archname = "OMAP850";
-}
-
-int
-MachineOMAP850::detect()
-{
-    // TODO - need to implement detection system.
-    return 0;
+    CPUInfo[0] = L"OMAP850";
 }
 
 void
@@ -65,3 +59,5 @@ MachineOMAP850::init()
                  "addlist gpios P2V(0xfffbe010)\n"
                  "addlist gpios P2V(0xfffbe810)\n");
 }
+
+REGMACHINE(MachineOMAP850)

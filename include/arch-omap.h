@@ -4,6 +4,5 @@
 class MachineOMAP850 : public Machine926 {
 public:
     MachineOMAP850();
-    int detect();
     void init();
 };
