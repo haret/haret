@@ -19,30 +19,41 @@ MachineS3c2442::detect()
 void
 MachineS3c2442::init()
 {
-    runMemScript("set ramaddr 0x30000000\n"
-                 // IRQs
-                 "addlist IRQS p2v(0x4A000010) 0x4030 32 0\n"
-                 "addlist IRQS p2v(0x560000a8) 0x0 32 0\n"
-                 // GPIOs
-                 "addlist GPIOS p2v(0x56000004)\n"
-                 "addlist GPIOS p2v(0x56000014)\n"
-                 "addlist GPIOS p2v(0x56000024)\n"
-                 "addlist GPIOS p2v(0x56000034)\n"
-                 "addlist GPIOS p2v(0x56000044)\n"
-                 "addlist GPIOS p2v(0x56000054)\n"
-                 "addlist GPIOS p2v(0x56000064)\n"
-                 "addlist GPIOS p2v(0x56000074)\n"
-                 "addlist GPIOS p2v(0x560000d4)\n"
-                 // GPIO functions
-                 "addlist GPIOS p2v(0x56000000)\n"
-                 "addlist GPIOS p2v(0x56000010)\n"
-                 "addlist GPIOS p2v(0x56000020)\n"
-                 "addlist GPIOS p2v(0x56000030)\n"
-                 "addlist GPIOS p2v(0x56000040)\n"
-                 "addlist GPIOS p2v(0x56000050)\n"
-                 "addlist GPIOS p2v(0x56000060)\n"
-                 "addlist GPIOS p2v(0x56000070)\n"
-                 "addlist GPIOS p2v(0x560000d0)\n");
+    runMemScript(
+        "set ramaddr 0x30000000\n"
+        // IRQs
+        "addlist IRQS p2v(0x4A000010) 0x4030 32 0\n"
+        "addlist IRQS p2v(0x560000a8) 0x0 32 0\n"
+        // GPIOs
+        "addlist GPIOS p2v(0x56000004)\n"
+        "addlist GPIOS p2v(0x56000014)\n"
+        "addlist GPIOS p2v(0x56000024)\n"
+        "addlist GPIOS p2v(0x56000034)\n"
+        "addlist GPIOS p2v(0x56000044)\n"
+        "addlist GPIOS p2v(0x56000054)\n"
+        "addlist GPIOS p2v(0x56000064)\n"
+        "addlist GPIOS p2v(0x56000074)\n"
+        "addlist GPIOS p2v(0x560000d4)\n"
+        // GPIO functions
+        "addlist GPIOS p2v(0x56000000)\n"
+        "addlist GPIOS p2v(0x56000010)\n"
+        "addlist GPIOS p2v(0x56000020)\n"
+        "addlist GPIOS p2v(0x56000030)\n"
+        "addlist GPIOS p2v(0x56000040)\n"
+        "addlist GPIOS p2v(0x56000050)\n"
+        "addlist GPIOS p2v(0x56000060)\n"
+        "addlist GPIOS p2v(0x56000070)\n"
+        "addlist GPIOS p2v(0x560000d0)\n"
+        // Clock & Power registers
+        "newvar CLOCKS GPIOS 'Architecture clock and power registers'\n"
+        "addlist CLOCKS p2v(0x4C000000)\n" // LOCKTIME
+        "addlist CLOCKS p2v(0x4C000004)\n" // MPLLCON
+        "addlist CLOCKS p2v(0x4C000008)\n" // UPLLCON
+        "addlist CLOCKS p2v(0x4C00000C)\n" // CLKCON
+        "addlist CLOCKS p2v(0x4C000010)\n" // CLKSLOW
+        "addlist CLOCKS p2v(0x4C000014)\n" // CLKDIVN
+        "addlist CLOCKS p2v(0x4C000018)\n" // CAMDIVN
+        );
 }
 
 static inline uint32 s3c_readl(volatile uint32 *base, uint32 reg)
