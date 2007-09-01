@@ -1,4 +1,5 @@
 #include <windows.h> // SystemParametersInfo
+#include "pkfuncs.h" // KernelIoControl
 
 #include "script.h" // REG_VAR_ROFUNC
 #include "output.h" // Output
@@ -103,6 +104,14 @@ findMachineType()
         }
     }
 
+    // Try to lookup processor type.
+    PROCESSOR_INFO pinfo;
+    DWORD rsize;
+    memset(&pinfo, sizeof(pinfo), 0);
+    KernelIoControl(IOCTL_PROCESSOR_INFORMATION, NULL, 0
+                    , &pinfo, sizeof(pinfo), &rsize);
+    Output("Trying to detect processor: %ls", pinfo.szProcessCore);
+
     // Couldn't find a machine - try by architecture.
     p = mach_start;
     while (p < &mach_end) {
@@ -112,6 +121,12 @@ findMachineType()
             // Not an architecture.
             continue;
         Output("Looking at arch %s", m->name);
+        for (uint32 j=0; j<ARRAY_SIZE(m->CPUInfo) && m->CPUInfo[j]; j++) {
+            int len = wcslen(m->CPUInfo[j]);
+            if (_wcsnicmp(pinfo.szProcessCore, m->CPUInfo[j], len) == 0)
+                // Match
+                return m;
+        }
         if (m->detect())
             // Match
             return m;

@@ -29,6 +29,7 @@ public:
     Machine();
     virtual ~Machine() { }
 
+    const wchar_t *CPUInfo[16];
     const char *name, *archname;
     const wchar_t *OEMInfo[16];
     const wchar_t *PlatformType;
