@@ -230,8 +230,9 @@ tryEmulate(struct irqData *data, struct irqregs *regs
 
         uint32 shift = 8 * (addr & 3);
         uint32 mask = ((1 << (8 * addrsize)) - 1) << shift;
+        uint32 cmpval = ((val << shift) & mask) | (t->cmpVal & ~mask);
         uint32 changed;
-        if (testChanged(t, val << shift, mask, &changed))
+        if (testChanged(t, cmpval, &changed))
             // Report insn
             add_trace(data, report_memAccess, addr, old_pc, insn
                       , val, changed >> shift);

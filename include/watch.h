@@ -18,8 +18,7 @@ struct memcheck {
     uint32 endaddr;
 };
 
-int testChanged(struct memcheck *mc, uint32 curval, uint32 extramask
-                , uint32 *pchanged);
+int testChanged(struct memcheck *mc, uint32 curval, uint32 *pchanged);
 int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged);
 void reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
                  , uint32 newval, uint32 changed);

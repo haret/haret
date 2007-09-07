@@ -45,12 +45,11 @@ doRead(struct memcheck *mc)
 }
 
 int __irq
-testChanged(struct memcheck *mc, uint32 curval, uint32 extramask
-            , uint32 *pchanged)
+testChanged(struct memcheck *mc, uint32 curval, uint32 *pchanged)
 {
     uint32 changed = 0;
     if (mc->trySuppress) {
-        changed = (curval ^ mc->cmpVal) & (mc->mask & extramask);
+        changed = (curval ^ mc->cmpVal) & mc->mask;
         if (changed == 0)
             // No change in value.
             return 0;
@@ -67,7 +66,7 @@ int __irq
 testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged)
 {
     uint32 curval = doRead(mc);
-    if (testChanged(mc, curval, 0xFFFFFFFF, pchanged)) {
+    if (testChanged(mc, curval, pchanged)) {
         *pnewval = curval;
         return 1;
     }
