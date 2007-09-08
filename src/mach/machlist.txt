@@ -51,7 +51,6 @@ e310,       SA      ,Toshiba e310
 e740,       PXA     ,TOSHIBA e740
 Acer_n30,           ,Acer n30 Handheld,           N30
 Mio_P550,   S3c2440 ,Mio P550,                    MIO_P550
-Libra,              ,LIBR100
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
@@ -62,3 +61,4 @@ H3600a,     SA      ,Compaq iPAQ H3600
 
 PLATFORM=SmartPhone
 Tornado,    OMAP850 ,Vodafone v1240,              OMAP_TORNADO
+Libra,              ,LIBR100
