@@ -76,6 +76,10 @@ stopL1traps(struct irqData *data)
     data->alterCount = 0;
 }
 
+// Obtain the Fault Address Register.
+DEF_GETIRQCPR(get_FAR, p15, 0, c6, c0, 0)
+// Get the Fault Status Register.
+DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
 // Flush the I and D TLBs.
 DEF_SETCPRATTR(set_TLBflush, p15, 0, c8, c7, 0, __irq, "memory")
 
@@ -92,7 +96,12 @@ static void __irq
 giveUp(struct irqData *data)
 {
     add_trace(data, report_giveup);
+
     data->errors++;
+    data->tracepoll.count = 0;
+    data->irqpoll.count = 0;
+    data->exitEarly = 1;
+
     stopL1traps(data);
     set_TLBflush(0);
 }
@@ -112,14 +121,16 @@ static void __irq
 tryEmulate(struct irqData *data, struct irqregs *regs
            , uint32 addr, uint32 newaddr)
 {
-    uint32 spsr = get_SPSR();
     uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
     uint32 insn = 0;
     int count;
-    if (spsr & (1<<5))
+    if (get_SPSR() & (1<<5))
         // Don't know how to handle thumb mode.
         goto fail;
     insn = *(uint32*)old_pc;
+    if ((get_FSR() & 0xd) != 0x5)
+        // Not a "section translation fault".
+        goto fail;
 
     if (--data->max_l1trace == 0)
         goto fail;
@@ -143,7 +154,6 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         if (Lbit(insn)) {
             // ldr
             if (Bbit(insn))
-                // XXX - access could fault
                 val = *(uint8*)newaddr;
             else
                 val = *(uint32*)newaddr;
@@ -170,14 +180,15 @@ tryEmulate(struct irqData *data, struct irqregs *regs
             goto fail;
         addrsize = 2;
         if (Lbit(insn)) {
-            // ldrh
             if (Hbit(insn)) {
-                if (Sbit(insn)) {
+                if (Sbit(insn))
+                    // ldrsh
                     val = *(int16*)newaddr;
-                } else {
+                else
+                    // ldrh
                     val = *(uint16*)newaddr;
-                }
             } else if (Sbit(insn)) {
+                // ldrsb
                 addrsize = 1;
                 val = *(int8*)newaddr;
             } else
@@ -249,11 +260,6 @@ fail:
     giveUp(data);
 }
 
-// Obtain the Fault Address Register.
-DEF_GETIRQCPR(get_FAR, p15, 0, c6, c0, 0)
-// Get the Fault Status Register.
-DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
-
 // Check if two addresses are in the same 1Meg range.
 static inline int __irq addrmatch(uint32 addr1, uint32 addr2) {
     return ((addr1 ^ addr2) & TOPBITS) == 0;
@@ -265,10 +271,6 @@ int __irq
 L1_abort_handler(struct irqData *data, struct irqregs *regs)
 {
     if (!data->alterCount)
-        return 0;
-    uint32 fsr = get_FSR();
-    if ((fsr & 0xd) != 0x5)
-        // Not a "section translation fault".
         return 0;
     uint32 faultaddr = get_FAR();
     for (uint i=0; i<data->alterCount; i++)
@@ -313,9 +315,12 @@ L1_prefetch_handler(struct irqData *data, struct irqregs *regs)
 static uint32 AltL1Trace = 0xE1100000;
 REG_VAR_INT(testWirqAvail, "ALTL1TRACE", AltL1Trace,
             "Alternate location to move L1TRACE accesses to")
-static uint32 MaxL1Trace = 0xFFFFFFFF;
+static uint32 MaxL1Trace = 0;
 REG_VAR_INT(testWirqAvail, "MAXL1TRACE", MaxL1Trace,
             "Maximum number of l1traces to report before giving up (debug feature)")
+static uint32 MaxL1TraceAfterResume = 0;
+REG_VAR_INT(testWirqAvail, "MAXL1TRACERESUME", MaxL1TraceAfterResume,
+            "Maximum number of l1traces after resume (debug feature)")
 
 class traceListVar : public listVarBase {
 public:
@@ -405,6 +410,17 @@ static uint32 traceForWatch;
 REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
             "Only report memory trace if ADDTRACEWATCH poll succeeds")
 
+// When tracing a coarse (or fine) mapping in the page tables there is
+// no reliable way to disable caching.  So, if an access occurs that
+// can't be emulated and the tracing needs to stop early then any
+// cached memory wont be flushed - this could cause problems.  By
+// default we only allow tracing section mappings - but we allow the
+// user to override the sanity test because there are occasionally
+// valid uses.
+static uint32 PermissiveMMUtrace;
+REG_VAR_INT(testWirqAvail, "PERMISSIVEMMUTRACE", PermissiveMMUtrace,
+            "Permit tracing non-section memory addresses.")
+
 
 /****************************************************************
  * Tracing setup
@@ -448,6 +464,7 @@ prepL1traps(struct irqData *data)
     }
 
     data->max_l1trace = MaxL1Trace;
+    data->max_l1trace_after_resume = MaxL1TraceAfterResume;
 
     // Determine which 1Meg sections need to be altered
     uint32 count = 0;
@@ -465,14 +482,15 @@ prepL1traps(struct irqData *data)
 
         // Lookup descriptor for mappings
         uint32 l1d = *getMMUref(data, vaddr);
-        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION)
-            // When tracing a coarse (or fine) mapping in the page
-            // tables there is no reliable way to disable caching.
-            // So, if an access occurs that can't be emulated and the
-            // tracing needs to stop early then any cached memory wont
-            // be flushed - this could cause problems.
+        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
             Output("Warning! Tracing non-section mapping (%08x)"
                    " not well supported", vaddr);
+            if (!PermissiveMMUtrace) {
+                Output("If you really want to do this, run"
+                       " 'set permissivemmutrace 1' and retry");
+                return -1;
+            }
+        }
         uint32 alt_l1d = *getMMUref(data, newAddr(data, count));
         if (alt_l1d != MMU_L1_UNMAPPED) {
             Output("Address %08x not unmapped (l1d=%08x)"
