@@ -16,5 +16,5 @@ struct stackJumper_s {
 extern struct stackJumper_s stackJumper;
 
 uint32 *findWinCEirq(uint32 offset);
-int hookResume(uint32 handler, uint32 stack, uint32 data);
+int hookResume(uint32 handler, uint32 stack, uint32 data, int complain=1);
 void unhookResume();

@@ -45,9 +45,11 @@ static struct stackJumper_s *ResumeSJ;
 
 // Setup wince to resume into a haret handler.
 int
-hookResume(uint32 handler, uint32 stack, uint32 data)
+hookResume(uint32 handler, uint32 stack, uint32 data, int complain)
 {
     if (winceResumeAddr == 0xffffffff) {
+        if (! complain)
+            return 0;
         Output(C_ERROR "Please specify WinCE physical resume address");
         return -1;
     }
