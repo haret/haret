@@ -137,6 +137,9 @@ getReg(struct irqregs *regs, uint32 nr)
     // registers, and then switch context back.
     uint32 newContext = get_SPSR();
     newContext &= 0x1f; // Extract mode bits.
+    if (newContext == 0x10)
+        // Get regs from system mode instead of user mode
+        newContext = 0x1f;
     newContext |= (1<<6)|(1<<7); // Disable interrupts
     uint32 temp, hiregs[2];
     asm volatile("mrs %0, cpsr @ Get current cpsr\n"
@@ -168,6 +171,9 @@ setReg(struct irqregs *regs, uint32 nr, uint32 val)
     uint32 newContext = get_SPSR();
     newContext &= 0x1f; // Extract mode bits.
     newContext |= (1<<6)|(1<<7); // Disable interrupts
+    if (newContext == 0x10)
+        // Get regs from system mode instead of user mode
+        newContext = 0x1f;
     if (nr == 13)
         newContext |= (1<<30); // Z bit
     uint32 temp;
