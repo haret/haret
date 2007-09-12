@@ -74,6 +74,10 @@ memalias.RegsList['ARCH:s3c2442'] = Regs_s3c2442
 # HTC Hermes specific registers
 Regs_Hermes = Regs_s3c2442.copy()
 Regs_Hermes.update({
+    0x08000000: ("cpldA", regOneBits("CA")),
+    0x08000002: ("cpldB", regOneBits("CB")),
     0x08000004: ("cpldirq", regOneBits("CPLD")),
+    0x08000006: ("cpldD", regOneBits("CD")),
+    0x08000008: ("cpldE", regOneBits("CE")),
     })
 memalias.RegsList['Hermes'] = Regs_Hermes
