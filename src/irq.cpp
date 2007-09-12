@@ -115,6 +115,8 @@ resume_handler(struct irqData *data, struct irqregs *regs)
 {
     add_trace(data, report_resume);
     checkPolls(data, -1, &data->resumepoll);
+    if (data->max_l1trace_after_resume)
+        data->max_l1trace = data->max_l1trace_after_resume;
 }
 
 
@@ -191,7 +193,7 @@ mainLoop(struct irqData *data, int seconds)
     uint32 cur_time = start_time;
     uint32 fin_time = cur_time + seconds * 1000;
     int tmpcount = 0;
-    while (cur_time <= fin_time) {
+    for (;;) {
         int ret = printTrace(cur_time - start_time, data);
         if (ret) {
             // Processed a trace - try to process another without
@@ -201,11 +203,16 @@ mainLoop(struct irqData *data, int seconds)
                 continue;
             // Hrmm.  Recheck the current time so that we don't run
             // away reporting traces.
-        } else
+        } else {
             // Nothing to report; yield the cpu.
+            if (data->exitEarly)
+                break;
             late_SleepTillTick();
+        }
         cur_time = GetTickCount();
         tmpcount = 0;
+        if (cur_time >= fin_time)
+            break;
     }
 }
 
@@ -350,14 +357,13 @@ cmd_wirq(const char *cmd, const char *args)
     if (ret)
         goto abort;
 
-    if (data->resumepoll.count) {
-        ret = hookResume(
-            memVirtToPhys((uint32)&code->cCode[offset_cResumeHandler()])
-            , memVirtToPhys((uint32)data)
-            , memVirtToPhys((uint32)data));
-        if (ret)
-            goto abort;
-    }
+    ret = hookResume(
+        memVirtToPhys((uint32)&code->cCode[offset_cResumeHandler()])
+        , memVirtToPhys((uint32)data)
+        , memVirtToPhys((uint32)data)
+        , data->resumepoll.count || data->max_l1trace_after_resume);
+    if (ret)
+        goto abort;
 
     // Replace old handler with new handler.
     Output("Replacing windows exception handlers...");
@@ -386,8 +392,7 @@ cmd_wirq(const char *cmd, const char *args)
     return_control();
     Output("Finished restoring windows exception handlers.");
 
-    if (data->resumepoll.count)
-        unhookResume();
+    unhookResume();
 
     postLoop(data);
 abort:

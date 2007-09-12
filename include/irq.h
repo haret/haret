@@ -59,6 +59,7 @@ struct irqData {
     uint32 overflows, errors;
     uint32 writePos, readPos;
     struct traceitem traces[NR_TRACE];
+    uint32 exitEarly;
 
     // Summary counters.
     uint32 irqCount, abortCount, prefetchCount;
@@ -76,7 +77,7 @@ struct irqData {
     uint32 alterCount, alterVAddrs[MAX_L1TRACE];
     uint32 traceCount;
     memcheck traceAddrs[MAX_L1TRACE];
-    uint32 max_l1trace;
+    uint32 max_l1trace, max_l1trace_after_resume;
 
     uint32 ignoreAddr[MAX_IGNOREADDR];
     uint32 ignoreAddrCount;
