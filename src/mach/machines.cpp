@@ -116,9 +116,6 @@ findMachineType()
     }
 
     // Couldn't find a machine - try by architecture.
-    wchar_t *cpuname = pinfo.szProcessorName;
-    if (!cpuname[0])
-        cpuname = pinfo.szProcessCore;
     p = mach_start;
     while (p < &mach_end) {
         Machine *m = *p;
@@ -129,7 +126,8 @@ findMachineType()
         Output("Looking at arch %s", m->name);
         for (uint32 j=0; j<ARRAY_SIZE(m->CPUInfo) && m->CPUInfo[j]; j++) {
             int len = wcslen(m->CPUInfo[j]);
-            if (_wcsnicmp(cpuname, m->CPUInfo[j], len) == 0)
+            if (_wcsnicmp(pinfo.szProcessorName, m->CPUInfo[j], len) == 0
+                || _wcsnicmp(pinfo.szProcessCore, m->CPUInfo[j], len) == 0)
                 // Match
                 return m;
         }
