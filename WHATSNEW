@@ -1,5 +1,8 @@
 next version <kevin@koconnor.net>, <pmiscml@gmail.com>
 
+  * It is now possible to detect processors by inspecting the wince
+    processor information.  (SC32442 and OMAP850 checks added.)
+
   * New command "newvar" that enhances memory watching.  It is now
     possible to dynamically create new lists - for example:
         newvar CLOCKS GPIOS 'Architecture clock registers'
