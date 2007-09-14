@@ -59,6 +59,19 @@ static inline uint32 MVAddr(uint32 addr) {
     return addr;
 }
 
+// Rotate right bit shift
+static inline uint32 rotr(uint32 val, uint32 shift) {
+    __asm__("mov %0, %1, ror %2"
+            : "=r" (val)
+            : "r" (val), "r" (shift));
+    return val;
+}
+
+// Rotate left bit shift
+static inline uint32 rotl(uint32 val, uint32 shift) {
+    return rotr(val, 32-shift);
+}
+
 void printWelcome();
 void take_control();
 void return_control();
