@@ -352,7 +352,12 @@ public:
                     get_suppress(args, t);
                 }
             }
-        t->mask = ~mask;
+
+        // Adjust mask to address offset
+        uint32 shift = 8 * (t->addr & 3);
+        t->mask = rotl(~mask, shift);
+        t->cmpVal = rotl(t->cmpVal, shift);
+
         t->endaddr = t->addr + addrsize;
         if ((t->addr & TOPBITS) != ((t->endaddr - 1) & TOPBITS)) {
             ScriptError("Address range must be within a 1Meg section");
@@ -375,9 +380,15 @@ public:
                 *f++ = 'w';
             *f = '\0';
             char buf[32];
+
+            // Undo adjustment of mask to address offset
+            memcheck tmp = *t;
+            uint32 shift = 8 * (t->addr & 3);
+            t->cmpVal = rotr(t->cmpVal, shift);
+
             Output("%03d: 0x%08x %d %s %08x %s"
                    , i, t->addr, t->endaddr - t->addr, flags
-                   , ~t->mask, disp_suppress(t, buf));
+                   , rotr(~t->mask, shift), disp_suppress(&tmp, buf));
         }
     }
     void fillVarType(char *buf) {
@@ -398,8 +409,7 @@ __REG_VAR(
     "    <ignVal> report only when value doesn't equal this value - one\n"
     "             may also specify 'last' or 'none' (default is 'last' if\n"
     "             <mask> is set - report on change.  Otherwise the default\n"
-    "             is 'none' - always report every event)\n"
-    "  Note that <mask> and <ignVal> work on 32-bit aligned values.")
+    "             is 'none' - always report every event)")
 
 static uint32 ignoreAddr[MAX_IGNOREADDR];
 static uint32 ignoreAddrCount;
