@@ -26,6 +26,12 @@ def regTwoBits(name, start=0):
     return tuple([("%d,%d" % (i, i+1), "%s%d" % (name, i/2 + start))
                   for i in range(0, 32, 2)])
 
+# Helper - create description for registers that are composed of an
+# incrementing list of four bit fields.
+def regFourBits(name, start=0):
+    return tuple([("%d,%d,%d,%d" % (i, i+1, i+2, i+3), "%s%d" % (name, i/4 + start))
+                  for i in range(0, 32, 4)])
+
 import regs_pxa
 import regs_s3c
 import regs_omap

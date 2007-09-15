@@ -5,8 +5,7 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import memalias
-regOneBits = memalias.regOneBits
-
+from memalias import regOneBits, regFourBits
 
 ######################################################################
 # omap850
@@ -57,5 +56,48 @@ Regs_omap850 = {
     0xfffbd810: ("GPIO4-IM", regOneBits("IM", 96)),
     0xfffbe010: ("GPIO5-IM", regOneBits("IM", 128)),
     0xfffbe810: ("GPIO6-IM", regOneBits("IM", 160)),
+
+    0xfffe1010: ("OMAP730_MODE1", regOneBits("M1")),
+    0xfffe1014: ("OMAP730_MODE2", regOneBits("M2")),
+
+    0xfffe1070: ("OMAP730_IO_CONF0", regFourBits("C")),
+    0xfffe1074: ("OMAP730_IO_CONF1", regFourBits("C")),
+    0xfffe1078: ("OMAP730_IO_CONF2", regFourBits("C")),
+    0xfffe107c: ("OMAP730_IO_CONF3", regFourBits("C")),
+    0xfffe1080: ("OMAP730_IO_CONF4", regFourBits("C")),
+    0xfffe1084: ("OMAP730_IO_CONF5", regFourBits("C")),
+    0xfffe1088: ("OMAP730_IO_CONF6", regFourBits("C")),
+    0xfffe108c: ("OMAP730_IO_CONF7", regFourBits("C")),
+    0xfffe1090: ("OMAP730_IO_CONF8", regFourBits("C")),
+    0xfffe1094: ("OMAP730_IO_CONF9", regFourBits("C")),
+    0xfffe1098: ("OMAP730_IO_CONF10", regFourBits("C")),
+    0xfffe109c: ("OMAP730_IO_CONF11", regFourBits("C")),
+    0xfffe10a0: ("OMAP730_IO_CONF12", regFourBits("C")),
+    0xfffe10a4: ("OMAP730_IO_CONF13", regFourBits("C")),
+
+    # Clocks
+    0xfffece00: ("ARM_CKCTL", (("0-1", "PERDIV"), ("2-3", "LCDDIV"), ("4-5", "ARMDIV"),
+                               ("6-7", "DSPDIV"), ("8-9", "TCDIV"), ("10-11", "DSPMMUDIV"),
+                               (13, "EN_DSPCK"))),
+    0xfffece08: ("ARM_IDLECT1", ((10, "dsp/mpui related"),)),
+    0xfffece04: ("ARM_IDLECT2", ((0, "EN_WDTCK"), (1, "EN_XORPCK"), (2, "EN_PERCK"),
+                                 (3, "EN_LCDCK"), (4, "EN_LBCK"),
+                                 (6, "EN_APICK"), (7, "EN_TIMCK"), (8, "DMACK_REQ"),
+                                 (9, "EN_GPIOCK"), (11, "EN_CKOUT_ARM"))),
+    0xfffece0c: ("ARM_EWUPCT", regOneBits("EWUPCT")),
+    0xfffece10: ("ARM_RSTCT1", ((0, "dsp/mpui related"), (1, "DSP_EN"))),
+    0xfffece14: ("ARM_RSTCT2", ((1,"dsp/mpui related"),)),
+    0xfffece18: ("ARM_SYSST", ((12, "sync_scal"),)),
+    0xfffece24: ("ARM_IDLECT3", ((0, "EN_OCPI_CK"), (2, "EN_TC1_CK"), (4, "EN_TC2_CK"))),
+    0xfffecf00: ("DPLL_CTL", (("2-3", "BYPASS_DIV"), (4, "EN_PLL"),
+                              ("5-7", "PLL_DIV"),  ("7-11", "PLL_MULT"))),
+    0xfffe0830: ("ULPD_CLOCK_CTRL", ((4, "USB_MCLK_EN"),)),
+    0xfffe0834: ("ULPD_SOFT_REQ", ((4, "USB_DC_CK"), (9, "UART1_CK"),
+                                   (11, "UART2_CK"), (12, "MMC_CK"))),
+    0xfffe1080: ("MOD_CONF_CTRL_0", ((9, "USB_HOST_HHC_UHOST_EN"),)),
+    0xfffe1110: ("MOD_CONF_CTRL_1", ((16, "SOSSI_CLK_EN"),)),
+    0xfffe0874: ("SWD_CLK_DIV_CTRL_SEL", ((1, "SWD_ULPD_PLL_CLK_REQ"), (2, "SDW_MCLK_INV_BIT"))),
+    0xfffe0878: ("COM_CLK_DIV_CTRL_SEL", ((1, "COM_ULPD_PLL_CLK_REQ"),)),
+    0xfffe0900: ("OMAP730_PCC_UPLD_CTRL", ((0, "omap input clock switch"),)),
     }
 memalias.RegsList['ARCH:OMAP850'] = Regs_omap850

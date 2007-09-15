@@ -5,4 +5,7 @@ class MachineOMAP850 : public Machine926 {
 public:
     MachineOMAP850();
     void init();
+    virtual int preHardwareShutdown();
+    virtual void hardwareShutdown();
+    uint16 *dma;
 };
