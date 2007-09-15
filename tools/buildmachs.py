@@ -56,6 +56,7 @@ def main():
 #include "arch-s3.h"
 #include "arch-pxa.h"
 #include "arch-sa.h"
+#include "arch-msm.h"
 
 #include "mach-types.h"
 #include "script.h" // runMemScript

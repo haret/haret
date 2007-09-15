@@ -85,7 +85,7 @@ $(OUT)%.exe: $(OUT)%-debug
 MACHOBJS := machines.o \
   mach-universal.o \
   mach-autogen.o \
-  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-arm.o
+  arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-msm.o arch-arm.o
 
 $(OUT)mach-autogen.o: src/mach/machlist.txt
 	@echo "  Building machine list"
