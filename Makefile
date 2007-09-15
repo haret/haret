@@ -8,7 +8,7 @@
 #
 
 # Program version
-VERSION=pre-0.4.9-$(shell date +"%Y%m%d_%H%M%S")
+VERSION=0.5.0
 
 # Output directory
 OUT=out/
