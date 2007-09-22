@@ -23,7 +23,7 @@ all:
 	echo rootfs image: $$image_file; \
 	\
 	gzip -d -c $$liveramdisk_file | ./cpio-append.py $$image_file initrd.jffs2 | gzip -c > $$(basename $$image_file).liveramdisk.cpio.gz; \
-	./make-bootbundle.py -o liveramdisk-$(MACHINE).exe \
+	./make-bootbundle.py \
 	    $(HARET) \
 	    $$kernel_file \
 	    $$(basename $$image_file).liveramdisk.cpio.gz \
