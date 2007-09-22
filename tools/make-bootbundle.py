@@ -4,18 +4,24 @@ import sys
 import os
 import stat
 import struct
+import getopt
 
-if len(sys.argv) != 5:
+optlist, args = getopt.gnu_getopt(sys.argv[1:], "o:h?")
+opts = {}
+opts.update(optlist)
+
+if len(args) != 4:
     print "make-bootbundle - Make a standalone HaRET boot bundle with kernel and initrd"
-    print "Usage: make-bootbundle.py <path to haret.exe> <zImage> <initrd> <script>"
+    print "Usage: make-bootbundle.py [-o <outfile>] <path to haret.exe> <zImage> <initrd> <script>"
     sys.exit(0)
 
-os.system("cat %s %s %s %s> bootbundle.exe"  % (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+outfile = opts.get("-o", "bootbundle.exe")
+os.system("cat %s %s %s %s> %s"  % (args[0], args[1], args[2], args[3], outfile))
 
-exe = open("bootbundle.exe", "r+b")
-kernelSt = os.stat(sys.argv[2])
-initrdSt = os.stat(sys.argv[3])
-scriptSt = os.stat(sys.argv[4])
+exe = open(outfile, "r+b")
+kernelSt = os.stat(args[1])
+initrdSt = os.stat(args[2])
+scriptSt = os.stat(args[3])
 
 exe.seek(0, 2)
 exe.write("HARET1\0\0")
