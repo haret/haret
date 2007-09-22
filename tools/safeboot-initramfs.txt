@@ -1,0 +1,9 @@
+#
+# LiveRamdisk HaRET script
+# (c) 2007 Paul Sokolovsky
+#
+msgbox "Attention!" "This will boot Linux. All memory will be overwritten and hard reset will be required to return to Windows Mobile. You *MUST BACKUP* your data first. Continue booting (Cancel - quit to make backup)?" 0x40031
+if result == 2 exit
+
+set cmdline "ip=192.168.2.202:192.168.2.200:192.168.2.200:255.255.255.0:ipaq:usb0 console=ttyS0,115200n8 console=tty0 rdinit=/init"
+ramboot
