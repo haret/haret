@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#
+# Licensed under GPL v3
+# (c) 2007 Paul Sokolovsky
+#
 """
 Take cpio archive on stdin, and append to it a file, dumping result on stdout.
 Usage:
@@ -8,7 +12,6 @@ cpio-append <fname> [<archive_fname>]
 import sys
 import os
 import stat
-from cpioarchive import *
 
 def copyData(fIn, fOut):
     while True:
