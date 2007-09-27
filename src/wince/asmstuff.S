@@ -79,10 +79,27 @@ cpuFlushCache_arm920:
 		mcr	p15, 0, r0, c8, c7, 0		@ drain I+D TLBs
 		mov	pc, r14
 
+@ Flush CPU caches on arm925 - this MUST be called between
+@ take_control()/return_control()
+@
+@ Dirties r0
+		.global cpuFlushCache_arm925
+cpuFlushCache_arm925:
+		mov	r0, #(256 - 1) << 4		@ 256 entries in segment
+1:		mrc	p15, 0, r0, c7, c14, 2		@ test,clean,invalidate
+		subs	r0, r0, #1 << 4
+		bcs	1b
+
+		mov	r0, #0
+		mcr	p15, 0, r0, c7, c5, 0		@ invalidate I cache
+		mcr	p15, 0, r0, c7, c10, 4		@ drain WB
+		mcr	p15, 0, r0, c8, c7, 0		@ drain I+D TLBs
+		mov	pc, r14
+
 @ Flush CPU caches on arm926 - this MUST be called between
 @ take_control()/return_control()
 @
-@ Dirties r0, r1, r2
+@ Dirties r0
 		.global cpuFlushCache_arm926
 cpuFlushCache_arm926:
 1:		mrc	p15, 0, r15, c7, c14, 3		@ test,clean,invalidate

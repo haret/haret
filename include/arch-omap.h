@@ -9,3 +9,8 @@ public:
     virtual void hardwareShutdown();
     uint16 *dma;
 };
+
+class MachineOMAP15xx : public Machine {
+public:
+    MachineOMAP15xx();
+};

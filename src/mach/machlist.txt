@@ -28,6 +28,7 @@ H3900,      PXA     ,Compaq iPAQ H39,             H3900
 H4000,      PXA     ,hp iPAQ h41,                 H4000
 H4300,      PXA     ,hp iPAQ h43,                 H4300
 H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
+H6340,      OMAP15xx,HP iPAQ h6340,               H6300
 HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   set ramsize 64*1024*1024
 HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*1024
 Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024

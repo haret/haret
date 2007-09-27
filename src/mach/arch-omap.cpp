@@ -137,3 +137,22 @@ MachineOMAP850::hardwareShutdown()
 }
 
 REGMACHINE(MachineOMAP850)
+
+
+/****************************************************************
+ * OMAP15xx
+ ****************************************************************/
+
+extern "C" {
+    void cpuFlushCache_arm925();
+}
+
+MachineOMAP15xx::MachineOMAP15xx()
+{
+    name = "Generic TI OMAP15xx";
+    archname = "OMAP15xx";
+    CPUInfo[0] = L"OMAP15";
+    flushCache = cpuFlushCache_arm925;
+}
+
+REGMACHINE(MachineOMAP15xx)
