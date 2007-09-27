@@ -11,6 +11,9 @@ New features:
 * Possibly allow the current machine definition (Mach) to be
   explicitly specified by a user command.
 
+* It would be nice if one could "watch" multiple lists
+  simultaneously.  For example: "watch gpios clocks 10"
+
 
 Misc cleanups:
 
@@ -36,7 +39,7 @@ Misc cleanups:
 
 * Remove old Microsoft based build code.
 
-* Submit nled.h, pkfuncs.h, and pwinuser.h to cegcc.
+* Submit nled.h, pkfuncs.h, pwindbas.h, and pwinuser.h to cegcc.
 
   * Find out origin of gx.h - sanitize and submit to cegcc if
     necessary.
