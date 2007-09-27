@@ -8,10 +8,10 @@
 #include "windows.h"
 #include <stdio.h> // sprintf
 
-#include "xtypes.h"
 #include "output.h" // Output
 #include "machines.h" // Mach
 #include "script.h" // REG_VAR_ROFUNC
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "cpu.h"
 
 DEF_GETCPR(get_p15r0, p15, 0, c0, c0, 0)
@@ -98,7 +98,7 @@ printWelcome()
 {
     // Display some welcome message
     SYSTEM_INFO si;
-    GetSystemInfo (&si);
+    GetSystemInfo(&si);
     OSVERSIONINFOW vi;
     vi.dwOSVersionInfoSize = sizeof(vi);
     GetVersionEx(&vi);
@@ -106,6 +106,13 @@ printWelcome()
     WCHAR bufplat[128], bufoem[128];
     SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
     SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
+
+    const char *cpuid = "?";
+    TRY_EXCEPTION_HANDLER {
+        cpuid = cpu_id();
+    } CATCH_EXCEPTION_HANDLER {
+        Output("Exception on cpu id detect");
+    }
 
     Output("Welcome, this is HaRET %s running on WindowsCE v%ld.%ld\n"
            "Minimal virtual address: %p, maximal virtual address: %p",
@@ -115,7 +122,7 @@ printWelcome()
            "CPU is %s running in %s mode\n"
            "Enter 'HELP' for a short command summary.\n",
            Mach->name, Mach->archname, bufplat, bufoem,
-           cpu_id(), cpu_mode());
+           cpuid, cpu_mode());
 }
 
 uint32 cmd_cpuGetPSR(bool, uint32*, uint32) {

@@ -3,6 +3,7 @@
 
 #include "script.h" // REG_VAR_ROFUNC
 #include "output.h" // Output
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "machines.h"
 
 // Global current machine setting.
@@ -131,7 +132,13 @@ findMachineType()
                 // Match
                 return m;
         }
-        if (m->detect())
+        int ret = 0;
+        TRY_EXCEPTION_HANDLER {
+            ret = m->detect();
+        } CATCH_EXCEPTION_HANDLER {
+            Output("Exception on arch %s detect", m->name);
+        }
+        if (ret)
             // Match
             return m;
     }
