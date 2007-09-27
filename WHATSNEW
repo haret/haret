@@ -1,3 +1,7 @@
+next version <kevin@koconnor.net>
+
+  * Initial support for detecting MSM7500 cpus.
+
 20070915 0.5.0 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * It is now possible to detect processors by inspecting the wince
