@@ -7,17 +7,17 @@
 MACHINE=h4000
 IMGTYPE=x11
 
-OEBUILD=../../build-oe-angstrom
+OEBUILD=../../OE/build
 # For LIVERAMDISK_DIR, machine is arbitrary, the image is machine-independent
 LIVERAMDISK_DIR=$(OEBUILD)/tmp/deploy/uclibc/images/h4000
 OEDEPLOY=$(OEBUILD)/tmp/deploy/glibc/images/$(MACHINE)
-HARET=../out/haret.exe
-#HARET=haret-0.5.0.exe
+#HARET=../out/haret.exe
+HARET=../../haret-0.5.0.exe
 
 all:
-	@liveramdisk_file=`ls -1 -r $(LIVERAMDISK_DIR)/*-liveramdisk-* | head -n 1`; \
-	kernel_file=`ls -1 -r $(OEDEPLOY)/zImage-*$(MACHINE)* | head -n 1`; \
-	image_file=`ls -1 -r $(OEDEPLOY)/A*$(IMGTYPE)*$(MACHINE).rootfs.jffs2 | head -n 1`; \
+	liveramdisk_file=`ls -1 -r $(LIVERAMDISK_DIR)/*-liveramdisk-* | head -n 1`; \
+	kernel_file=`find $(OEDEPLOY) -name 'zImage-*$(MACHINE)*' | sort | head -n 1`; \
+	image_file=`find $(OEDEPLOY) -name 'A*$(IMGTYPE)*$(MACHINE).rootfs.jffs2' | sort | head -n 1`; \
 	echo LiveRamdisk image: $$liveramdisk_file; \
 	echo kernel: $$kernel_file; \
 	echo rootfs image: $$image_file; \
