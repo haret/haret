@@ -16,8 +16,8 @@ HARET=../../haret-0.5.0.exe
 
 all:
 	liveramdisk_file=`ls -1 -r $(LIVERAMDISK_DIR)/*-liveramdisk-* | head -n 1`; \
-	kernel_file=`find $(OEDEPLOY) -name 'zImage-*$(MACHINE)*' | sort | head -n 1`; \
-	image_file=`find $(OEDEPLOY) -name 'A*$(IMGTYPE)*$(MACHINE).rootfs.jffs2' | sort | head -n 1`; \
+	kernel_file=`find $(OEDEPLOY) -name 'zImage-*$(MACHINE)*' | sort -r | head -n 1`; \
+	image_file=`find $(OEDEPLOY) -name 'A*$(IMGTYPE)*$(MACHINE).rootfs.jffs2' | sort -r | head -n 1`; \
 	echo LiveRamdisk image: $$liveramdisk_file; \
 	echo kernel: $$kernel_file; \
 	echo rootfs image: $$image_file; \
