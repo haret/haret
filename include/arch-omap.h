@@ -13,4 +13,8 @@ public:
 class MachineOMAP15xx : public Machine {
 public:
     MachineOMAP15xx();
+    void init();
+    virtual int preHardwareShutdown();
+    virtual void hardwareShutdown();
+    uint16 *dma;
 };
