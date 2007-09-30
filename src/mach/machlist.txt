@@ -18,6 +18,7 @@ Blueangel,  PXA     ,PH20,                        BLUEANGEL, \
         set ramsize 128*1024*1024
 Himalaya,   PXA     ,PH10A;PH10B,                 HIMALAYA
 Magician,   PXA27x  ,PM10,                        MAGICIAN
+Universal,  PXA27x  ,PU10,                        HTCUNIVERSAL
 H1910,      PXA     ,hp iPAQ h191,                H1900
 H1940,      S3c2410 ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*1024
 H2200,      PXA     ,hp iPAQ h22,                 H2200
