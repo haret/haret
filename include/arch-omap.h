@@ -7,7 +7,7 @@ public:
     void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
-    uint16 *dma;
+    uint8 *base;
 };
 
 class MachineOMAP15xx : public Machine {
@@ -16,5 +16,5 @@ public:
     void init();
     virtual int preHardwareShutdown();
     virtual void hardwareShutdown();
-    uint16 *dma;
+    uint8 *base;
 };

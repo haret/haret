@@ -3,6 +3,11 @@
 #include "arch-omap.h"
 
 
+#define OMAP_BASE		0xfffe0000
+#define __REG16(x) (*(volatile uint16 *)(&base[(x)-OMAP_BASE]))
+#define __REG32(x) (*(volatile uint32 *)(&base[(x)-OMAP_BASE]))
+
+
 /****************************************************************
  * OMAP DMA
  ****************************************************************/
@@ -23,12 +28,10 @@
 #define OMAP_DMA_CDFI_REG(n)            __REG16(OMAP_DMA_BASE + 0x40 * (n) + 0x1e)
 #define OMAP_DMA_CLNK_CTRL_REG(n)       __REG16(OMAP_DMA_BASE + 0x40 * (n) + 0x28)
 
-#define __REG16(x) (dma[(x-OMAP_DMA_BASE)>>1])
-
 #define OMAP_DMA_CCR_EN			(1 << 7)
 
 static void
-omapResetDMA(volatile uint16 *dma, int chancount)
+omapResetDMA(volatile uint8 *base, int chancount)
 {
     uint16 status;
     for (int i = 0; i < chancount; i++) {
@@ -45,6 +48,42 @@ omapResetDMA(volatile uint16 *dma, int chancount)
         /* Clear pending interrupts */
         status = OMAP_DMA_CSR_REG(i);
     }
+}
+
+
+/****************************************************************
+ * OMAP IRQS
+ ****************************************************************/
+
+#define OMAP_IH1_BASE           0xfffecb00
+#define OMAP_IH2_BASE           0xfffe0000
+
+#define OMAP_IH1_ITR            __REG32(OMAP_IH1_BASE + 0x00)
+#define OMAP_IH1_MIR            __REG32(OMAP_IH1_BASE + 0x04)
+#define OMAP_IH1_SIR_IRQ        __REG32(OMAP_IH1_BASE + 0x10)
+#define OMAP_IH1_SIR_FIQ        __REG32(OMAP_IH1_BASE + 0x14)
+#define OMAP_IH1_CONTROL        __REG32(OMAP_IH1_BASE + 0x18)
+#define OMAP_IH1_ILR0           __REG32(OMAP_IH1_BASE + 0x1c)
+#define OMAP_IH1_ISR            __REG32(OMAP_IH1_BASE + 0x9c)
+
+#define OMAP_IH2_ITR            __REG32(OMAP_IH2_BASE + 0x00)
+#define OMAP_IH2_MIR            __REG32(OMAP_IH2_BASE + 0x04)
+#define OMAP_IH2_SIR_IRQ        __REG32(OMAP_IH2_BASE + 0x10)
+#define OMAP_IH2_SIR_FIQ        __REG32(OMAP_IH2_BASE + 0x14)
+#define OMAP_IH2_CONTROL        __REG32(OMAP_IH2_BASE + 0x18)
+#define OMAP_IH2_ILR0           __REG32(OMAP_IH2_BASE + 0x1c)
+#define OMAP_IH2_ISR            __REG32(OMAP_IH2_BASE + 0x9c)
+
+static void
+omapResetIRQ(volatile uint8 *base)
+{
+        OMAP_IH1_MIR = 0xFFFFFFFF;
+        OMAP_IH1_ITR = 0;
+        OMAP_IH1_CONTROL = 0x03;
+
+        OMAP_IH2_MIR = 0xFFFFFFFF;
+        OMAP_IH2_ITR = 0;
+        OMAP_IH2_CONTROL = 0x03;
 }
 
 
@@ -150,8 +189,8 @@ int
 MachineOMAP850::preHardwareShutdown()
 {
     /* Map now everything we'll need later */
-    dma = (uint16 *)memPhysMap(OMAP_DMA_BASE);
-    if (! dma)
+    base = memPhysMap(OMAP_BASE);
+    if (! base)
         return -1;
     return 0;
 }
@@ -159,7 +198,7 @@ MachineOMAP850::preHardwareShutdown()
 void
 MachineOMAP850::hardwareShutdown()
 {
-    omapResetDMA(dma, 17);
+    omapResetDMA(base, 17);
 }
 
 REGMACHINE(MachineOMAP850)
@@ -191,8 +230,8 @@ int
 MachineOMAP15xx::preHardwareShutdown()
 {
     /* Map now everything we'll need later */
-    dma = (uint16 *)memPhysMap(OMAP_DMA_BASE);
-    if (! dma)
+    base = memPhysMap(OMAP_BASE);
+    if (! base)
         return -1;
     return 0;
 }
@@ -200,7 +239,8 @@ MachineOMAP15xx::preHardwareShutdown()
 void
 MachineOMAP15xx::hardwareShutdown()
 {
-    omapResetDMA(dma, 9);
+    omapResetIRQ(base);
+    omapResetDMA(base, 8);
 }
 
 REGMACHINE(MachineOMAP15xx)
