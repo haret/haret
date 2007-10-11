@@ -107,10 +107,13 @@ LINLOADOBJS := $(COREOBJS) stubboot.o kernelfiles.o
 KERNEL := zImage
 INITRD := /dev/null
 SCRIPT := docs/linload.txt
+LINWARN := "WARNING: Linload is deprecated.  Please see tools/make-bootbundle.py"
 
 $(OUT)kernelfiles.o: src/wince/kernelfiles.S FORCE
 	@echo "  Building $@"
+	@echo "$(LINWARN)"
 	$(Q)$(CXX) -c -DLIN_KERNEL=\"$(KERNEL)\" -DLIN_INITRD=\"$(INITRD)\" -DLIN_SCRIPT=\"$(SCRIPT)\" -o $@ $<
+	@echo "$(LINWARN)"
 
 $(OUT)linload-debug: $(addprefix $(OUT), $(LINLOADOBJS)) src/haret.lds
 
