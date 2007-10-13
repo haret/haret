@@ -7,7 +7,7 @@ public:
     int detect();
     void init();
     virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
+    virtual void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 dcsr_count;
     uint32 *dma, *udc;
@@ -20,7 +20,7 @@ public:
     int detect();
     void init();
     virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
+    virtual void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 *cken, *uhccoms;
 };

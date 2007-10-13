@@ -107,7 +107,7 @@ ResetUHC(volatile uint32 *uhcmap)
 }
 
 void
-MachineS3c2442::hardwareShutdown()
+MachineS3c2442::hardwareShutdown(struct fbinfo *fbi)
 {
     s3c24xxShutdownDMA(channels);
     ResetUHC(uhcmap);

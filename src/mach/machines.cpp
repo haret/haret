@@ -38,7 +38,7 @@ Machine::preHardwareShutdown()
 }
 
 void
-Machine::hardwareShutdown()
+Machine::hardwareShutdown(struct fbinfo *fbi)
 {
 }
 

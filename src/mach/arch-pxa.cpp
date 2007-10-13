@@ -89,7 +89,7 @@ pxaResetUDC(volatile pxaUDC *udc)
 }
 
 void
-MachinePXA::hardwareShutdown()
+MachinePXA::hardwareShutdown(struct fbinfo *fbi)
 {
     pxaResetDMA((pxaDMA*)dma, dcsr_count);
     pxaResetUDC((pxaUDC*)udc);

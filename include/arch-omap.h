@@ -6,7 +6,7 @@ public:
     MachineOMAP850();
     void init();
     virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
+    virtual void hardwareShutdown(struct fbinfo *fbi);
     uint8 *base;
 };
 
@@ -15,6 +15,6 @@ public:
     MachineOMAP15xx();
     void init();
     virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
+    virtual void hardwareShutdown(struct fbinfo *fbi);
     uint8 *base;
 };

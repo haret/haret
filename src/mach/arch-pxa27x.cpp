@@ -87,9 +87,9 @@ Reset27xUHC(volatile uint32 *uhccoms)
 }
 
 void
-MachinePXA27x::hardwareShutdown()
+MachinePXA27x::hardwareShutdown(struct fbinfo *fbi)
 {
-    MachinePXA::hardwareShutdown();
+    MachinePXA::hardwareShutdown(fbi);
     Reset27xUHC(uhccoms);
 
     *cken=(*cken)&(~(

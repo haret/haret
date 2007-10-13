@@ -6,7 +6,7 @@ public:
     MachineS3c2442();
     void init();
     int preHardwareShutdown();
-    void hardwareShutdown();
+    void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 *channels, *uhcmap;
 };

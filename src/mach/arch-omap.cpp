@@ -196,7 +196,7 @@ MachineOMAP850::preHardwareShutdown()
 }
 
 void
-MachineOMAP850::hardwareShutdown()
+MachineOMAP850::hardwareShutdown(struct fbinfo *fbi)
 {
     omapResetDMA(base, 17);
 }
@@ -237,7 +237,7 @@ MachineOMAP15xx::preHardwareShutdown()
 }
 
 void
-MachineOMAP15xx::hardwareShutdown()
+MachineOMAP15xx::hardwareShutdown(struct fbinfo *fbi)
 {
     omapResetIRQ(base);
     omapResetDMA(base, 8);

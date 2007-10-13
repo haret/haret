@@ -572,7 +572,7 @@ launchKernel(struct bootmem *bm)
     fb_printf(&bm->pd->fbi, "HaRET boot\nShutting down hardware\n");
 
     // Call per-arch boot prep function.
-    Mach->hardwareShutdown();
+    Mach->hardwareShutdown(&bm->pd->fbi);
 
     fb_printf(&bm->pd->fbi, "Turning off MMU...\n");
 

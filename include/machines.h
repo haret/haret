@@ -37,7 +37,7 @@ public:
 
     virtual void init();
     virtual int preHardwareShutdown();
-    virtual void hardwareShutdown();
+    virtual void hardwareShutdown(struct fbinfo *);
     virtual int detect();
     void (*flushCache)(void);
 };
