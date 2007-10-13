@@ -9,6 +9,7 @@ PLATFORM=PocketPC
 Alpine,     PXA27x  ,PH10C;PH10D,                 HTCALPINE
 Apache,     PXA27x  ,PA10,                        HTCAPACHE, \
         ibit IRQS 79, addlist IRQS p2v(0x0a000000) 0xff 16 0, \
+        addlist GPIOS p2v(0x0a000000) 0xff00 16, \
         set resumeaddr 0xa0040000
 AximX50,    PXA27x  ,Dell Axim X50;Dell Axim X51, X50,       \
         set ramaddr 0xa8000000,set ramsize 64*1024*1024
