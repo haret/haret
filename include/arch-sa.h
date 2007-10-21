@@ -4,5 +4,6 @@
 class MachineSA : public Machine {
 public:
     MachineSA();
+    void init();
     int detect();
 };
