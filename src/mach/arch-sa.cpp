@@ -4,6 +4,8 @@
 MachineSA::MachineSA()
 {
     name = "Generic Intel StrongArm";
+    CPUInfo[0] = L"SA1110";
+    CPUInfo[1] = L"SA110";
 }
 
 void
