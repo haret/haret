@@ -376,124 +376,117 @@ DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 static void
 memDumpMMU(const char *tok, const char *args)
 {
-  uint32 l1only = 0;
-  get_expression(&args, &l1only);
+    uint32 l1only = 0;
+    get_expression(&args, &l1only);
 
-  Output("----- Virtual address map -----");
-  Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
-         , get_p15r1(), get_p15r2(), get_p15r3(), get_p15r13());
-  Output("Descriptor flags legend:\n"
-             " C: Cacheable\n"
-             " B: Bufferable\n"
-             " 0..3: Access Permissions (for up to 4 slices):\n"
-             "       0: Supervisor mode Read\n"
-             "       1: Supervisor mode Read/Write\n"
-             "       2: User mode Read\n"
-             "       3: User mode Read/Write\n");
+    Output("----- Virtual address map -----");
+    Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
+           , get_p15r1(), get_p15r2(), get_p15r3(), get_p15r13());
+    Output("Descriptor flags legend:\n"
+           " C: Cacheable\n"
+           " B: Bufferable\n"
+           " 0..3: Access Permissions (for up to 4 slices):\n"
+           "       0: Supervisor mode Read\n"
+           "       1: Supervisor mode Read/Write\n"
+           "       2: User mode Read\n"
+           "       3: User mode Read/Write\n");
 
-  uint32 mmu = cpuGetMMU ();
+    uint32 mmu = cpuGetMMU();
 
-  Output("  Virtual | Physical | Description |  Flags");
-  Output("  address | address  |             |");
-  Output("----------+----------+-------------+------------------------");
+    Output("  Virtual | Physical | Description |  Flags");
+    Output("  address | address  |             |");
+    Output("----------+----------+-------------+------------------------");
 
-  // Previous 1st and 2nd level descriptors
-  uint32 pL1 = 0xffffffff;
-  uint32 pL2 = 0xffffffff;
-  uint mb = 0;
+    // Previous 1st and 2nd level descriptors
+    uint32 pL1 = 0xffffffff;
+    uint32 pL2 = 0xffffffff;
+    uint mb = 0;
 
-  // Walk down the 1st level descriptor table
-  InitProgress(DLG_PROGRESS, 0x1000);
-  TRY_EXCEPTION_HANDLER
-  {
-    for (mb = 0; mb < 0x1000; mb++)
-    {
-      SetProgress (mb);
+    // Walk down the 1st level descriptor table
+    InitProgress(DLG_PROGRESS, 0x1000);
+    TRY_EXCEPTION_HANDLER {
+        for (mb = 0; mb < 0x1000; mb++) {
+            SetProgress(mb);
 
-      mmuL1Desc l1d = memPhysRead (mmu + mb * 4);
+            mmuL1Desc l1d = memPhysRead(mmu + mb * 4);
 
-      uint32 paddr=0, pss=0;
-      uint l2_count = 0;
-      char flagbuf[64];
+            uint32 paddr=0, pss=0;
+            uint l2_count = 0;
+            char flagbuf[64];
 
-      // Ok, now we have a 1st level descriptor
-      switch (l1d & MMU_L1_TYPE_MASK)
-      {
-        case MMU_L1_UNMAPPED:
-          if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
-            Output("%08x  |          | UNMAPPED    |", mb << 20);
-          break;
-        case MMU_L1_SECTION:
-          paddr = (l1d & MMU_L1_SECTION_MASK);
-          __flags_l1(flagbuf, l1d & ~MMU_L1_SECTION_MASK);
-          Output("%08x  | %08x | 1MB section |%s", mb << 20, paddr, flagbuf);
-          break;
-        case MMU_L1_COARSE_L2:
-          // Bits 12..19 select the 2nd level descriptor
-          paddr = (l1d & MMU_L1_COARSE_MASK);
-          __flags_l1(flagbuf, l1d & ~MMU_L1_COARSE_MASK);
-          Output("%08x  | %08x | Coarse      |%s", mb << 20, paddr, flagbuf);
-          l2_count = 256; pss = 12;
-          break;
-        case MMU_L1_FINE_L2:
-          // Bits 10..19 select the 2nd level descriptor
-          paddr = (l1d & MMU_L1_FINE_MASK);
-          __flags_l1(flagbuf, l1d & ~MMU_L1_FINE_MASK);
-          Output("%08x  | %08x | Fine        |%s", mb << 20, paddr, flagbuf);
-          l2_count = 1024; pss = 10;
-          break;
-      }
+            // Ok, now we have a 1st level descriptor
+            switch (l1d & MMU_L1_TYPE_MASK) {
+            case MMU_L1_UNMAPPED:
+                if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
+                    Output("%08x  |          | UNMAPPED    |", mb << 20);
+                break;
+            case MMU_L1_SECTION:
+                paddr = (l1d & MMU_L1_SECTION_MASK);
+                __flags_l1(flagbuf, l1d & ~MMU_L1_SECTION_MASK);
+                Output("%08x  | %08x | 1MB section |%s"
+                       , mb << 20, paddr, flagbuf);
+                break;
+            case MMU_L1_COARSE_L2:
+                // Bits 12..19 select the 2nd level descriptor
+                paddr = (l1d & MMU_L1_COARSE_MASK);
+                __flags_l1(flagbuf, l1d & ~MMU_L1_COARSE_MASK);
+                Output("%08x  | %08x | Coarse      |%s"
+                       , mb << 20, paddr, flagbuf);
+                l2_count = 256; pss = 12;
+                break;
+            case MMU_L1_FINE_L2:
+                // Bits 10..19 select the 2nd level descriptor
+                paddr = (l1d & MMU_L1_FINE_MASK);
+                __flags_l1(flagbuf, l1d & ~MMU_L1_FINE_MASK);
+                Output("%08x  | %08x | Fine        |%s"
+                       , mb << 20, paddr, flagbuf);
+                l2_count = 1024; pss = 10;
+                break;
+            }
 
-      if (l2_count && !l1only)
-      {
-        // There is a possibility of crash here. I don't know what's the
-        // cause but that's why L2 is commented out for now
-        for (uint d = 0; d < l2_count; d++)
-        {
-          mmuL2Desc l2d = memPhysRead (paddr + d * 4);
+            if (l2_count && !l1only) {
+                for (uint d = 0; d < l2_count; d++) {
+                    mmuL2Desc l2d = memPhysRead(paddr + d * 4);
 
-          uint32 l2paddr;
-          switch (l2d & MMU_L2_TYPE_MASK)
-          {
-            case MMU_L2_UNMAPPED:
-              if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                Output(" %08x |          | UNMAPPED    |",
-                     (mb << 20) + (d << pss));
-              break;
-            case MMU_L2_LARGEPAGE:
-              l2paddr = (l2d & MMU_L2_LARGE_MASK);
-              __flags_l2(flagbuf, l2d & ~MMU_L2_LARGE_MASK);
-              Output(" %08x | %08x | Large (64K) |%s"
-                     , (mb << 20) + (d << pss), l2paddr, flagbuf);
-              break;
-            case MMU_L2_SMALLPAGE:
-              l2paddr = (l2d & MMU_L2_SMALL_MASK);
-              __flags_l2(flagbuf, l2d & ~MMU_L2_SMALL_MASK);
-              Output(" %08x | %08x | Small (4K)  |%s"
-                     , (mb << 20) + (d << pss), l2paddr, flagbuf);
-              break;
-            case MMU_L2_TINYPAGE:
-              l2paddr = (l2d & MMU_L2_TINY_MASK);
-              __flags_l2(flagbuf, l2d & ~MMU_L2_TINY_MASK);
-              Output(" %08x | %08x | Tiny (1K)   |%s"
-                     , (mb << 20) + (d << pss), l2paddr, flagbuf);
-              break;
-          }
+                    uint32 l2paddr;
+                    switch (l2d & MMU_L2_TYPE_MASK) {
+                    case MMU_L2_UNMAPPED:
+                        if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
+                            Output(" %08x |          | UNMAPPED    |",
+                                   (mb << 20) + (d << pss));
+                        break;
+                    case MMU_L2_LARGEPAGE:
+                        l2paddr = (l2d & MMU_L2_LARGE_MASK);
+                        __flags_l2(flagbuf, l2d & ~MMU_L2_LARGE_MASK);
+                        Output(" %08x | %08x | Large (64K) |%s"
+                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                        break;
+                    case MMU_L2_SMALLPAGE:
+                        l2paddr = (l2d & MMU_L2_SMALL_MASK);
+                        __flags_l2(flagbuf, l2d & ~MMU_L2_SMALL_MASK);
+                        Output(" %08x | %08x | Small (4K)  |%s"
+                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                        break;
+                    case MMU_L2_TINYPAGE:
+                        l2paddr = (l2d & MMU_L2_TINY_MASK);
+                        __flags_l2(flagbuf, l2d & ~MMU_L2_TINY_MASK);
+                        Output(" %08x | %08x | Tiny (1K)   |%s"
+                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                        break;
+                    }
 
-          pL2 = l2d;
+                    pL2 = l2d;
+                }
+            }
+
+            pL1 = l1d;
         }
-      }
-
-      pL1 = l1d;
+    } CATCH_EXCEPTION_HANDLER {
+        Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
     }
-  }
-  CATCH_EXCEPTION_HANDLER
-  {
-    Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
-  }
 
-  Output(" ffffffff |          |             | End of virtual address space");
-  DoneProgress ();
+    Output(" ffffffff |          |             | End of virtual address space");
+    DoneProgress();
 }
 REG_DUMP(0, "MMU", memDumpMMU,
          "MMU [1]\n"
