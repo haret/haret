@@ -410,7 +410,7 @@ memDumpMMU(const char *tok, const char *args)
 
             mmuL1Desc l1d = memPhysRead(mmu + mb * 4);
 
-            uint32 paddr=0, pss=0;
+            uint32 paddr=0, vaddr=mb<<20, pss=0;
             uint l2_count = 0;
             char flagbuf[64];
 
@@ -418,20 +418,20 @@ memDumpMMU(const char *tok, const char *args)
             switch (l1d & MMU_L1_TYPE_MASK) {
             case MMU_L1_UNMAPPED:
                 if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
-                    Output("%08x  |          | UNMAPPED    |", mb << 20);
+                    Output("%08x  |          | UNMAPPED    |", vaddr);
                 break;
             case MMU_L1_SECTION:
                 paddr = (l1d & MMU_L1_SECTION_MASK);
                 __flags_l1(flagbuf, l1d & ~MMU_L1_SECTION_MASK);
                 Output("%08x  | %08x | 1MB section |%s"
-                       , mb << 20, paddr, flagbuf);
+                       , vaddr, paddr, flagbuf);
                 break;
             case MMU_L1_COARSE_L2:
                 // Bits 12..19 select the 2nd level descriptor
                 paddr = (l1d & MMU_L1_COARSE_MASK);
                 __flags_l1(flagbuf, l1d & ~MMU_L1_COARSE_MASK);
                 Output("%08x  | %08x | Coarse      |%s"
-                       , mb << 20, paddr, flagbuf);
+                       , vaddr, paddr, flagbuf);
                 l2_count = 256; pss = 12;
                 break;
             case MMU_L1_FINE_L2:
@@ -439,7 +439,7 @@ memDumpMMU(const char *tok, const char *args)
                 paddr = (l1d & MMU_L1_FINE_MASK);
                 __flags_l1(flagbuf, l1d & ~MMU_L1_FINE_MASK);
                 Output("%08x  | %08x | Fine        |%s"
-                       , mb << 20, paddr, flagbuf);
+                       , vaddr, paddr, flagbuf);
                 l2_count = 1024; pss = 10;
                 break;
             }
@@ -448,30 +448,30 @@ memDumpMMU(const char *tok, const char *args)
                 for (uint d = 0; d < l2_count; d++) {
                     mmuL2Desc l2d = memPhysRead(paddr + d * 4);
 
-                    uint32 l2paddr;
+                    uint32 l2paddr, l2vaddr = vaddr + (d << pss);
                     switch (l2d & MMU_L2_TYPE_MASK) {
                     case MMU_L2_UNMAPPED:
                         if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                            Output(" %08x |          | UNMAPPED    |",
-                                   (mb << 20) + (d << pss));
+                            Output(" %08x |          | UNMAPPED    |"
+                                   , l2vaddr);
                         break;
                     case MMU_L2_LARGEPAGE:
                         l2paddr = (l2d & MMU_L2_LARGE_MASK);
                         __flags_l2(flagbuf, l2d & ~MMU_L2_LARGE_MASK);
                         Output(" %08x | %08x | Large (64K) |%s"
-                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                               , l2vaddr, l2paddr, flagbuf);
                         break;
                     case MMU_L2_SMALLPAGE:
                         l2paddr = (l2d & MMU_L2_SMALL_MASK);
                         __flags_l2(flagbuf, l2d & ~MMU_L2_SMALL_MASK);
                         Output(" %08x | %08x | Small (4K)  |%s"
-                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                               , l2vaddr, l2paddr, flagbuf);
                         break;
                     case MMU_L2_TINYPAGE:
                         l2paddr = (l2d & MMU_L2_TINY_MASK);
                         __flags_l2(flagbuf, l2d & ~MMU_L2_TINY_MASK);
                         Output(" %08x | %08x | Tiny (1K)   |%s"
-                               , (mb << 20) + (d << pss), l2paddr, flagbuf);
+                               , l2vaddr, l2paddr, flagbuf);
                         break;
                     }
 
