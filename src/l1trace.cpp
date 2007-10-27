@@ -359,10 +359,6 @@ public:
         t->cmpVal = rotl(t->cmpVal, shift);
 
         t->endaddr = t->addr + addrsize;
-        if ((t->addr & TOPBITS) != ((t->endaddr - 1) & TOPBITS)) {
-            ScriptError("Address range must be within a 1Meg section");
-            return false;
-        }
         t->rw = 0;
         if (strchr(flags, 'r') || strchr(flags, 'R'))
             t->rw = 1;
@@ -481,37 +477,43 @@ prepL1traps(struct irqData *data)
     for (uint i=0; i<data->traceCount; i++) {
         memcheck *t = &data->traceAddrs[i];
         uint32 vaddr = t->addr & TOPBITS;
+        for (; vaddr < t->endaddr; vaddr += ONEMEG) {
+            // See if this vaddr already done.
+            int found = 0;
+            for (uint j=0; j<count; j++)
+                if (data->alterVAddrs[j] == vaddr)
+                    found = 1;
+            if (found)
+                continue;
 
-        // See if this vaddr already done.
-        int found = 0;
-        for (uint j=0; j<count; j++)
-            if (data->alterVAddrs[j] == vaddr)
-                found = 1;
-        if (found)
-            continue;
-
-        // Lookup descriptor for mappings
-        uint32 l1d = *getMMUref(data, vaddr);
-        if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
-            Output("Warning! Tracing non-section mapping (%08x)"
-                   " not well supported", vaddr);
-            if (!PermissiveMMUtrace) {
-                Output("If you really want to do this, run"
-                       " 'set permissivemmutrace 1' and retry");
+            if (count >= MAX_L1TRACE) {
+                Output("Too many L1 traces (max=%d)", MAX_L1TRACE);
                 return -1;
             }
-        }
-        uint32 alt_l1d = *getMMUref(data, newAddr(data, count));
-        if (alt_l1d != MMU_L1_UNMAPPED) {
-            Output("Address %08x not unmapped (l1d=%08x)"
-                   , newAddr(data, count), alt_l1d);
-            return -1;
-        }
 
-        data->alterVAddrs[count] = vaddr;
-        Output("%02d: Mapping %08x accesses to %08x (tbl %08x)"
-               , i, data->alterVAddrs[count], newAddr(data, count), l1d);
-        count++;
+            // Lookup descriptor for mappings
+            uint32 l1d = *getMMUref(data, vaddr);
+            if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION) {
+                Output("Warning! Tracing non-section mapping (%08x)"
+                       " not well supported", vaddr);
+                if (!PermissiveMMUtrace) {
+                    Output("If you really want to do this, run"
+                           " 'set permissivemmutrace 1' and retry");
+                    return -1;
+                }
+            }
+            uint32 alt_l1d = *getMMUref(data, newAddr(data, count));
+            if (alt_l1d != MMU_L1_UNMAPPED) {
+                Output("Address %08x not unmapped (l1d=%08x)"
+                       , newAddr(data, count), alt_l1d);
+                return -1;
+            }
+
+            data->alterVAddrs[count] = vaddr;
+            Output("%02d: Mapping %08x accesses to %08x (tbl %08x)"
+                   , i, data->alterVAddrs[count], newAddr(data, count), l1d);
+            count++;
+        }
     }
     data->alterCount = count;
 
