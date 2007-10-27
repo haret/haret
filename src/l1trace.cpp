@@ -511,7 +511,8 @@ prepL1traps(struct irqData *data)
 
             data->alterVAddrs[count] = vaddr;
             Output("%02d: Mapping %08x accesses to %08x (tbl %08x)"
-                   , i, data->alterVAddrs[count], newAddr(data, count), l1d);
+                   , count, data->alterVAddrs[count], newAddr(data, count)
+                   , l1d);
             count++;
         }
     }
