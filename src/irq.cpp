@@ -24,6 +24,37 @@
 LATE_LOAD(AllocPhysMem, "coredll")
 LATE_LOAD(FreePhysMem, "coredll")
 
+/*
+ * Theory of operation:
+ *
+ * This code allows one to obtain a log of ARM exceptions (interrupts,
+ * memory faults, and code execution faults).  It also allows one to
+ * catch exceptions (see the pxatrace.cpp and l1trace.cpp code).
+ * Tracing exceptions is useful when trying to understand how wince
+ * interacts with the hardware.
+ *
+ * The code works by allocating a continuous area of physical memory
+ * which is populated with exception handling code and space for a
+ * "trace buffer".  The ARM exception handling table is then modified
+ * so that these new haret exception handlers are called instead of
+ * the normal wince ones.
+ *
+ * The haret exception handlers basically log the event that occurred
+ * (in the trace buffer) and then hand the exception over to wince for
+ * normal processing.  (More advanced processing is also available -
+ * haret can inspect memory on each fault and sometimes entirely
+ * handle a fault.)
+ *
+ * The main haret process periodically checks the trace buffer for new
+ * events.  Upon finding a new event, it reports it to the user.
+ * (Note that the exception handlers can not directly report an event
+ * to the user because they don't run in the haret "context" and they
+ * can't access files, sockets, or even any library code.)
+ *
+ * Upon completion of the tracing session, the code returns the wince
+ * exception table to its original state.
+ */
+
 
 /****************************************************************
  * C part of exception handlers

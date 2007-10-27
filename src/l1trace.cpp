@@ -18,6 +18,30 @@
 #define TOPBITS 0xFFF00000
 #define BOTBITS 0x000FFFFF
 
+/*
+ * Theory of operation:
+ *
+ * This code allows one to obtain a log of reads and writes to memory
+ * that wince (and programs running under wince) perform.  This is
+ * useful for "watching" how the system interacts with memory mapped
+ * hardware registers.
+ *
+ * The code works by altering the ARM cpu memory management unit (MMU)
+ * tables so that ranges of virtual addresses cause a memory access
+ * fault.  In this way, haret can cause all code on the system that
+ * reads or writes to a memory location to fault.
+ *
+ * Haret then binds the memory exception vectors so that haret can
+ * analyze each fault.  Normal access faults are handed off to the
+ * regular wince exception handler unmodified.  However, faults that
+ * are caused by the altering of the MMU are handled by haret.  Each
+ * generated fault causes haret to emulate the access, log the access
+ * for the user, and then return to the original code.
+ *
+ * This system should be portable to all ARM cpus capable of running
+ * wince.
+ */
+
 
 /****************************************************************
  * MMU fault handling
@@ -357,7 +381,6 @@ public:
         uint32 shift = 8 * (t->addr & 3);
         t->mask = rotl(~mask, shift);
         t->cmpVal = rotl(t->cmpVal, shift);
-
         t->endaddr = t->addr + addrsize;
         t->rw = 0;
         if (strchr(flags, 'r') || strchr(flags, 'R'))
