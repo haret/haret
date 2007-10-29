@@ -241,7 +241,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     //
 
     // Trace time memory polling.
-    count = checkPolls(data, -1, &data->tracepoll);
+    count = checkPolls(data, &data->tracepoll);
     if (data->traceForWatch && !count)
         // Further reporting disabled
         return;

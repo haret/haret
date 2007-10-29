@@ -71,7 +71,7 @@ report_memPoll(uint32 msecs, irqData *data, traceitem *item)
 
 // Perform a set of memory polls and add to trace buffer.
 int __irq
-checkPolls(struct irqData *data, uint32 clock, pollinfo *info)
+checkPolls(struct irqData *data, pollinfo *info, uint32 clock)
 {
     int foundcount = 0;
     for (uint i=0; i<info->count; i++) {
@@ -104,9 +104,9 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     }
 
     // Irq time memory polling.
-    checkPolls(data, -1, &data->irqpoll);
+    checkPolls(data, &data->irqpoll);
     // Trace time memory polling.
-    checkPolls(data, -1, &data->tracepoll);
+    checkPolls(data, &data->tracepoll);
 }
 
 extern "C" int __irq
@@ -145,7 +145,7 @@ extern "C" void __irq
 resume_handler(struct irqData *data, struct irqregs *regs)
 {
     add_trace(data, report_resume);
-    checkPolls(data, -1, &data->resumepoll);
+    checkPolls(data, &data->resumepoll);
     if (data->max_l1trace_after_resume)
         data->max_l1trace = data->max_l1trace_after_resume;
 }

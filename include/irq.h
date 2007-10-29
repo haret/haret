@@ -122,7 +122,7 @@ add_trace(struct irqData *data, tracereporter reporter
  ****************************************************************/
 
 int testWirqAvail();
-int checkPolls(struct irqData *data, uint32 clock, pollinfo *info);
+int checkPolls(struct irqData *data, pollinfo *info, uint32 clock = -1);
 
 // Contents of register description passed into the exception
 // handlers.  This layout corresponds with the assembler code in
