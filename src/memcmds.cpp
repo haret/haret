@@ -373,6 +373,26 @@ DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 DEF_GETCPR(get_p15r3, p15, 0, c3, c0, 0)
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 
+struct pageinfo {
+    const char name[12];
+    uint32 mask;
+    uint32 l2_vaddr_shift;
+};
+
+static const struct pageinfo L1PageInfo[] = {
+    { "UNMAPPED"},
+    { "Coarse", MMU_L1_COARSE_MASK, 12 },
+    { "1MB section", MMU_L1_SECTION_MASK },
+    { "Fine", MMU_L1_FINE_MASK, 10 },
+};
+
+static const struct pageinfo L2PageInfo[] = {
+    { "UNMAPPED"},
+    { "Large (64K)", MMU_L2_LARGE_MASK },
+    { "Small (4K)", MMU_L2_SMALL_MASK },
+    { "Tiny (1K)", MMU_L2_TINY_MASK },
+};
+
 static void
 memDumpMMU(const char *tok, const char *args)
 {
@@ -397,89 +417,58 @@ memDumpMMU(const char *tok, const char *args)
     Output("  address | address  |             |");
     Output("----------+----------+-------------+------------------------");
 
-    // Previous 1st and 2nd level descriptors
-    uint32 pL1 = 0xffffffff;
-    uint32 pL2 = 0xffffffff;
-    uint mb = 0;
-
     // Walk down the 1st level descriptor table
     InitProgress(DLG_PROGRESS, 0x1000);
+    uint mb = 0;
     TRY_EXCEPTION_HANDLER {
+        uint32 pL1, l1d = 0xffffffff;
         for (mb = 0; mb < 0x1000; mb++) {
             SetProgress(mb);
+            pL1 = l1d;
 
-            mmuL1Desc l1d = memPhysRead(mmu + mb * 4);
-
-            uint32 paddr=0, vaddr=mb<<20, pss=0;
-            uint l2_count = 0;
+            // Read 1st level descriptor
+            l1d = memPhysRead(mmu + mb * 4);
+            uint32 vaddr=mb<<20;
+            int type = l1d & MMU_L1_TYPE_MASK;
+            const struct pageinfo *pi = &L1PageInfo[type];
+            uint32 paddr = l1d & pi->mask;
             char flagbuf[64];
-
-            // Ok, now we have a 1st level descriptor
-            switch (l1d & MMU_L1_TYPE_MASK) {
+            __flags_l1(flagbuf, l1d & ~pi->mask);
+            switch (type) {
             case MMU_L1_UNMAPPED:
                 if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
-                    Output("%08x  |          | UNMAPPED    |", vaddr);
-                break;
+                    Output("%08x  |          | %11s |", vaddr, pi->name);
+                continue;
             case MMU_L1_SECTION:
-                paddr = (l1d & MMU_L1_SECTION_MASK);
-                __flags_l1(flagbuf, l1d & ~MMU_L1_SECTION_MASK);
-                Output("%08x  | %08x | 1MB section |%s"
-                       , vaddr, paddr, flagbuf);
-                break;
-            case MMU_L1_COARSE_L2:
-                // Bits 12..19 select the 2nd level descriptor
-                paddr = (l1d & MMU_L1_COARSE_MASK);
-                __flags_l1(flagbuf, l1d & ~MMU_L1_COARSE_MASK);
-                Output("%08x  | %08x | Coarse      |%s"
-                       , vaddr, paddr, flagbuf);
-                l2_count = 256; pss = 12;
-                break;
-            case MMU_L1_FINE_L2:
-                // Bits 10..19 select the 2nd level descriptor
-                paddr = (l1d & MMU_L1_FINE_MASK);
-                __flags_l1(flagbuf, l1d & ~MMU_L1_FINE_MASK);
-                Output("%08x  | %08x | Fine        |%s"
-                       , vaddr, paddr, flagbuf);
-                l2_count = 1024; pss = 10;
-                break;
+                Output("%08x  | %08x | %11s |%s"
+                       , vaddr, paddr, pi->name, flagbuf);
+                continue;
             }
+            Output("%08x  |          | %11s |%s", vaddr, pi->name, flagbuf);
 
-            if (l2_count && !l1only) {
-                for (uint d = 0; d < l2_count; d++) {
-                    mmuL2Desc l2d = memPhysRead(paddr + d * 4);
+            if (l1only)
+                continue;
 
-                    uint32 l2paddr, l2vaddr = vaddr + (d << pss);
-                    switch (l2d & MMU_L2_TYPE_MASK) {
-                    case MMU_L2_UNMAPPED:
-                        if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                            Output(" %08x |          | UNMAPPED    |"
-                                   , l2vaddr);
-                        break;
-                    case MMU_L2_LARGEPAGE:
-                        l2paddr = (l2d & MMU_L2_LARGE_MASK);
-                        __flags_l2(flagbuf, l2d & ~MMU_L2_LARGE_MASK);
-                        Output(" %08x | %08x | Large (64K) |%s"
-                               , l2vaddr, l2paddr, flagbuf);
-                        break;
-                    case MMU_L2_SMALLPAGE:
-                        l2paddr = (l2d & MMU_L2_SMALL_MASK);
-                        __flags_l2(flagbuf, l2d & ~MMU_L2_SMALL_MASK);
-                        Output(" %08x | %08x | Small (4K)  |%s"
-                               , l2vaddr, l2paddr, flagbuf);
-                        break;
-                    case MMU_L2_TINYPAGE:
-                        l2paddr = (l2d & MMU_L2_TINY_MASK);
-                        __flags_l2(flagbuf, l2d & ~MMU_L2_TINY_MASK);
-                        Output(" %08x | %08x | Tiny (1K)   |%s"
-                               , l2vaddr, l2paddr, flagbuf);
-                        break;
-                    }
+            // Walk the 2nd level descriptor table
+            uint l2_count = 1 << (20 - pi->l2_vaddr_shift);
+            uint32 pL2, l2d = 0xffffffff;
+            for (uint d = 0; d < l2_count; d++) {
+                pL2 = l2d;
+                l2d = memPhysRead(paddr + d * 4);
+                uint32 l2vaddr = vaddr + (d << pi->l2_vaddr_shift);
+                uint32 l2type = l2d & MMU_L2_TYPE_MASK;
+                const struct pageinfo *pi2 = &L2PageInfo[l2type];
+                uint32 l2paddr = l2d & pi2->mask;
+                __flags_l2(flagbuf, l2d & ~pi2->mask);
 
-                    pL2 = l2d;
+                if (l2type == MMU_L2_UNMAPPED) {
+                    if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
+                        Output(" %08x |          | %11s |", l2vaddr, pi2->name);
+                    continue;
                 }
+                Output(" %08x | %08x | %11s |%s"
+                       , l2vaddr, l2paddr, pi2->name, flagbuf);
             }
-
-            pL1 = l1d;
         }
     } CATCH_EXCEPTION_HANDLER {
         Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
