@@ -484,6 +484,35 @@ REG_DUMP(0, "MMU", memDumpMMU,
 
 
 /****************************************************************
+ * Memory location tests
+ ****************************************************************/
+
+static void
+allocTest(const char *tok, const char *args)
+{
+    uint32 count;
+    if (!get_expression(&args, &count)) {
+        ScriptError("Expected <count>");
+        return;
+    }
+
+    struct pageAddrs pages[count];
+    void *data = allocPages(pages, count);
+    if (!data)
+        return;
+
+    Output("pg#: <virt>   <phys>");
+    for (uint i=0; i<count; i++)
+        Output("%03d: %08x %08x", i, (uint32)pages[i].virtLoc, pages[i].physLoc);
+    freePages(data, count);
+}
+REG_CMD(0, "ALLOCTEST", allocTest,
+        "ALLOCTEST <count>\n"
+        "  Allocate <count> number of pages and print the pages'\n"
+        "  virtual and physical addresses.")
+
+
+/****************************************************************
  * Memory access variables
  ****************************************************************/
 
