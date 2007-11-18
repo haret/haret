@@ -15,21 +15,20 @@ import struct
 
 import memalias
 
-OBJDUMP='arm-linux-objdump'
+OBJDUMP=['arm-linux-objdump', 'arm-wince-mingw32ce-objdump']
 OBJDUMPARGS='-D -b binary -m arm'
 CLOCKRATE=416000000.0/64
 
 def findObjdumpLoc():
     scriptloc = os.sep.join(sys.argv[0].split(os.sep)[:-1])
-    tryloc = scriptloc + os.sep + OBJDUMP
-    if os.access(tryloc, os.X_OK):
-        loc = tryloc
-    elif os.access(OBJDUMP, os.X_OK):
-        # Check current directory
-        loc = "." + os.sep + OBJDUMP
-    else:
-        # Try running flow from the execute path
-        loc = OBJDUMP
+    trydirs = [scriptloc, '.', '/opt/mingw32ce/bin']
+    for name in OBJDUMP:
+        for loc in trydirs:
+            tryloc = loc + os.sep + name
+            if os.access(tryloc, os.X_OK):
+                return tryloc
+    # Try running from the path
+    loc = OBJDUMP[0]
     return loc
 
 BINLOC=findObjdumpLoc()
