@@ -1,4 +1,4 @@
-# Register definitions for PXA processors
+# Register definitions for OMAP processors
 #
 # (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
 #
