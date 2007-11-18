@@ -11,9 +11,6 @@ New features:
 * Possibly allow the current machine definition (Mach) to be
   explicitly specified by a user command.
 
-* It would be nice if one could "watch" multiple lists
-  simultaneously.  For example: "watch gpios clocks 10"
-
 
 Misc cleanups:
 
@@ -59,7 +56,7 @@ Misc cleanups:
 * Remove old PXA gpio watching code (wgpio)?
 
 
-Possible features for "wi":
+Possible features for "watch" and "wi":
 
 * Haret should fixup the exception vectors if the user tries to exit
   while in "wi".
@@ -72,9 +69,17 @@ Possible features for "wi":
 
 * Get wirq running on machines that don't have AllocPhysMem.
 
+* The current mmutrace system catches memory accesses by invalidating
+  1MiB memory ranges.  In theory, this could be reduced to 1KiB memory
+  ranges.  Reducing the memory range may reduce the number
+  instructions haret has to emulate.
+
 * Possibly add the ability for watch lists to be conditional on values
   previously read.  (For example, a gpio level register might only be
   valid if the gpio direction is set to input.)
+
+* It would be nice if one could "watch" multiple lists
+  simultaneously.  For example: "watch gpios clocks 10"
 
 
 Possible features for Linux booting:
