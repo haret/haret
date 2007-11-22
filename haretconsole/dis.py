@@ -88,6 +88,10 @@ def procline(line):
     if m is not None:
         insn = int(m.group('insn'), 16)
         iname = dis(insn, m)
+        if insn & (1<<20):
+            op = '=='
+        else:
+            op = ' ='
         changed = int(m.group('changed'), 16)
         if changed:
             changed = " (%08x)" % changed
@@ -99,10 +103,10 @@ def procline(line):
         if paddr is not None:
             reginfo = memalias.ArchRegs.get(paddr | (vaddr & 0xfffff))
             if reginfo is not None:
-                addrname = "%-8s" % reginfo[0]
-        print "%s %s: %-21s # a=%s v=%s%s" % (
+                addrname = "%8s" % reginfo[0]
+        print "%s %s: %-21s # %s%s%s%s" % (
             getClock(m), m.group('addr'), iname
-            , addrname, m.group('val'), changed)
+            , addrname, op, m.group('val'), changed)
         return
 
     m = re_irq.match(line)
