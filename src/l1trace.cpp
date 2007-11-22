@@ -533,8 +533,8 @@ prepL1traps(struct irqData *data)
             }
 
             data->alterVAddrs[count] = vaddr;
-            Output("%02d: Mapping %08x accesses to %08x (tbl %08x)"
-                   , count, data->alterVAddrs[count], newAddr(data, count)
+            Output("%02d: Mapping %08x(@%08x) accesses to %08x (tbl %08x)"
+                   , count, vaddr, memVirtToPhys(vaddr), newAddr(data, count)
                    , l1d);
             count++;
         }
