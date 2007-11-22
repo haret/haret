@@ -93,9 +93,16 @@ def procline(line):
             changed = " (%08x)" % changed
         else:
             changed = ""
+        addrname = m.group('vaddr')
+        vaddr = int(addrname, 16)
+        paddr = memalias.VirtTrace.get(vaddr & 0xfff00000)
+        if paddr is not None:
+            reginfo = memalias.ArchRegs.get(paddr | (vaddr & 0xfffff))
+            if reginfo is not None:
+                addrname = "%-8s" % reginfo[0]
         print "%s %s: %-21s # a=%s v=%s%s" % (
             getClock(m), m.group('addr'), iname
-            , m.group('vaddr'), m.group('val'), changed)
+            , addrname, m.group('val'), changed)
         return
 
     m = re_irq.match(line)

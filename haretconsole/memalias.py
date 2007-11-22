@@ -7,11 +7,14 @@
 
 import re
 
-# Regs_xxx = {addr: name, ...}
+# List of all available register names.
+# RegsList["archname"] = Regs_xxx
+#
+# Regs_xxx = {paddr: name, ...}
 #   or
-# Regs_xxx = {addr: (name, ((bits, name), (bits,name), ...)) }
+# Regs_xxx = {paddr: (name, ((bits, name), (bits,name), ...)) }
 #   or
-# Regs_xxx = {addr: (name, func(bit)) }
+# Regs_xxx = {paddr: (name, func(bit)) }
 
 RegsList = {}
 
@@ -79,7 +82,7 @@ def preproc():
         archinfo = {}
         for addr, info in regs.items():
             if type(info) == type(""):
-                info = (info,)
+                info = (info, ())
             else:
                 info = (info[0], parsebits(info[1]))
             archinfo[addr] = info
@@ -144,6 +147,11 @@ class memDisplay:
             # list of bits to ignore.
             changed = val
             notfirst = 0
+        if not self.bitdefs:
+            # Only a register name exists (no bit definitions)
+            out = self.getValue("%08s" % self.name, ~0, val, changed, notfirst)
+            print "%s%s %s" % (getClock(m), self.type, out,)
+            return
         unnamedbits = changed
         for bits, desc in self.bitdefs:
             if bits & changed:
@@ -175,18 +183,28 @@ def defaultFunc(m):
 
 # Regular expressions to search for.
 TIMEPRE_S = r'^(?P<time>[0-9]+): ((?P<clock>[0-9a-f]+): )?'
-re_detect = re.compile(r"^Detected machine (?P<name>.*)/(?P<arch>.*)"
-                       r" \(Plat=.*\)$")
 re_begin = re.compile(r"^Beginning memory tracing\.$")
-re_watch = re.compile(r"^Watching (?P<type>.*)\((?P<pos>\d+)\): ("
-                      r"Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)|"
-                      r"Insn (?P<insn>.*))$")
-re_mem = re.compile(TIMEPRE_S + r"(?P<type>insn|mem) (?P<vaddr>.*)=(?P<val>.*)"
-                    r" \((?P<changed>.*)\)$")
+re_detect = re.compile(
+    r"^Detected machine (?P<name>.*)/(?P<arch>.*) \(Plat=.*\)$")
+re_watch = re.compile(
+    r"^Watching (?P<type>.*)\((?P<pos>\d+)\): ("
+    r"Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)|"
+    r"Insn (?P<insn>.*))$")
+re_mmu = re.compile(
+    r"^(?P<pos>\d+): Mapping (?P<vaddr>.*)\(@(?P<paddr>.*)\) accesses to"
+    r" (?P<newvaddr>.*) \(tbl (?P<tbldev>.*)\)$")
+re_mem = re.compile(
+    TIMEPRE_S + r"(?P<type>insn|mem) (?P<vaddr>.*)=(?P<val>.*)"
+    r" \((?P<changed>.*)\)$")
 
 # Storage of known named registers that are being "watched"
+# VirtMap[vaddr] = func
 VirtMap = {}
+# Storage of known mmutrace mappings
+# VirtTrace[vaddr & 0xFFF00000] = paddr
+VirtTrace = {}
 # The active architecture named registers
+# ArchRegs = {paddr: (name, ((bits, name), (bits,name), ...)) }
 ArchRegs = {}
 
 def handleWatch(m):
@@ -207,10 +225,15 @@ def handleWatch(m):
         VirtMap[name] = md.displayFunc
     print m.string
 
+def handleWatchMMU(m):
+    VirtTrace[int(m.group('vaddr'), 16)] = int(m.group('paddr'), 16)
+    print m.string
+
 def handleBegin(m):
     global LastClock
     LastClock = 0
     VirtMap.clear()
+    VirtTrace.clear()
     print m.string
 
 def handleDetect(m):
@@ -233,6 +256,9 @@ def procline(line):
     m = re_watch.match(line)
     if m:
         return handleWatch(m)
+    m = re_mmu.match(line)
+    if m:
+        return handleWatchMMU(m)
     m = re_begin.match(line)
     if m:
         return handleBegin(m)
