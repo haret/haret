@@ -2,6 +2,9 @@ next version <kevin@koconnor.net>
 
   * Initial support for detecting MSM7500 and OMAP15xx cpus.
 
+  * Basic support for decoding register names on MMUTRACE events in
+    haretconsole.
+
 20070915 0.5.0 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * It is now possible to detect processors by inspecting the wince
