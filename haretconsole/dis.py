@@ -34,7 +34,7 @@ def findObjdumpLoc():
 BINLOC=findObjdumpLoc()
 
 InsnCache = {}
-def dis(insn):
+def dis(insn, match):
     if insn in InsnCache:
         return InsnCache[insn]
     f = tempfile.NamedTemporaryFile(bufsize=0)
@@ -42,22 +42,26 @@ def dis(insn):
     l = os.popen(BINLOC + " " + OBJDUMPARGS + " " + f.name)
     lines = l.readlines()
     f.close()
-    out = "%08x (??)" % (insn,)
     for line in lines:
         if line[:5] == '   0:':
             parts = line[5:].strip().split(None, 2)
             out = "%-6s %s" % tuple(parts[1:])
             break
+    else:
+        out = "%08x(%s)" % (insn, match.group('desc'))
     InsnCache[insn] = out
     return out
 
 TIMEPRE_S = memalias.TIMEPRE_S
-re_debug = re.compile(TIMEPRE_S + r'debug (?P<addr>.*):'
-                      r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
-re_trace = re.compile(TIMEPRE_S + r'mmutrace (?P<addr>.*):'
-                      r' (?P<insn>.*)\(.*\) (?P<vaddr>.*) (?P<val>.*)'
-                      r' \((?P<changed>.*)\)$')
-re_irq = re.compile(TIMEPRE_S + r'(?P<data>(irq |cpu resumed).*)$')
+re_debug = re.compile(
+    TIMEPRE_S + r'debug (?P<addr>.*):'
+    r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
+re_trace = re.compile(
+    TIMEPRE_S + r'mmutrace (?P<addr>.*):'
+    r' (?P<insn>.*)\((?P<desc>.*)\) (?P<vaddr>.*) (?P<val>.*)'
+    r' \((?P<changed>.*)\)$')
+re_irq = re.compile(
+    TIMEPRE_S + r'(?P<data>(irq |cpu resumed).*)$')
 getClock = memalias.getClock
 
 def transRegVal(reg, val):
@@ -67,7 +71,7 @@ def procline(line):
     m = re_debug.match(line)
     if m is not None:
         insn = int(m.group('insn'), 16)
-        iname = dis(insn)
+        iname = dis(insn, m)
         Rd = (insn >> 12) & 0xF
         Rn = (insn >> 16) & 0xF
         Rdval = transRegVal(Rd, m.group('Rd'))
@@ -83,7 +87,7 @@ def procline(line):
     m = re_trace.match(line)
     if m is not None:
         insn = int(m.group('insn'), 16)
-        iname = dis(insn)
+        iname = dis(insn, m)
         changed = int(m.group('changed'), 16)
         if changed:
             changed = " (%08x)" % changed
@@ -97,8 +101,9 @@ def procline(line):
     m = re_irq.match(line)
     if m is not None:
         print getClock(m), m.group('data')
-    else:
-        memalias.procline(line)
+        return
+
+    memalias.procline(line)
 
 def main():
     lines = sys.stdin.readlines()
