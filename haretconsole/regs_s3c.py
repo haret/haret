@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import memalias
+import regs_ati
 regOneBits = memalias.regOneBits
 regTwoBits = memalias.regTwoBits
 
@@ -80,4 +81,5 @@ Regs_Hermes.update({
     0x08000006: ("cpldD", regOneBits("CD")),
     0x08000008: ("cpldE", regOneBits("CE")),
     })
+Regs_Hermes.update(regs_ati.getWxxxxDefs(0x10000000))
 memalias.RegsList['Hermes'] = Regs_Hermes
