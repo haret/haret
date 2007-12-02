@@ -9,13 +9,9 @@ import re
 
 # List of all available register names.
 # RegsList["archname"] = Regs_xxx
-#
-# Regs_xxx = {paddr: name, ...}
-#   or
-# Regs_xxx = {paddr: (name, ((bits, name), (bits,name), ...)) }
-#   or
-# Regs_xxx = {paddr: (name, func(bit)) }
-
+#   Regs_xxx = {paddr: name, ...}
+#     or
+#   Regs_xxx = {paddr: (name, ((bits, name), (bits,name), ...)) }
 RegsList = {}
 
 # Helper - create description for registers that are composed of an
