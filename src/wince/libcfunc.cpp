@@ -8,10 +8,14 @@
 #include <string.h> // defs
 #include <stdlib.h> // defs
 
-// The functions in this file are not implmented in coredll.dll on
+
+/****************************************************************
+ * C library stubs
+ ****************************************************************/
+
+// The functions in this section are not implmented in coredll.dll on
 // some WinCE 2.x devices (despite what the msdn docs say).  As such,
 // these local copies of the functions are used instead.
-
 
 // _isctype adopted from Wine code - Copyright 2000 Jon Griffiths
 
@@ -137,3 +141,32 @@ strtoul(const char *ptr, char **endptr, int base)
   return v;
 }
 
+
+/****************************************************************
+ * C++ library stubs
+ ****************************************************************/
+
+// The following functions are implemented in libsupc++.a.  However,
+// pulling in that library increases the haret exe by about 40K.  So,
+// we just implement local copies here that implement the bare
+// requirements.
+
+extern "C" void
+__cxa_pure_virtual(void)
+{
+    * (int*)0 = 0;
+    while (1)
+        ;
+}
+
+void *
+operator new(size_t sz)
+{
+    return malloc(sz ? sz : 1);
+}
+
+void
+operator delete(void *x)
+{
+    free(x);
+}

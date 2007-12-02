@@ -14,7 +14,7 @@ VERSION=pre-0.5.1-$(shell date +"%Y%m%d_%H%M%S")
 OUT=out/
 
 # Default compiler flags (note -march=armv4 is needed for 16 bit insns)
-CXXFLAGS = -Wall -O -g -MD -march=armv4 -Iinclude
+CXXFLAGS = -Wall -O -g -MD -march=armv4 -Iinclude -fno-exceptions -fno-rtti
 LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
