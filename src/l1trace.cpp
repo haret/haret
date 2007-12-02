@@ -355,7 +355,7 @@ public:
                       , &tracecount, (void*)traces, sizeof(traces[0])
                       , ARRAY_SIZE(traces))
         , tracecount(0) { }
-    variableBase *newVar() { return new traceListVar(0, "", ""); };
+    variableBase *newVar() { return new traceListVar(0, "", ""); }
     bool setVarItem(void *p, const char *args) {
         memcheck *t = (memcheck*)p;
         memset(t, 0, sizeof(*t));
