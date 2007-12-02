@@ -123,6 +123,12 @@ disp_suppress(memcheck *mc, char *buf)
     return buf;
 }
 
+watchListVar *watchListVar::cast(commandBase *b) {
+    if (b && b->isAvail && strncmp(b->type, "var_list_watch", 14) == 0)
+        return static_cast<watchListVar*>(b);
+    return NULL;
+}
+
 bool
 watchListVar::setVarItem(void *p, const char *args)
 {
@@ -232,7 +238,7 @@ FindWatchVar(const char **args)
         ScriptError("Expected <varname>");
         return NULL;
     }
-    watchListVar *wl = dynamic_cast<watchListVar*>(FindVar(varname));
+    watchListVar *wl = watchListVar::cast(FindVar(varname));
     if (!wl) {
         ScriptError("Expected <watch list var>");
         return NULL;

@@ -12,7 +12,6 @@
 #include <stdarg.h> // va_list
 #include <string.h> // strchr, memcpy, memset
 #include <stdlib.h> // free
-#include <typeinfo> // typeid
 
 #include "xtypes.h"
 #include "cbitmap.h" // TEST/SET/CLEARBIT
@@ -56,16 +55,6 @@ setupCommands()
  * Basic variable definitions
  ****************************************************************/
 
-static inline regCommand *isCmd(commandBase *cmd) {
-    return cmd->isAvail ? dynamic_cast<regCommand*>(cmd) : 0;
-}
-static inline dumpCommand *isDump(commandBase *cmd) {
-    return cmd->isAvail ? dynamic_cast<dumpCommand*>(cmd) : 0;
-}
-static inline variableBase *isVar(commandBase *cmd) {
-    return cmd->isAvail ? dynamic_cast<variableBase*>(cmd) : 0;
-}
-
 // List of user defined variables.
 static commandBase **UserVars = NULL;
 static int UserVarsCount = 0;
@@ -75,7 +64,7 @@ static variableBase *
 __findVar(const char *vn, commandBase **vars, int varCount)
 {
     for (int i = 0; i < varCount; i++) {
-        variableBase *var = isVar(vars[i]);
+        variableBase *var = variableBase::cast(vars[i]);
         if (var && !_stricmp(vn, var->name))
             return var;
     }
@@ -466,7 +455,7 @@ bool scrInterpret(const char *str, uint lineno)
 
     // Okay, now see what keyword is this :)
     for (int i = 0; i < commands_count; i++) {
-        regCommand *hc = isCmd(commands_start[i]);
+        regCommand *hc = regCommand::cast(commands_start[i]);
         if (hc && IsToken(tok, hc->name)) {
             hc->func(tok, x);
             return true;
@@ -541,6 +530,23 @@ void scrExecute (const char *scrfn, bool complain)
  * Variable definitions
  ****************************************************************/
 
+regCommand *regCommand::cast(commandBase *b) {
+    if (b && b->isAvail && strncmp(b->type, "cmd", 3) == 0)
+        return static_cast<regCommand*>(b);
+    return NULL;
+}
+
+dumpCommand *dumpCommand::cast(commandBase *b) {
+    if (b && b->isAvail && strncmp(b->type, "dump", 4) == 0)
+        return static_cast<dumpCommand*>(b);
+    return NULL;
+}
+
+variableBase *variableBase::cast(commandBase *b) {
+    if (b && b->isAvail && strncmp(b->type, "var", 3) == 0)
+        return static_cast<variableBase*>(b);
+    return NULL;
+}
 bool variableBase::getVar(const char **s, uint32 *v) {
     return false;
 }
@@ -620,6 +626,11 @@ void bitsetVar::fillVarType(char *buf) {
     strcpy(buf, "bitset");
 }
 
+listVarBase *listVarBase::cast(commandBase *b) {
+    if (b && b->isAvail && strncmp(b->type, "var_list", 8) == 0)
+        return static_cast<listVarBase*>(b);
+    return NULL;
+}
 bool listVarBase::getVar(const char **s, uint32 *v) {
     uint32 idx;
     if (!get_args(s, name, &idx, 1))
@@ -808,7 +819,7 @@ cmd_addlist(const char *cmd, const char *args)
         ScriptError("Expected <varname>");
         return;
     }
-    listVarBase *var = dynamic_cast<listVarBase*>(FindVar(vn));
+    listVarBase *var = listVarBase::cast(FindVar(vn));
     if (!var) {
         ScriptError("Expected list variable");
         return;
@@ -836,7 +847,7 @@ cmd_joinlist(const char *cmd, const char *args)
         return;
     }
     commandBase *rawvar = FindVar(destname);
-    listVarBase *destvar = dynamic_cast<listVarBase*>(rawvar);
+    listVarBase *destvar = listVarBase::cast(rawvar);
     if (!destvar) {
         if (rawvar) {
             ScriptError("Expected list variable");
@@ -848,7 +859,7 @@ cmd_joinlist(const char *cmd, const char *args)
             ScriptError("Expected <source list1>");
             return;
         }
-        listVarBase *peekvar = dynamic_cast<listVarBase*>(FindVar(peek));
+        listVarBase *peekvar = listVarBase::cast(FindVar(peek));
         if (!peekvar) {
             ScriptError("Expected <source list1>");
             return;
@@ -871,7 +882,7 @@ cmd_joinlist(const char *cmd, const char *args)
             ScriptError("Expected <source list> instead of %s", srcvarname);
             return;
         }
-        if (typeid(*rawvar) != typeid(*destvar)) {
+        if (strcmp(rawvar->type, destvar->type) != 0) {
             ScriptError("Type mismatch on list variable %s", srcvarname);
             return;
         }
@@ -909,7 +920,7 @@ cmd_dump(const char *cmd, const char *args)
     }
 
     for (int i = 0; i < commands_count; i++) {
-        dumpCommand *hd = isDump(commands_start[i]);
+        dumpCommand *hd = dumpCommand::cast(commands_start[i]);
         if (hd && !_stricmp(vn, hd->name)) {
             hd->func(vn, args);
             return;
@@ -989,7 +1000,7 @@ cmd_help(const char *cmd, const char *x)
         Output("Name                 Type");
         Output("-------------------- ----------");
         for (int i = 0; i < commands_count; i++) {
-            variableBase *var = isVar(commands_start[i]);
+            variableBase *var = variableBase::cast(commands_start[i]);
             if (!var || !var->desc)
                 continue;
             char type[variableBase::MAXTYPELEN];
@@ -1008,7 +1019,7 @@ cmd_help(const char *cmd, const char *x)
     else if (!_stricmp(vn, "DUMP"))
     {
         for (int i = 0; i < commands_count; i++) {
-            dumpCommand *hc = isDump(commands_start[i]);
+            dumpCommand *hc = dumpCommand::cast(commands_start[i]);
             if (hc && hc->desc)
                 Output("%s", hc->desc);
         }
@@ -1022,7 +1033,7 @@ cmd_help(const char *cmd, const char *x)
         Output("  Any command name can be shortened to minimal unambiguous length,");
         Output("  e.g. you can use 'p' for 'print' but not 'vd' for 'vdump'");
         for (int i = 0; i < commands_count; i++) {
-            regCommand *hc = isCmd(commands_start[i]);
+            regCommand *hc = regCommand::cast(commands_start[i]);
             if (hc && hc->desc)
                 Output("%s", hc->desc);
         }

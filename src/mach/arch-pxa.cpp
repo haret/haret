@@ -1,3 +1,4 @@
+#include <string.h> // strncmp
 #include "cpu.h" // DEF_GETCPR
 #include "memory.h" // memPhysMap
 #include "script.h" // runMemScript
@@ -99,7 +100,7 @@ MachinePXA::hardwareShutdown(struct fbinfo *fbi)
 int
 testPXA()
 {
-    return dynamic_cast<MachinePXA*>(Mach) != NULL;
+    return strncmp(Mach->archname, "PXA", 3) == 0;
 }
 
 REGMACHINE(MachinePXA)

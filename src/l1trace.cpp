@@ -351,7 +351,7 @@ public:
     uint32 tracecount;
     memcheck traces[MAX_L1TRACE];
     traceListVar(predFunc ta, const char *n, const char *d)
-        : listVarBase(ta, n, d
+        : listVarBase("var_list_trace", ta, n, d
                       , &tracecount, (void*)traces, sizeof(traces[0])
                       , ARRAY_SIZE(traces))
         , tracecount(0) { }

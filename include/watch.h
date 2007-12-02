@@ -34,9 +34,10 @@ public:
     uint32 watchcount;
     memcheck watchlist[64];
     watchListVar(predFunc ta, const char *n, const char *d)
-        : listVarBase(ta, n, d, &watchcount, (void*)watchlist
+        : listVarBase("var_list_watch", ta, n, d, &watchcount, (void*)watchlist
                       , sizeof(watchlist[0]), ARRAY_SIZE(watchlist))
         , watchcount(0) { }
+    static watchListVar *cast(commandBase *b);
     variableBase *newVar() { return new watchListVar(0, "", ""); }
     bool setVarItem(void *p, const char *args);
     void showVar(const char *args);

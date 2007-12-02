@@ -76,9 +76,11 @@ class commandBase *Ptr ##Decl                                   \
 class commandBase {
 public:
     typedef int (*predFunc)();
-    commandBase(predFunc ta, const char *n, const char *d)
-        : testAvail(ta), isAvail(0), name(n), desc(d) { }
+    commandBase(const char *ty, predFunc ta, const char *n, const char *d)
+        : type(ty), testAvail(ta), isAvail(0), name(n), desc(d) { }
     virtual ~commandBase() { }
+    // Type name
+    const char *type;
     // Predicate function to determine if this command/variable is available.
     predFunc testAvail;
     // Is this command/variable active.
@@ -93,7 +95,8 @@ class regCommand : public commandBase {
 public:
     typedef void (*cmdfunc)(const char *cmd, const char *args);
     regCommand(predFunc ta, const char *n, const char *d, cmdfunc f)
-        : commandBase(ta, n, d), func(f) { }
+        : commandBase("cmd", ta, n, d), func(f) { }
+    static regCommand *cast(commandBase *b);
     cmdfunc func;
 };
 
@@ -101,14 +104,16 @@ class dumpCommand : public commandBase {
 public:
     typedef regCommand::cmdfunc cmdfunc;
     dumpCommand(predFunc ta, const char *n, const char *d, cmdfunc f)
-        : commandBase(ta, n, d), func(f) { }
+        : commandBase("dump", ta, n, d), func(f) { }
+    static dumpCommand *cast(commandBase *b);
     cmdfunc func;
 };
 
 class variableBase : public commandBase {
 public:
-    variableBase(predFunc ta, const char *n, const char *d)
-        : commandBase(ta, n, d) { }
+    variableBase(const char *ty, predFunc ta, const char *n, const char *d)
+        : commandBase(ty, ta, n, d) { }
+    static variableBase *cast(commandBase *b);
     virtual bool getVar(const char **args, uint32 *v);
     virtual void setVar(const char *args);
     virtual void showVar(const char *args);
@@ -121,7 +126,7 @@ public:
 class stringVar : public variableBase {
 public:
     stringVar(predFunc ta, const char *n, const char *d, char **v)
-        : variableBase(ta, n, d), data(v), isDynamic(0) { }
+        : variableBase("var_str", ta, n, d), data(v), isDynamic(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void showVar(const char *args);
@@ -133,7 +138,7 @@ public:
 class integerVar : public variableBase {
 public:
     integerVar(predFunc ta, const char *n, const char *d, uint32 *v)
-        : variableBase(ta, n, d), data(v), dynstorage(0) { }
+        : variableBase("var_int", ta, n, d), data(v), dynstorage(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void fillVarType(char *buf);
@@ -143,10 +148,11 @@ public:
 
 class listVarBase : public variableBase {
 public:
-    listVarBase(predFunc ta, const char *n, const char *d, uint32 *c
-                , void *v, uint ds, uint max)
-        : variableBase(ta, n, d)
+    listVarBase(const char *ty, predFunc ta, const char *n, const char *d
+                , uint32 *c, void *v, uint ds, uint max)
+        : variableBase(ty, ta, n, d)
         , count(c), data(v), datasize(ds), maxavail(max) { }
+    static listVarBase *cast(commandBase *b);
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void clearVar(const char *args);
@@ -162,7 +168,8 @@ class intListVar : public listVarBase {
 public:
     intListVar(predFunc ta, const char *n, const char *d, uint32 *c
                , uint32 *v, uint max)
-        : listVarBase(ta, n, d, c, (void*)v, sizeof(uint32), max) { }
+        : listVarBase("var_list_int", ta, n, d, c
+                      , (void*)v, sizeof(uint32), max) { }
     bool getVarItem(void *p, const char **args, uint32 *v);
     bool setVarItem(void *p, const char *args);
     void showVar(const char *args);
@@ -172,7 +179,7 @@ public:
 class bitsetVar : public variableBase {
 public:
     bitsetVar(predFunc ta, const char *n, const char *d, uint32 *v, uint max)
-        : variableBase(ta, n, d), data(v), maxavail(max) { }
+        : variableBase("var_bits", ta, n, d), data(v), maxavail(max) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void fillVarType(char *buf);
@@ -184,7 +191,7 @@ class rofuncVar : public variableBase {
 public:
     typedef uint32 (*varfunc_t)(bool setval, uint32 *args, uint32 val);
     rofuncVar(predFunc ta, const char *n, const char *d, varfunc_t f, int na)
-        : variableBase(ta, n, d), func(f), numargs(na) { }
+        : variableBase("var_func", ta, n, d), func(f), numargs(na) { }
     bool getVar(const char **args, uint32 *v);
     void fillVarType(char *buf);
     varfunc_t func;
