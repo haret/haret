@@ -519,7 +519,7 @@ setupTrampoline()
 {
     uint32 virtTram = MVAddr((uint32)mmu_trampoline);
     uint32 virtTramEnd = MVAddr((uint32)mmu_trampoline_end);
-    if ((virtTram & 0xFFFFF000) != (virtTramEnd & 0xFFFFF000)) {
+    if ((virtTram & 0xFFFFF000) != ((virtTramEnd-1) & 0xFFFFF000)) {
         Output(C_ERROR "Can't handle trampoline spanning page boundary"
                " (%p %08x %08x)"
                , mmu_trampoline, virtTram, virtTramEnd);
