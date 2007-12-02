@@ -59,6 +59,11 @@ uint32 cmd_vidGetVRAM(bool, uint32*, uint32) {
     return vidGetVRAM();
 }
 REG_VAR_ROFUNC(0, "VRAM", cmd_vidGetVRAM, 0, "Video Memory physical address")
+uint32 cmd_vidGetVirtVRAM(bool, uint32*, uint32) {
+    return (uint32)vidGetVirtVRAM();
+}
+REG_VAR_ROFUNC(0, "VIRTVRAM", cmd_vidGetVirtVRAM, 0,
+               "Video Memory virtual address")
 
 static uint32 returnZero(void) { return 0; }
 
