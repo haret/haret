@@ -235,6 +235,13 @@ static inline uint32 __preload do_cpuGetPSR(void) {
 
 #define FB_PRINTF(fbi,fmt,args...) fb_printf((fbi), STR_IN_CODE(.text.preload, fmt) , ##args )
 
+static inline int __preload
+fbOverlaps(struct preloadData *pd)
+{
+    uint end = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
+    return pd->physFB >= pd->startRam && pd->physFB < end;
+}
+
 // Code to launch kernel.
 static void __preload
 preloader(struct preloadData *data)
@@ -242,6 +249,16 @@ preloader(struct preloadData *data)
     data->fbi.fb = (uint16 *)data->physFB;
     data->fbi.fonts = (unsigned char *)data->physFonts;
     FB_PRINTF(&data->fbi, "In preloader\\n");
+
+    uint32 psr = do_cpuGetPSR();
+    FB_PRINTF(&data->fbi, "PSR=%%x\\n", psr);
+    if ((psr & 0xc0) != 0xc0)
+        FB_PRINTF(&data->fbi, "ERROR: IRQS not off\\n");
+
+    if (fbOverlaps(data)) {
+        FB_PRINTF(&data->fbi, "Disabling framebuffer feedback\\n");
+        data->fbi.fb = 0;
+    }
 
     // Copy tags to beginning of ram.
     char *destTags = (char *)data->startRam + PHYSOFFSET_TAGS;
@@ -291,11 +308,6 @@ preloader(struct preloadData *data)
                 FB_PRINTF(&data->fbi, "FAIL FAIL FAIL\\n");
         }
     }
-
-    uint32 psr = do_cpuGetPSR();
-    FB_PRINTF(&data->fbi, "PSR=%%x\\n", psr);
-    if ((psr & 0xc0) != 0xc0)
-        FB_PRINTF(&data->fbi, "ERROR: IRQS not off\\n");
 
     FB_PRINTF(&data->fbi, "Jumping to Kernel...\\n");
 
@@ -477,11 +489,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
         pd->physFonts = pg_data->physLoc + offsetof(struct preloadData, fonts);
         pd->physFB = vidGetVRAM();
         Output("Video Phys FB=%08x Fonts=%08x", pd->physFB, pd->physFonts);
-	uint end = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
-        if (pd->physFB >= pd->startRam && pd->physFB < end) {
-            Output("Boot FB feedback requested, but FB overlaps with kernel structures - feedback disabled");
-            pd->physFB = 0;
-        }
+        if (fbOverlaps(pd))
+            Output("Framebuffer overlaps with kernel destination");
     }
 
     // Setup preloader code.
