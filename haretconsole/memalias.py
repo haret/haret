@@ -34,6 +34,7 @@ def regFourBits(name, start=0):
 import regs_pxa
 import regs_s3c
 import regs_omap
+import regs_msm
 
 
 ######################################################################

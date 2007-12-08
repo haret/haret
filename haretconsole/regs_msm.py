@@ -5,7 +5,7 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import memalias
-from memalias import regOneBits, regFourBits
+from memalias import regOneBits
 
 
 ######################################################################
