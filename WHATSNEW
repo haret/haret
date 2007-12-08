@@ -5,6 +5,12 @@ next version <kevin@koconnor.net>
   * Basic support for decoding register names on MMUTRACE events in
     haretconsole.
 
+  * New command "ALLOCTEST" - allocates memory and then frees it.  It
+    is useful to see where wince places user memory requests.
+
+  * New variable "VIRTVRAM" - it stores the virtual address of the
+    video ram reported by wince.
+
 20070915 0.5.0 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * It is now possible to detect processors by inspecting the wince
