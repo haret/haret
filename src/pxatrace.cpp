@@ -133,7 +133,7 @@ static void
 report_insnTrace(uint32 msecs, irqData *, traceitem *item)
 {
     uint32 clock=item->d0, pc=item->d1, reg1=item->d2, reg2=item->d3;
-    Output("%06d: %08x: insn %08x: %08x %08x"
+    Output("%06d: %08x: break %08x: %08x %08x"
            , msecs, clock, pc, reg1, reg2);
 }
 
@@ -212,11 +212,11 @@ static uint32 irqTraceType = 2;
 static uint32 irqTrace2Type = 2;
 
 REG_VAR_INT(testPXAAvail, "TRACE", irqTrace,
-            "Memory location to trace during WI")
+            "Memory location to trace during WIRQ")
 REG_VAR_INT(testPXAAvail, "TRACEMASK", irqTraceMask,
-            "Memory location mask to apply to TRACE during WI")
+            "Memory location mask to apply to TRACE during WIRQ")
 REG_VAR_INT(testPXAAvail, "TRACE2", irqTrace2,
-            "Second memory location to trace during WI (only if no mask)")
+            "Second memory location to trace during WIRQ (only if no mask)")
 REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
             "1=store only, 2=loads or stores, 3=loads only")
 REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
