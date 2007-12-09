@@ -108,10 +108,9 @@ DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
 DEF_SETCPRATTR(set_TLBflush, p15, 0, c8, c7, 0, __irq, "memory")
 
 static void
-report_giveup(uint32 msecs, irqData *, traceitem *item)
+report_giveup(irqData *, const char *header, traceitem *)
 {
-    Output("%06d: %08x: giving up - clearing mapping"
-           , msecs, 0);
+    Output("%s giving up - clearing mapping", header);
 }
 
 // A problem occurred during emulation - try to report the problem and
@@ -131,12 +130,12 @@ giveUp(struct irqData *data)
 }
 
 static void
-report_memAccess(uint32 msecs, irqData *, traceitem *item)
+report_memAccess(irqData *, const char *header, traceitem *item)
 {
     uint32 addr=item->d0, pc=item->d1, insn=item->d2, val=item->d3;
     uint32 changed=item->d4;
-    Output("%06d: mmutrace %08x: %08x(%s) %08x %08x (%08x)"
-           , msecs, pc, insn, getInsnName(insn), addr, val, changed);
+    Output("%s mmutrace %08x: %08x(%s) %08x %08x (%08x)"
+           , header, pc, insn, getInsnName(insn), addr, val, changed);
 }
 
 // Attempt to emulate a memory access fault, and then report the event
@@ -147,7 +146,6 @@ tryEmulate(struct irqData *data, struct irqregs *regs
 {
     uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
     uint32 insn = 0;
-    int count;
     if (get_SPSR() & (1<<5))
         // Don't know how to handle thumb mode.
         goto fail;
@@ -240,11 +238,6 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     // Event reporting
     //
 
-    // Trace time memory polling.
-    count = checkPolls(data, &data->tracepoll);
-    if (data->traceForWatch && !count)
-        // Further reporting disabled
-        return;
     if (isIgnoredAddr(data, old_pc))
         // Not interested in this address
         return;
@@ -308,11 +301,10 @@ L1_abort_handler(struct irqData *data, struct irqregs *regs)
 }
 
 static void
-report_prefetch(uint32 msecs, irqData *, traceitem *item)
+report_prefetch(irqData *, const char *header, traceitem *item)
 {
     uint32 addr=item->d0;
-    Output("%06d: %08x: Can't emulate insn access at %08x"
-           , msecs, 0, addr);
+    Output("%s Can't emulate insn access at %08x", header, addr);
 }
 
 // Handler for instruction fetch faults - this is here to catch the
@@ -435,10 +427,6 @@ static uint32 ignoreAddrCount;
 REG_VAR_INTLIST(testWirqAvail, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
                 "List of pc addresses to ignore when tracing")
 
-static uint32 traceForWatch;
-REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
-            "Only report memory trace if ADDTRACEWATCH poll succeeds")
-
 // When tracing a coarse (or fine) mapping in the page tables there is
 // no reliable way to disable caching.  So, if an access occurs that
 // can't be emulated and the tracing needs to stop early then any
@@ -470,7 +458,6 @@ int
 prepL1traps(struct irqData *data)
 {
     // Copy ignoreaddr values (note pxatrace uses these too)
-    data->traceForWatch = traceForWatch;
     data->ignoreAddrCount = ignoreAddrCount;
     memcpy(data->ignoreAddr, ignoreAddr, sizeof(data->ignoreAddr));
 

@@ -57,36 +57,59 @@ LATE_LOAD(FreePhysMem, "coredll")
 
 
 /****************************************************************
+ * PXA wrappers
+ ****************************************************************/
+
+// The CCNT performance monitoring register
+DEF_GETIRQCPR(get_CCNT, p14, 0, c1, c1, 0)
+
+static inline int __irq
+start_trap(struct irqData *data) {
+    int isPXA = data->isPXA;
+    if (isPXA)
+        data->clock = get_CCNT();
+    return isPXA;
+}
+static inline void __irq
+prePoll(struct irqData *data, int isPXA) {
+    if (isPXA)
+        set_DBCON(0);
+}
+static inline void __irq
+postPoll(struct irqData *data, int isPXA) {
+    if (isPXA)
+        set_DBCON(data->dbcon);
+}
+
+
+/****************************************************************
  * C part of exception handlers
  ****************************************************************/
 
 static void
-report_memPoll(uint32 msecs, irqData *data, traceitem *item)
+report_memPoll(irqData *data, const char *header, traceitem *item)
 {
     watchListVar *w = (watchListVar*)item->d0;
-    uint32 pos=item->d1, clock=item->d2, val=item->d3, changed=item->d4;
-    w->reportWatch(msecs, clock, pos, val, changed);
+    uint32 pos=item->d1, val=item->d2, changed=item->d3;
+    w->reportWatch(header, pos, val, changed);
 }
 
 // Perform a set of memory polls and add to trace buffer.
-int __irq
-checkPolls(struct irqData *data, pollinfo *info, uint32 clock)
+static void __irq
+checkPolls(struct irqData *data, pollinfo *info)
 {
-    int foundcount = 0;
     for (uint i=0; i<info->count; i++) {
         memcheck *mc = &info->list[i];
         uint32 val, changed;
         int ret = testMem(mc, &val, &changed);
         if (!ret)
             continue;
-        foundcount++;
         ret = add_trace(data, report_memPoll, (uint32)info->cls, i
-                        , clock, val, changed);
+                        , val, changed);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
     }
-    return foundcount;
 }
 
 // Handler for interrupt events.  Note that this is running in
@@ -95,54 +118,68 @@ checkPolls(struct irqData *data, pollinfo *info, uint32 clock)
 extern "C" void __irq
 irq_handler(struct irqData *data, struct irqregs *regs)
 {
+    int isPXA = start_trap(data);
     data->irqCount++;
-    if (data->isPXA) {
+
+    if (isPXA)
         // Separate routine for PXA chips
         PXA_irq_handler(data, regs);
-        return;
-    }
 
-    // Irq time memory polling.
-    checkPolls(data, &data->irqpoll);
     // Trace time memory polling.
+    prePoll(data, isPXA);
+    checkPolls(data, &data->irqpoll);
     checkPolls(data, &data->tracepoll);
+    postPoll(data, isPXA);
 }
 
 extern "C" int __irq
 abort_handler(struct irqData *data, struct irqregs *regs)
 {
+    int isPXA = start_trap(data);
     data->abortCount++;
-    if (data->isPXA) {
+
+    int ret = L1_abort_handler(data, regs);
+    if (!ret && isPXA)
         // Separate routine for PXA chips
-        int ret = PXA_abort_handler(data, regs);
-        if (ret)
-            return ret;
-    }
-    return L1_abort_handler(data, regs);
+        ret = PXA_abort_handler(data, regs);
+
+    // Trace time memory polling.
+    prePoll(data, isPXA);
+    checkPolls(data, &data->tracepoll);
+    postPoll(data, isPXA);
+
+    return ret;
 }
 
 extern "C" int __irq
 prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
+    int isPXA = start_trap(data);
     data->prefetchCount++;
-    if (data->isPXA) {
+
+    int ret = L1_prefetch_handler(data, regs);
+    if (!ret && isPXA)
         // Separate routine for PXA chips
-        int ret = PXA_prefetch_handler(data, regs);
-        if (ret)
-            return ret;
-    }
-    return L1_prefetch_handler(data, regs);
+        ret = PXA_prefetch_handler(data, regs);
+
+    // Trace time memory polling.
+    prePoll(data, isPXA);
+    checkPolls(data, &data->tracepoll);
+    postPoll(data, isPXA);
+
+    return ret;
 }
 
 static void
-report_resume(uint32 msecs, irqData *, traceitem *item)
+report_resume(irqData *, const char *header, traceitem *item)
 {
-    Output("%06d: WinCE resume", msecs);
+    Output("%s WinCE resume", header);
 }
 
 extern "C" void __irq
 resume_handler(struct irqData *data, struct irqregs *regs)
 {
+    start_trap(data);
     add_trace(data, report_resume);
     checkPolls(data, &data->resumepoll);
     if (data->max_l1trace_after_resume)
@@ -186,7 +223,12 @@ printTrace(uint32 msecs, struct irqData *data)
         LastOverflowReport = tmpoverflow;
     }
     struct traceitem *cur = &data->traces[data->readPos % NR_TRACE];
-    cur->reporter(msecs, data, cur);
+    char header[64];
+    if (data->clock != (uint32)-1)
+        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, data->clock);
+    else
+        _snprintf(header, sizeof(header), "%06d:", msecs);
+    cur->reporter(data, header, cur);
     data->readPos++;
     return 1;
 }
@@ -205,6 +247,7 @@ static void
 preLoop(struct irqData *data)
 {
     LastOverflowReport = 0;
+    data->clock = -1;
 
     // Setup memory tracing.
     prepPoll(&data->irqpoll, &IRQS, 1);

@@ -15,11 +15,8 @@
 #include "arminsns.h" // getInsnName
 #include "irq.h"
 
-// The CCNT performance monitoring register
-DEF_GETIRQCPR(get_CCNT, p14, 0, c1, c1, 0)
 // The DBCON software debug register
 DEF_GETIRQCPR(get_DBCON, p15, 0, c14, c4, 0)
-DEF_SETIRQCPR(set_DBCON, p15, 0, c14, c4, 0)
 // Interrupt status register
 DEF_GETIRQCPR(get_ICHP, p6, 0, c5, c0, 0)
 // Set the IBCR0 software debug register
@@ -51,6 +48,7 @@ startPXAtraps(struct irqData *data)
     set_EVTSEL(0xffffffff);  // Disable explicit event counts
     set_INTEN(0);  // Don't use interrupts
     set_PMNC(0xf);  // Enable performance monitor; clear counter
+    data->clock = 0;
     // Enable software debug
     if (data->dbcon || data->insns[0].addr1 != 0xFFFFFFFF) {
         set_DBCON(0);  // Clear DBCON
@@ -66,38 +64,28 @@ startPXAtraps(struct irqData *data)
 }
 
 static void
-report_winceResume(uint32 msecs, irqData *, traceitem *item)
+report_winceResume(irqData *, const char *header, traceitem *)
 {
-    Output("%06d: %08x: cpu resumed", msecs, 0);
+    Output("%s cpu resumed", header);
 }
 
 // PXA specific handler for IRQ events
 void __irq
 PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 {
-    uint32 clock = get_CCNT();
-
     if (get_DBCON() != data->dbcon) {
         // Performance counter not running - reenable.
         add_trace(data, report_winceResume);
         startPXAtraps(data);
-        clock = 0;
     }
-
-    set_DBCON(0);
-    // Irq time memory polling.
-    checkPolls(data, &data->irqpoll, clock);
-    // Trace time memory polling.
-    checkPolls(data, &data->tracepoll, clock);
-    set_DBCON(data->dbcon);
 }
 
 static void
-report_memAccess(uint32 msecs, irqData *, traceitem *item)
+report_memAccess(irqData *, const char *header, traceitem *item)
 {
-    uint32 clock=item->d0, pc=item->d1, insn=item->d2, Rd=item->d3, Rn=item->d4;
-    Output("%06d: %08x: debug %08x: %08x(%s) %08x %08x"
-           , msecs, clock, pc, insn, getInsnName(insn), Rd, Rn);
+    uint32 pc=item->d0, insn=item->d1, Rd=item->d2, Rn=item->d3;
+    Output("%s debug %08x: %08x(%s) %08x %08x"
+           , header, pc, insn, getInsnName(insn), Rd, Rn);
 }
 
 // Code that handles memory access events.
@@ -108,14 +96,7 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
         // Not a debug trace event
         return 0;
 
-    uint32 clock = get_CCNT();
-    data->abortCount++;
-
-    // Trace time memory polling.
-    set_DBCON(0);
-    int count = checkPolls(data, &data->tracepoll, clock);
-    set_DBCON(data->dbcon);
-    if (data->traceForWatch && !count)
+    if (data->traceForWatch)
         return 1;
 
     uint32 old_pc = MVAddr_irq(regs->old_pc - 8);
@@ -123,18 +104,18 @@ PXA_abort_handler(struct irqData *data, struct irqregs *regs)
         return 1;
 
     uint32 insn = *(uint32*)old_pc;
-    add_trace(data, report_memAccess, clock, old_pc, insn
+    add_trace(data, report_memAccess, old_pc, insn
               , getReg(regs, mask_Rd(insn))
               , getReg(regs, mask_Rn(insn)));
     return 1;
 }
 
 static void
-report_insnTrace(uint32 msecs, irqData *, traceitem *item)
+report_insnTrace(irqData *, const char *header, traceitem *item)
 {
-    uint32 clock=item->d0, pc=item->d1, reg1=item->d2, reg2=item->d3;
-    Output("%06d: %08x: break %08x: %08x %08x"
-           , msecs, clock, pc, reg1, reg2);
+    uint32 pc=item->d0, reg1=item->d1, reg2=item->d2;
+    Output("%s break %08x: %08x %08x"
+           , header, pc, reg1, reg2);
 }
 
 // Code that handles instruction breakpoint events.
@@ -144,9 +125,6 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
     if ((get_FSR() & (1<<9)) == 0)
         // Not a debug trace event
         return 0;
-
-    uint32 clock = get_CCNT();
-    data->prefetchCount++;
 
     uint32 old_pc = MVAddr_irq(regs->old_pc-4);
     struct irqData::insn_s *idata = &data->insns[0];
@@ -172,14 +150,10 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
         }
     }
 
-    add_trace(data, report_insnTrace, clock, old_pc
+    add_trace(data, report_insnTrace, old_pc
               , getReg(regs, idata->reg1)
               , getReg(regs, idata->reg2));
 
-    // Trace time memory polling.
-    set_DBCON(0);
-    checkPolls(data, &data->tracepoll, clock);
-    set_DBCON(data->dbcon);
     return 1;
 }
 
@@ -210,6 +184,7 @@ static uint32 irqTraceMask = 0;
 static uint32 irqTrace2 = 0xFFFFFFFF;
 static uint32 irqTraceType = 2;
 static uint32 irqTrace2Type = 2;
+static uint32 traceForWatch;
 
 REG_VAR_INT(testPXAAvail, "TRACE", irqTrace,
             "Memory location to trace during WIRQ")
@@ -221,6 +196,8 @@ REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
             "1=store only, 2=loads or stores, 3=loads only")
 REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
             "1=store only, 2=loads or stores, 3=loads only")
+REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
+            "Only report memory trace if ADDTRACEWATCH poll succeeds")
 
 // Externally modifiable settings for software tracing
 static uint32 insnTrace = 0xFFFFFFFF, insnTraceReenable = 0xFFFFFFFF;
@@ -256,6 +233,7 @@ prepPXAtraps(struct irqData *data)
     data->isPXA = testPXA();
     if (! data->isPXA)
         return 0;
+    data->traceForWatch = traceForWatch;
     // Check for software debug data watch points.
     if (irqTrace != 0xFFFFFFFF) {
         data->dbr0 = irqTrace;

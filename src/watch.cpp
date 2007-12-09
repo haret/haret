@@ -216,15 +216,9 @@ watchListVar::beginWatch(int isStart)
 }
 
 void
-watchListVar::reportWatch(uint32 msecs, uint32 clock, uint32 pos
+watchListVar::reportWatch(const char *header, uint32 pos
                           , uint32 newval, uint32 changed)
 {
-    char header[64];
-    if (clock != (uint32)-1)
-        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
-    else
-        _snprintf(header, sizeof(header), "%06d:", msecs);
-
     memcheck *mc = &watchlist[pos];
     const char *atype = "mem";
     if (mc->isInsn)
@@ -330,7 +324,9 @@ cmd_watch(const char *cmd, const char *args)
             int ret = testMem(mc, &val, &changed);
             if (!ret)
                 continue;
-            wl->reportWatch(cur_time - start_time, -1, i, val, changed);
+            char header[64];
+            _snprintf(header, sizeof(header), "%06d:", cur_time - start_time);
+            wl->reportWatch(header, i, val, changed);
         }
 
         cur_time = GetTickCount();

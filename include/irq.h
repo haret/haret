@@ -26,7 +26,7 @@
 
 struct traceitem;
 struct irqData;
-typedef void (*tracereporter)(uint32 msecs, irqData *, traceitem *);
+typedef void (*tracereporter)(irqData *, const char *, traceitem *);
 
 // The layout of each item in the "trace buffer" shared between the
 // exception handlers and the monitoring code.
@@ -34,6 +34,7 @@ struct traceitem {
     // Event specific reporter
     tracereporter reporter;
     // Data
+    uint32 clock;
     uint32 d0, d1, d2, d3, d4;
 };
 
@@ -55,12 +56,6 @@ struct pollinfo {
 // Persistent data accessible by both exception handlers and regular
 // code.
 struct irqData {
-    // Trace buffer.
-    uint32 overflows, errors;
-    uint32 writePos, readPos;
-    struct traceitem traces[NR_TRACE];
-    uint32 exitEarly;
-
     // Summary counters.
     uint32 irqCount, abortCount, prefetchCount;
 
@@ -93,6 +88,15 @@ struct irqData {
     struct insn_s { uint32 addr1, addr2, reg1, reg2; } insns[2];
     uint32 dbr0, dbr1, dbcon;
     uint32 traceForWatch;
+
+    //
+    // Trace buffer.
+    //
+    uint32 overflows, errors;
+    uint32 writePos, readPos;
+    uint32 clock;
+    uint32 exitEarly;
+    struct traceitem traces[NR_TRACE];
 };
 
 // Add an item to the trace buffer.
@@ -107,6 +111,7 @@ add_trace(struct irqData *data, tracereporter reporter
     }
     struct traceitem *pos = &data->traces[data->writePos % NR_TRACE];
     pos->reporter = reporter;
+    pos->clock = data->clock;
     pos->d0 = d0;
     pos->d1 = d1;
     pos->d2 = d2;
@@ -122,7 +127,6 @@ add_trace(struct irqData *data, tracereporter reporter
  ****************************************************************/
 
 int testWirqAvail();
-int checkPolls(struct irqData *data, pollinfo *info, uint32 clock = -1);
 
 // Contents of register description passed into the exception
 // handlers.  This layout corresponds with the assembler code in
@@ -176,6 +180,9 @@ static inline int __irq isIgnoredAddr(struct irqData *data, uint32 pc) {
 /****************************************************************
  * Intel PXA specific memory tracing (see pxatrace.cpp)
  ****************************************************************/
+
+// The DBCON software debug register
+DEF_SETIRQCPR(set_DBCON, p15, 0, c14, c4, 0)
 
 void PXA_irq_handler(struct irqData *data, struct irqregs *regs);
 int PXA_abort_handler(struct irqData *data, struct irqregs *regs);
