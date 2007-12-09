@@ -39,7 +39,6 @@ public:
     variableBase *newVar() { return new watchListVar(0, "", ""); }
     bool setVarItem(void *p, const char *args);
     void showVar(const char *args);
-    void fillVarType(char *buf);
     void beginWatch(int isStart=1);
     void reportWatch(const char *header, uint32 pos
                      , uint32 newval, uint32 changed);

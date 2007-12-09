@@ -191,10 +191,6 @@ watchListVar::showVar(const char *args)
     }
 }
 
-void watchListVar::fillVarType(char *buf) {
-    strcpy(buf, "watch list");
-}
-
 // Output the addresses to be watched.
 void
 watchListVar::beginWatch(int isStart)

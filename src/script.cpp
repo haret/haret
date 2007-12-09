@@ -598,6 +598,9 @@ void variableBase::showVar(const char *s) {
 void variableBase::clearVar(const char *s) {
     ScriptError("Can not clear `%s' variable", name);
 }
+void variableBase::fillVarType(char *buf) {
+    strcpy(buf, &type[4]);
+}
 variableBase *variableBase::newVar() {
     return NULL;
 }
@@ -609,9 +612,6 @@ bool integerVar::getVar(const char **s, uint32 *v) {
 void integerVar::setVar(const char *s) {
     if (!get_expression(&s, data))
         ScriptError("Expected numeric <value>");
-}
-void integerVar::fillVarType(char *buf) {
-    strcpy(buf, "int");
 }
 
 bool stringVar::getVar(const char **s, uint32 *v) {
@@ -629,9 +629,6 @@ void stringVar::setVar(const char *s) {
 }
 void stringVar::showVar(const char *s) {
     Output("%s", *data);
-}
-void stringVar::fillVarType(char *buf) {
-    strcpy(buf, "string");
 }
 
 bool bitsetVar::getVar(const char **s, uint32 *v) {
@@ -655,9 +652,6 @@ void bitsetVar::setVar(const char *s) {
         return;
     }
     ASSIGNBIT(data, idx, val);
-}
-void bitsetVar::fillVarType(char *buf) {
-    strcpy(buf, "bitset");
 }
 
 listVarBase *listVarBase::cast(commandBase *b) {
@@ -717,9 +711,6 @@ void intListVar::showVar(const char *s) {
     for (uint i=0; i<*count; i++)
         Output("%03d: 0x%08x", i, d[i]);
 }
-void intListVar::fillVarType(char *buf) {
-    strcpy(buf, "int list");
-}
 
 bool rofuncVar::getVar(const char **s, uint32 *v) {
     uint32 args[50];
@@ -729,7 +720,7 @@ bool rofuncVar::getVar(const char **s, uint32 *v) {
     return true;
 }
 void rofuncVar::fillVarType(char *buf) {
-    sprintf(buf, "ro func(%d)", numargs);
+    sprintf(buf, "%s(%d)", &type[4], numargs);
 }
 
 void rwfuncVar::setVar(const char *s) {
@@ -742,9 +733,6 @@ void rwfuncVar::setVar(const char *s) {
         return;
     }
     func(true, args, val);
-}
-void rwfuncVar::fillVarType(char *buf) {
-    sprintf(buf, "rw func(%d)", numargs);
 }
 
 void SetVar(const char *name, const char *val)

@@ -78,6 +78,7 @@ public:
         : type(ty), testAvail(ta), isAvail(0), name(n), desc(d) { }
     virtual ~commandBase() { }
     // Type name
+    static const int MAXTYPELEN = 32;
     const char *type;
     // Predicate function to determine if this command/variable is available.
     predFunc testAvail;
@@ -117,18 +118,16 @@ public:
     virtual void showVar(const char *args);
     virtual void clearVar(const char *args);
     virtual variableBase *newVar();
-    static const int MAXTYPELEN = 16;
-    virtual void fillVarType(char *buf) { }
+    virtual void fillVarType(char *buf);
 };
 
 class stringVar : public variableBase {
 public:
     stringVar(predFunc ta, const char *n, const char *d, char **v)
-        : variableBase("var_str", ta, n, d), data(v), isDynamic(0) { }
+        : variableBase("var_string", ta, n, d), data(v), isDynamic(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void showVar(const char *args);
-    void fillVarType(char *buf);
     char **data;
     int isDynamic;
 };
@@ -139,7 +138,6 @@ public:
         : variableBase("var_int", ta, n, d), data(v), dynstorage(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
-    void fillVarType(char *buf);
     uint32 *data;
     uint32 dynstorage;
 };
@@ -171,16 +169,14 @@ public:
     bool getVarItem(void *p, const char **args, uint32 *v);
     bool setVarItem(void *p, const char *args);
     void showVar(const char *args);
-    void fillVarType(char *buf);
 };
 
 class bitsetVar : public variableBase {
 public:
     bitsetVar(predFunc ta, const char *n, const char *d, uint32 *v, uint max)
-        : variableBase("var_bits", ta, n, d), data(v), maxavail(max) { }
+        : variableBase("var_bitset", ta, n, d), data(v), maxavail(max) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
-    void fillVarType(char *buf);
     uint32 *data;
     uint maxavail;
 };
@@ -189,7 +185,7 @@ class rofuncVar : public variableBase {
 public:
     typedef uint32 (*varfunc_t)(bool setval, uint32 *args, uint32 val);
     rofuncVar(predFunc ta, const char *n, const char *d, varfunc_t f, int na)
-        : variableBase("var_func", ta, n, d), func(f), numargs(na) { }
+        : variableBase("var_func_ro", ta, n, d), func(f), numargs(na) { }
     bool getVar(const char **args, uint32 *v);
     void fillVarType(char *buf);
     varfunc_t func;
@@ -199,9 +195,8 @@ public:
 class rwfuncVar : public rofuncVar {
 public:
     rwfuncVar(predFunc ta, const char *n, const char *d, varfunc_t f, int na)
-        : rofuncVar(ta, n, d, f, na) { }
+        : rofuncVar(ta, n, d, f, na) { type = "var_func_rw"; }
     void setVar(const char *args);
-    void fillVarType(char *buf);
 };
 
 void setupCommands();

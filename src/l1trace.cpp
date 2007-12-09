@@ -402,9 +402,6 @@ public:
                    , rotr(~t->mask, shift), disp_suppress(&tmp, buf));
         }
     }
-    void fillVarType(char *buf) {
-        strcpy(buf, "trace list");
-    }
 };
 __REG_VAR(
     traceListVar, MMUTrace,
