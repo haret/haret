@@ -229,7 +229,7 @@ static uint32 insnTrace2 = 0xFFFFFFFF, insnTrace2Reenable = 0xFFFFFFFF;
 static uint32 insnTrace2Reg1 = 0, insnTrace2Reg2 = 1;
 
 REG_VAR_INT(testPXAAvail, "INSN", insnTrace,
-            "Instruction address to monitor during WI")
+            "Instruction address to monitor during WIRQ")
 REG_VAR_INT(testPXAAvail, "INSNREENABLE", insnTraceReenable,
             "Instruction address to reenable breakpoint after INSN")
 REG_VAR_INT(testPXAAvail, "INSNREG1", insnTraceReg1,
@@ -237,7 +237,7 @@ REG_VAR_INT(testPXAAvail, "INSNREG1", insnTraceReg1,
 REG_VAR_INT(testPXAAvail, "INSNREG2", insnTraceReg2,
             "Second register to report during INSN breakpoint")
 REG_VAR_INT(testPXAAvail, "INSN2", insnTrace2,
-            "Second instruction address to monitor during WI")
+            "Second instruction address to monitor during WIRQ")
 REG_VAR_INT(testPXAAvail, "INSN2REENABLE", insnTrace2Reenable,
             "Instruction address to reenable breakpoint after INSN2")
 REG_VAR_INT(testPXAAvail, "INSN2REG1", insnTrace2Reg1,

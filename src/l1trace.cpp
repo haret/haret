@@ -418,7 +418,7 @@ __REG_VAR(
     traceListVar, MMUTrace,
     testWirqAvail,
     "MMUTRACE",
-    "Memory locations to trace during WI.\n"
+    "Memory locations to trace during WIRQ.\n"
     "  List of <start> [<size> [<rw> [<mask> [<ignVal>]]]] 5-tuples\n"
     "    <start>  is a virtual address to trace\n"
     "    <size>   is the number of bytes in the range to trace (default 1)\n"
