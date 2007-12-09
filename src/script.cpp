@@ -179,6 +179,7 @@ static char peek_char (const char **s)
 // Eat the closing ')'
 #define PAREN_EAT	2
 
+// Parse the next part of the string as an expression
 bool
 get_expression(const char **s, uint32 *v, int priority, int flags)
 {
@@ -337,6 +338,37 @@ get_expression(const char **s, uint32 *v, int priority, int flags)
   return true;
 }
 
+// Parser for integers (eg, "123") or an integer range (eg, "123..456")
+bool
+get_range(const char **s, uint32 *pstart, uint32 *pend)
+{
+    uint32 start, end;
+    const char *tmp = *s;
+    int ret = get_expression(&tmp, &start);
+    if (!ret)
+        return ret;
+    if (tmp[0] != '.' || tmp[1] != '.') {
+        // Only a single integer present.
+        *s = tmp;
+        *pend = *pstart = start;
+        return ret;
+    }
+    // Looks like an integer range.
+    tmp += 2;
+    ret = get_expression(&tmp, &end);
+    if (ret) {
+        *s = tmp;
+        if (start > end) {
+            *pstart = end;
+            *pend = start;
+        } else {
+            *pstart = start;
+            *pend = end;
+        }
+    }
+    return ret;
+}
+
 static bool get_args (const char **s, const char *keyw, uint32 *args, uint count)
 {
   if (!count)
@@ -437,6 +469,7 @@ void ScriptError(const char *fmt, ...)
     Output(C_ERROR "line %d: %s", ScriptLine, buf);
 }
 
+// Interpret one line of scripting language; returns false on QUIT
 bool scrInterpret(const char *str, uint lineno)
 {
     ScriptLine = lineno;
@@ -496,6 +529,7 @@ runMemScript(const char *script)
     }
 }
 
+// Execute the script from given file
 void scrExecute (const char *scrfn, bool complain)
 {
   char fn [100];

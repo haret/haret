@@ -255,27 +255,32 @@ ignoreBit(const char *cmd, const char *args)
         return;
 
     // Add bits to the mask
-    uint32 bit;
-    while (get_expression(&args, &bit)) {
-        uint pos = bit / 32;
-        uint mask = 1<<(bit % 32);
-        if (pos >= wl->watchcount) {
-            Output(C_ERROR "Bit %d is past max found of %d"
-                   , pos, wl->watchcount);
+    uint32 start, end;
+    while (get_range(&args, &start, &end)) {
+        uint32 max = wl->watchcount * 32 - 1;
+        if (start > max) {
+            Output(C_ERROR "Bit %d is past max of %d", end, max);
             return;
         }
-        if (toupper(cmd[0]) == 'I')
-            wl->watchlist[pos].mask &= ~mask;
-        else
-            wl->watchlist[pos].mask |= mask;
+        if (end > max)
+            end = max;
+        for (uint i=start; i<=end; i++) {
+            uint pos = i / 32;
+            uint mask = 1<<(i % 32);
+            if (toupper(cmd[0]) == 'I')
+                wl->watchlist[pos].mask &= ~mask;
+            else
+                wl->watchlist[pos].mask |= mask;
+        }
     }
 }
 REG_CMD(0, "IBIT", ignoreBit,
-            "IBIT <watch list> <bit#> [<bit#>...]\n"
-            "  Ignore the nth bit in the watch list");
+        "IBIT <watch list> <bit range> [<bit range>...]\n"
+        "  Ignore bits in a watch list\n"
+        "  A bit range can be a number (eg, 1) or a range (eg, 1..5)")
 REG_CMD_ALT(0, "WBIT", ignoreBit, watch,
-            "WBIT <watch list> <bit#> [<bit#>...]\n"
-            "  Opposite of IBIT - remove bit from mask");
+            "WBIT <watch list> <bit range> [<bit range>...]\n"
+            "  Opposite of IBIT - remove bits from mask")
 
 
 /****************************************************************

@@ -1,5 +1,8 @@
 next version <kevin@koconnor.net>
 
+  * The ibit and wbit commands can now take a bit range.  For example:
+       ibit gpios 58..90
+
   * Initial support for detecting MSM7500 and OMAP15xx cpus.
 
   * Basic support for decoding register names on MMUTRACE events in
