@@ -76,7 +76,9 @@ memalias.RegsList['ARCH:PXA27x'] = Regs_pxa27x
 # HTC Apache specific registers
 Regs_Apache = Regs_pxa27x.copy()
 Regs_Apache.update({
-    0x0a000000: ("cpldirq", regOneBits("CPLD")),
+    0x0a000000: ("cpldA", regOneBits("cpldA")),
+    0x0a000002: ("cpldB", regOneBits("cpldB")),
+    0x0a000004: ("cpldC", regOneBits("cpldC")),
     })
 memalias.RegsList['Apache'] = Regs_Apache
 
