@@ -405,7 +405,7 @@ public:
             uint32 shift = 8 * (t->addr & 3);
             t->cmpVal = rotr(t->cmpVal, shift);
 
-            Output("%03d: 0x%08x %d %s %08x %s"
+            Output("%03d: 0x%08x %d '%s' %08x %s"
                    , i, t->addr, t->endaddr - t->addr, flags
                    , rotr(~t->mask, shift), disp_suppress(&tmp, buf));
         }
