@@ -73,21 +73,6 @@ testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged)
     return 0;
 }
 
-void
-reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
-            , uint32 newval, uint32 changed)
-{
-    char header[64];
-    if (clock != (uint32)-1)
-        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
-    else
-        _snprintf(header, sizeof(header), "%06d:", msecs);
-    if (mc->isInsn)
-        Output("%s insn %08x=%08x (%08x)", header, mc->insn, newval, changed);
-    else
-        Output("%s mem %08x=%08x (%08x)", header, mc->addr, newval, changed);
-}
-
 
 /****************************************************************
  * Helpers for registering watched memory
@@ -230,6 +215,26 @@ watchListVar::beginWatch(int isStart)
     }
 }
 
+void
+watchListVar::reportWatch(uint32 msecs, uint32 clock, uint32 pos
+                          , uint32 newval, uint32 changed)
+{
+    char header[64];
+    if (clock != (uint32)-1)
+        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, clock);
+    else
+        _snprintf(header, sizeof(header), "%06d:", msecs);
+
+    memcheck *mc = &watchlist[pos];
+    const char *atype = "mem";
+    if (mc->isInsn)
+        atype = "insn";
+
+    Output("%s %s %s(%d) %08x=%08x (%08x)"
+           , header, atype, name, pos
+           , mc->addr, newval, changed);
+}
+
 static watchListVar *
 FindWatchVar(const char **args)
 {
@@ -325,7 +330,7 @@ cmd_watch(const char *cmd, const char *args)
             int ret = testMem(mc, &val, &changed);
             if (!ret)
                 continue;
-            reportWatch(cur_time - start_time, -1, mc, val, changed);
+            wl->reportWatch(cur_time - start_time, -1, i, val, changed);
         }
 
         cur_time = GetTickCount();

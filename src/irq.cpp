@@ -64,9 +64,8 @@ static void
 report_memPoll(uint32 msecs, irqData *data, traceitem *item)
 {
     watchListVar *w = (watchListVar*)item->d0;
-    memcheck *mc = &w->watchlist[item->d1];
-    uint32 clock=item->d2, val=item->d3, changed=item->d4;
-    reportWatch(msecs, clock, mc, val, changed);
+    uint32 pos=item->d1, clock=item->d2, val=item->d3, changed=item->d4;
+    w->reportWatch(msecs, clock, pos, val, changed);
 }
 
 // Perform a set of memory polls and add to trace buffer.

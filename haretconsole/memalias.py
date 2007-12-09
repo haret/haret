@@ -106,72 +106,57 @@ def getClock(m):
     LastClock = clock
     return "%s(%s)" % (t, out)
 
-# Internal class that stores an active "watch" region.  It is used
-# when reformating the output string of a memory trace event.
-class memDisplay:
-    def __init__(self, reginfo, type, pos):
-        self.type = ""
-        if type:
-            self.type = " " + type
-        self.pos = pos
-        self.name = reginfo[0]
-        self.bitdefs = reginfo[1]
-    # Return a string representation of a set of changed bits.
-    def getValue(self, desc, bits, val, changed, add_il):
-        count = 0
-        outval = 0
-        pos = []
-        for i in range(32):
-            bit = 1<<i
-            if bit & bits:
-                if bit & val:
-                    outval |= 1<<count
-                if bit & changed:
-                    pos.append(i)
-                count += 1
-        if add_il:
-            ignorelist = " ".join(["%d" % (self.pos*32+i) for i in pos])
-            return " %s(%s)=%x" % (desc, ignorelist, outval)
-        return " %s=%x" % (desc, outval)
-    # Main function call into this class - display a mem trace line
-    def displayFunc(self, m):
-        val = int(m.group('val'), 16)
-        changed = int(m.group('changed'), 16)
-        out = ""
-        notfirst = 1
-        if not changed:
-            # Start of trace - show all bit defs, but don't show the
-            # list of bits to ignore.
-            changed = val
-            notfirst = 0
-        if not self.bitdefs:
-            # Only a register name exists (no bit definitions)
-            out = self.getValue("%08s" % self.name, ~0, val, changed, notfirst)
-            print "%s%s %s" % (getClock(m), self.type, out,)
-            return
-        unnamedbits = changed
-        for bits, desc in self.bitdefs:
-            if bits & changed:
-                out += self.getValue(desc, bits, val, changed, notfirst)
-                unnamedbits &= ~bits
-        if unnamedbits:
-            # Not all changed bits are named - come up with a "dummy"
-            # name for the remaining bits.
-            out += self.getValue("?", ~0, val&unnamedbits, unnamedbits, notfirst)
-        if notfirst:
-            print "%s%s %8s:%s" % (
-                getClock(m), self.type, self.name, out,)
-        else:
-            # Show register value along with any additional info
-            print "%s%s %8s=%08x:%s" % (
-                getClock(m), self.type, self.name, val, out,)
+# Return a string representation of a set of changed bits.
+def bitDecode(m, bits, desc, val, changed, add_il):
+    count = 0
+    outval = 0
+    pos = []
+    for i in range(32):
+        bit = 1<<i
+        if bit & bits:
+            if bit & val:
+                outval |= 1<<count
+            if bit & changed:
+                pos.append(i)
+            count += 1
+    if add_il:
+        varpos = int(m.group('varpos'))
+        ignorelist = " ".join(["%d" % (varpos*32+i) for i in pos])
+        return " %s(%s)=%x" % (desc, ignorelist, outval)
+    return " %s=%x" % (desc, outval)
 
-# Default memory tracing line if no custom register specified.
-def defaultFunc(m):
-    e = m.end('clock')
-    if e < 0:
-        e = m.end('time')
-    print getClock(m), m.string[e+6:]
+# Main function call into this class - display a mem trace line
+def memDecode(m, reginfo):
+    regname, bitdefs = reginfo
+    var = m.group('var')
+    val = int(m.group('val'), 16)
+    changed = int(m.group('changed'), 16)
+    notfirst = 1
+    if not changed:
+        # Start of trace - show all bit defs, but don't show the
+        # list of bits to ignore.
+        changed = val
+        notfirst = 0
+    if not bitdefs:
+        # Only a register name exists (no bit definitions)
+        out = bitDecode(m, ~0, "%08s" % regname, val, changed, notfirst)
+        print "%s %8s %s" % (getClock(m), var, out,)
+        return
+    out = ""
+    unnamedbits = changed
+    for bits, desc in bitdefs:
+        if bits & changed:
+            out += bitDecode(m, bits, desc, val, changed, notfirst)
+            unnamedbits &= ~bits
+    if unnamedbits:
+        # Not all changed bits are named - come up with a "dummy" name
+        # for the remaining bits.
+        out += bitDecode(m, ~0, "?", val&unnamedbits, unnamedbits, notfirst)
+    if notfirst:
+        print "%s %8s %8s:%s" % (getClock(m), var, regname, out)
+    else:
+        # Show register value along with any additional info
+        print "%s %8s %8s=%08x:%s" % (getClock(m), var, regname, val, out)
 
 
 ######################################################################
@@ -184,18 +169,18 @@ re_begin = re.compile(r"^Beginning memory tracing\.$")
 re_detect = re.compile(
     r"^Detected machine (?P<name>.*)/(?P<arch>.*) \(Plat=.*\)$")
 re_watch = re.compile(
-    r"^Watching (?P<type>.*)\((?P<pos>\d+)\): ("
+    r"^Watching (?P<var>.*)\((?P<varpos>\d+)\): ("
     r"Addr (?P<vaddr>.*)\(@(?P<paddr>.*)\)|"
     r"Insn (?P<insn>.*))$")
 re_mmu = re.compile(
-    r"^(?P<pos>\d+): Mapping (?P<vaddr>.*)\(@(?P<paddr>.*)\) accesses to"
+    r"^(?P<varpos>\d+): Mapping (?P<vaddr>.*)\(@(?P<paddr>.*)\) accesses to"
     r" (?P<newvaddr>.*) \(tbl (?P<tbldev>.*)\)$")
 re_mem = re.compile(
-    TIMEPRE_S + r"(?P<type>insn|mem) (?P<vaddr>.*)=(?P<val>.*)"
-    r" \((?P<changed>.*)\)$")
+    TIMEPRE_S + r"(?P<type>insn|mem) (?P<var>.*)\((?P<varpos>\d+)\)"
+    r" (?P<vaddr>.*)=(?P<val>.*) \((?P<changed>.*)\)$")
 
 # Storage of known named registers that are being "watched"
-# VirtMap[vaddr] = func
+# VirtMap[vaddr] = (name, ((bits, name), (bits,name), ...))
 VirtMap = {}
 # Storage of known mmutrace mappings
 # VirtTrace[vaddr & 0xFFF00000] = paddr
@@ -213,28 +198,33 @@ def lookupVirt(vaddr):
     return paddr, ArchRegs.get(paddr)
 
 def handleWatch(m):
+    """Process a setup message from 'watch'"""
     name = m.group('vaddr')
     if name is not None:
         key = int(m.group('paddr'), 16)
     else:
         name = key = "insn:"+m.group('insn')
-    reginfo = ArchRegs.get(key)
-    if reginfo is not None:
-        # Found a named register
-        md = memDisplay(reginfo, m.group('type'), int(m.group('pos')))
-        VirtMap[name] = md.displayFunc
-    else:
-        # No named register - invent a "dummy" one
-        md = memDisplay((name, ()), m.group('type')
-                        , int(m.group('pos')))
-        VirtMap[name] = md.displayFunc
+    VirtMap[name] = ArchRegs.get(key)
     print m.string
 
+def handleMem(m):
+    """Process an update from the 'watch' command"""
+    name = m.group('vaddr')
+    if m.group('type') == 'insn':
+        name = "insn:"+name
+    reginfo = VirtMap.get(name)
+    if reginfo is None:
+        # No named register - invent a "dummy" one
+        reginfo = (name, ())
+    memDecode(m, reginfo)
+
 def handleWatchMMU(m):
+    """Process an mmutrace setup message"""
     VirtTrace[int(m.group('vaddr'), 16)] = int(m.group('paddr'), 16)
     print m.string
 
 def handleBegin(m):
+    """Note the beginning of a new 'watch' type command"""
     global LastClock
     LastClock = 0
     VirtMap.clear()
@@ -242,6 +232,7 @@ def handleBegin(m):
     print m.string
 
 def handleDetect(m):
+    """Process a setup message that shows what machine is in use"""
     global ArchRegs
     ar = RegsList.get(m.group('name'))
     if ar is None:
@@ -252,12 +243,7 @@ def handleDetect(m):
 def procline(line):
     m = re_mem.match(line)
     if m:
-        name = m.group('vaddr')
-        if m.group('type') == 'insn':
-            name = "insn:"+name
-        func = VirtMap.get(name, defaultFunc)
-        func(m)
-        return
+        return handleMem(m)
     m = re_watch.match(line)
     if m:
         return handleWatch(m)

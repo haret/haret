@@ -20,8 +20,6 @@ struct memcheck {
 
 int testChanged(struct memcheck *mc, uint32 curval, uint32 *pchanged);
 int testMem(struct memcheck *mc, uint32 *pnewval, uint32 *pchanged);
-void reportWatch(uint32 msecs, uint32 clock, struct memcheck *mc
-                 , uint32 newval, uint32 changed);
 void get_suppress(const char *args, memcheck *mc);
 const char *disp_suppress(memcheck *mc, char *buf);
 
@@ -43,6 +41,8 @@ public:
     void showVar(const char *args);
     void fillVarType(char *buf);
     void beginWatch(int isStart=1);
+    void reportWatch(uint32 msecs, uint32 clock, uint32 pos
+                     , uint32 newval, uint32 changed);
 };
 #define REG_VAR_WATCHLIST(Pred, Name, Var, Desc)       \
     __REG_VAR(watchListVar, Var, Pred, Name, Desc)
