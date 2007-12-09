@@ -204,6 +204,14 @@ VirtTrace = {}
 # ArchRegs = {paddr: (name, ((bits, name), (bits,name), ...)) }
 ArchRegs = {}
 
+def lookupVirt(vaddr):
+    """Locate register info for a vaddr returned from mmutrace report."""
+    paddr = VirtTrace.get(vaddr & 0xfff00000)
+    if paddr is None:
+        return None, None
+    paddr = paddr | (vaddr & 0xfffff)
+    return paddr, ArchRegs.get(paddr)
+
 def handleWatch(m):
     name = m.group('vaddr')
     if name is not None:
