@@ -8,101 +8,88 @@
 # This file may be distributed under the terms of the GNU GPL license.
 
 import sys
-import re
-import os
-import tempfile
-import struct
+import getopt
 
 import dis
 
-HEXALL=0
+class serBuf:
+    """Class that accumulates characters into a buffer."""
+    def __init__(self, hexall):
+        self.hexall = hexall
+        self.buffer = ""
+        self.bufferStart = self.bufferEnd = self.bufferType = None
 
-redebug = dis.redebug
-reirq = dis.reirq
+    def encodeBuf(self):
+        """Show buffer in hex"""
+        out = ""
+        for c in self.buffer:
+            o = ord(c)
+            if self.hexall or ((o < 32 or o > 127) and o not in [10, 13]):
+                out += "<%02x>" % o
+            else:
+                out += c
+        return repr(out)
 
-# Codes to watch for
-SCANTRACE = 1
-WRITEINSN = 0xe5832000
-READINSN = 0xe5933000
-##SCANTRACE = 0
-##WRITEINSN = 0x0935acb0
-##READINSN = 0x0935a9f0
+    def flush(self):
+        """Print out internal buffer and reset it"""
+        if self.buffer:
+            print "%s-%s %5s: %s" % (
+                dis.getClock(self.bufferStart), dis.getClock(self.bufferEnd)
+                , self.bufferType, self.encodeBuf())
+        self.buffer = ""
+        self.bufferStart = self.bufferEnd = self.bufferType = None
 
-# Buffer variables
-Buffer = ""
-BufferType = None
-BufferStart = None
-BufferEnd = None
+    def append(self, mtime, cmdtype, val):
+        """Add a character to the internal buffer"""
+        if cmdtype != self.bufferType and self.bufferType is not None:
+            self.flush()
+        if self.bufferStart == None:
+            self.bufferStart = mtime
+        self.bufferEnd = mtime
+        self.bufferType = cmdtype
+        self.buffer = self.buffer + chr(val)
+        if (cmdtype == 'read' and (val == 10 or (val == 13
+                                                and self.buffer == '0\r'))
+            or cmdtype == 'write' and val == 13):
+            self.flush()
 
-def appendBuffer(mtime, cmdtype, val):
-    global Buffer, BufferType, BufferStart, BufferEnd
-    if BufferStart == None:
-        BufferStart = mtime
-    BufferEnd = mtime
-    BufferType = cmdtype
-    Buffer = Buffer + chr(val)
-
-def encodeBuf(buf):
-    """Show 'buf' in hex"""
-    out = ""
-    for c in buf:
-        o = ord(c)
-        if HEXALL or ((o < 32 or o > 127) and o not in [10, 13]):
-            out += "<%02x>" % o
-        else:
-            out += c
-    return repr(out)
-
-def flushBuffer():
-    global Buffer, BufferType, BufferStart, BufferEnd
-    if Buffer:
-        print "%s-%s %5s: %s" % (
-            dis.getClock(BufferStart), dis.getClock(BufferEnd)
-            , BufferType, encodeBuf(Buffer))
-    Buffer = ""
-    BufferStart = BufferEnd = BufferType = None
-
-def procline(line):
-    if SCANTRACE:
-        # Look at memory trace events
-        m = redebug.match(line)
-        if m is None:
-            return dis.procline(line)
-        insn = int(m.group('insn'), 16)
-        Rd = int(m.group('Rd'), 16)
-    else:
-        # Look at breakpoints
-        m = reirq.match(line)
-        if m is None:
-            return dis.procline(line)
-        parts = line.split()
-        if parts[2] != 'insn':
-            return dis.procline(line)
-        insn = int(parts[3][:-1], 16)
-        if insn not in (WRITEINSN, READINSN):
+def procline(sb, line, addr):
+    m = dis.re_trace.match(line)
+    if m is not None:
+        vaddr = int(m.group('vaddr'), 16)
+        val = int(m.group('val'), 16)
+        paddr, reginfo = dis.memalias.lookupVirt(vaddr)
+        if paddr == addr and val <= 0xff:
+            insn = int(m.group('insn'), 16)
+            if insn & (1<<20):
+                cmdtype = 'read'
+            else:
+                cmdtype = 'write'
+            sb.append(m, cmdtype, val)
             return
-        Rd = int(parts[4], 16)
-    if insn == WRITEINSN:
-        cmdtype = 'write'
-    elif insn == READINSN:
-        cmdtype = 'read'
-    else:
-        return dis.procline(line)
+    sb.flush()
+    dis.procline(line)
 
-    if Rd > 0xff:
-        return dis.procline(line)
-    if cmdtype != BufferType and BufferType is not None:
-        flushBuffer()
-    appendBuffer(m, cmdtype, Rd)
-    if (cmdtype == 'read' and (Rd == 10 or (Rd == 13 and Buffer == '0\r'))
-        or cmdtype == 'write' and Rd == 13):
-        flushBuffer()
+def printUsage():
+    print "Usage:\n   %s [-h] <paddr>" % (sys.argv[0],)
+    sys.exit(1)
 
 def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'h')
+    except getopt.error:
+        printUsage()
+    try:
+        addr = int(args[0], 16)
+    except:
+        printUsage()
+    hexall = ('-h', '') in opts
+
+    sb = serBuf(hexall)
     lines = sys.stdin.readlines()
     for line in lines:
-        procline(line)
-    flushBuffer()
+        procline(sb, line.rstrip(), addr)
+    sb.flush()
 
 if __name__ == '__main__':
     main()
