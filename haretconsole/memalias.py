@@ -35,6 +35,7 @@ import regs_pxa
 import regs_s3c
 import regs_omap
 import regs_msm
+import regs_misc
 
 
 ######################################################################

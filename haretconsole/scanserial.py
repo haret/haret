@@ -49,7 +49,7 @@ class serBuf:
         self.bufferType = cmdtype
         self.buffer = self.buffer + chr(val)
         if (cmdtype == 'read' and (val == 10 or (val == 13
-                                                and self.buffer == '0\r'))
+                                                 and self.buffer == '0\r'))
             or cmdtype == 'write' and val == 13):
             self.flush()
 
