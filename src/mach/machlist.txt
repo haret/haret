@@ -46,7 +46,7 @@ Trinity,    S3c2442 ,TRIN100,                     HTC_TRINITY
 Athena,     PXA27x  ,ATHE100,                     HTCATHENA
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
 Artemis,    OMAP850 ,ARTE,                        ARTEMIS
-Herald,     OMAP850 ,HERA,                        HERALD
+Herald,     OMAP850 ,HERA,                        HERMES
 Prophet,    OMAP850 ,PM300
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
 Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   set ramsize 64*1024*1024
@@ -65,4 +65,4 @@ H3600a,     SA      ,Compaq iPAQ H3600
 
 PLATFORM=SmartPhone
 Tornado,    OMAP850 ,Vodafone v1240,              OMAP_TORNADO
-Libra,              ,LIBR100
+Libra,      MSM7500 ,LIBR100
