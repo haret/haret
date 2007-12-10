@@ -55,6 +55,7 @@ e740,       PXA     ,TOSHIBA e740
 Acer_n30,   S3c2410 ,Acer n30 Handheld,           N30
 Mio_P550,   S3c2440 ,Mio P550,                    MIO_P550
 Kaiser,     MSM7200 ,Kaiser
+Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
