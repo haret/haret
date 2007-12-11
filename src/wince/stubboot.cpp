@@ -22,7 +22,7 @@ class dummyListVar : public listVarBase {
 public:
     uint32 dummycount;
     dummyListVar(const char *n)
-        : listVarBase(0, n, 0, &dummycount, 0, 0, 1) { }
+        : listVarBase("var_list_dummY", 0, n, 0, &dummycount, 0, 0, 1) { }
     variableBase *newVar() { return new dummyListVar(""); }
     bool setVarItem(void *p, const char *args) {
         return false;
