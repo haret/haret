@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> // FILE
 #include "xtypes.h" // uint32
 
 // Mark a function that is used in the C preloader.  Note all

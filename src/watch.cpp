@@ -5,7 +5,7 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
-#include "windows.h" // Sleep
+#include <windows.h> // Sleep
 #include "pkfuncs.h" // SleepTillTick
 #include <ctype.h> // toupper
 #include <time.h> // time

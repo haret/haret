@@ -7,8 +7,8 @@
 
 #include <windows.h> // for pkfuncs.h
 #include "pkfuncs.h" // AllocPhysMem
-#include <time.h> // time
 #include <string.h> // memcpy
+#include <stdio.h> // _snprintf
 
 #include "xtypes.h"
 #include "watch.h" // memcheck
@@ -16,7 +16,6 @@
 #include "memory.h" // memPhysMap
 #include "script.h" // REG_CMD
 #include "machines.h" // Mach
-#include "arch-pxa.h" // MachinePXA
 #include "lateload.h" // LATE_LOAD
 #include "winvectors.h" // findWinCEirq
 #include "irq.h"
