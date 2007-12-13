@@ -59,3 +59,9 @@ Regs_Athena.update(getEGPIOdefs(0x08000000, 8))
 Regs_Athena.update(getEGPIOdefs(0x09000000, 1, 8))
 Regs_Athena.update(regs_ati.getWxxxxDefs(0x04000000))
 memalias.RegsList['Athena'] = Regs_Athena
+
+# HTC Universal specific registers
+Regs_Universal = regs_pxa.Regs_pxa27x.copy()
+Regs_Universal.update(getEGPIOdefs(0x0a000000, 1))
+Regs_Universal.update(regs_asic3.getASIC3Defs(base=0x10000000, sd_base=0x0c000000))
+memalias.RegsList['Universal'] = Regs_Universal
