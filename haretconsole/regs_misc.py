@@ -9,6 +9,7 @@ import regs_s3c
 import regs_pxa
 import regs_msm
 import regs_ati
+import regs_asic3
 
 regOneBits = memalias.regOneBits
 
@@ -44,3 +45,10 @@ memalias.RegsList['Hermes'] = Regs_Hermes
 Regs_Kaiser = regs_msm.Regs_msm7500.copy()
 Regs_Kaiser.update(getEGPIOdefs(0x98000000, 10))
 memalias.RegsList['Kaiser'] = Regs_Kaiser
+
+# HTC Roadster (HP iPAQ hx4700) specific registers
+Regs_HX4700 = regs_pxa.Regs_pxa27x.copy()
+Regs_HX4700.update(getEGPIOdefs(0x14000000, 1))
+Regs_HX4700.update(regs_asic3.getASIC3Defs(base=0x0c000000, sd_base=0x0e000000))
+Regs_HX4700.update(regs_ati.getWxxxxDefs(0x08000000))
+memalias.RegsList['HX4700'] = Regs_HX4700
