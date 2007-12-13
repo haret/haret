@@ -18,10 +18,10 @@ regOneBits = memalias.regOneBits
 # HTC cpld egpio chip
 ######################################################################
 
-def getEGPIOdefs(base, count):
+def getEGPIOdefs(base, count, start=0):
     out = {}
     for i in range(count):
-        char = chr(ord('A')+i)
+        char = chr(ord('A')+i+start)
         out[base+2*i] = ("cpld" + char, regOneBits("C" + char))
     return out
 
@@ -52,3 +52,10 @@ Regs_HX4700.update(getEGPIOdefs(0x14000000, 1))
 Regs_HX4700.update(regs_asic3.getASIC3Defs(base=0x0c000000, sd_base=0x0e000000))
 Regs_HX4700.update(regs_ati.getWxxxxDefs(0x08000000))
 memalias.RegsList['HX4700'] = Regs_HX4700
+
+# HTC Athena specific registers
+Regs_Athena = regs_pxa.Regs_pxa27x.copy()
+Regs_Athena.update(getEGPIOdefs(0x08000000, 8))
+Regs_Athena.update(getEGPIOdefs(0x09000000, 1, 8))
+Regs_Athena.update(regs_ati.getWxxxxDefs(0x04000000))
+memalias.RegsList['Athena'] = Regs_Athena
