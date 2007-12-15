@@ -5,13 +5,9 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
-#include <string.h> // memcpy
-
-#include "memory.h" // memPhysMap
 #include "script.h" // REG_VAR_INT
 #include "arch-pxa.h" // testPXA
 #include "output.h" // Output
-#include "machines.h" // Mach
 #include "arminsns.h" // getInsnName
 #include "irq.h"
 
@@ -197,7 +193,7 @@ REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
 REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
             "1=store only, 2=loads or stores, 3=loads only")
 REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
-            "Only report memory trace if ADDTRACEWATCH poll succeeds")
+            "Ignore all TRACE reports (useful when using TRACES variable)")
 
 // Externally modifiable settings for software tracing
 static uint32 insnTrace = 0xFFFFFFFF, insnTraceReenable = 0xFFFFFFFF;
