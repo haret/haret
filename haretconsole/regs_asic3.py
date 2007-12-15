@@ -98,9 +98,10 @@ ASIC3_BANK = {
 
 # FIXME: add SD banks (SD_CONFIG, SD_CTRL, SDIO_CTRL)
 
-def getASIC3Defs(base, sd_base):
+def getASIC3Defs(base, sd_base, shift=0):
 	out = {}
 	for bank, btuple in ASIC3_BANK.items():
 		for offset, function in btuple[1].items():
-			out[base+bank+offset] = btuple[0] + "_" + function
+			name = btuple[0] + "_" + function
+			out[base + (bank+offset)>>shift] = name
 	return out

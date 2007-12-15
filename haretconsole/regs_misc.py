@@ -49,7 +49,8 @@ memalias.RegsList['Kaiser'] = Regs_Kaiser
 # HTC Roadster (HP iPAQ hx4700) specific registers
 Regs_HX4700 = regs_pxa.Regs_pxa27x.copy()
 Regs_HX4700.update(getEGPIOdefs(0x14000000, 1))
-Regs_HX4700.update(regs_asic3.getASIC3Defs(base=0x0c000000, sd_base=0x0e000000))
+Regs_HX4700.update(regs_asic3.getASIC3Defs(base=0x0c000000, sd_base=0x0e000000
+                                           , shift=1))
 Regs_HX4700.update(regs_ati.getWxxxxDefs(0x08000000))
 memalias.RegsList['HX4700'] = Regs_HX4700
 
@@ -63,5 +64,6 @@ memalias.RegsList['Athena'] = Regs_Athena
 # HTC Universal specific registers
 Regs_Universal = regs_pxa.Regs_pxa27x.copy()
 Regs_Universal.update(getEGPIOdefs(0x0a000000, 1))
-Regs_Universal.update(regs_asic3.getASIC3Defs(base=0x10000000, sd_base=0x0c000000))
+Regs_Universal.update(regs_asic3.getASIC3Defs(base=0x10000000, sd_base=0x0c000000
+                                              , shift=1))
 memalias.RegsList['Universal'] = Regs_Universal
