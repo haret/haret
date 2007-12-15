@@ -61,7 +61,7 @@ re_trace = re.compile(
     r' (?P<insn>.*)\((?P<desc>.*)\) (?P<vaddr>.*) (?P<val>.*)'
     r' \((?P<changed>.*)\)$')
 re_irq = re.compile(
-    TIMEPRE_S + r'(?P<data>(break |irq |cpu resumed).*)$')
+    TIMEPRE_S + r'(?P<data>(break |irq |cpu resumed|WinCE resume).*)$')
 getClock = memalias.getClock
 
 def transRegVal(reg, val):

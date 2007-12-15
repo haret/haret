@@ -5,8 +5,7 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
-#include "windows.h"
-#include "pkfuncs.h" // VirtualCopy
+#include <string.h> // memset
 
 #include "script.h" // REG_VAR_INT
 #include "output.h" // Output
@@ -321,6 +320,14 @@ L1_prefetch_handler(struct irqData *data, struct irqregs *regs)
             return 1;
         }
     return 0;
+}
+
+// Handler for wince resume
+void __irq
+L1_resume_handler(struct irqData *data, struct irqregs *regs)
+{
+    if (data->max_l1trace_after_resume)
+        data->max_l1trace = data->max_l1trace_after_resume;
 }
 
 

@@ -13,15 +13,12 @@
 #include "xtypes.h"
 #include "watch.h" // memcheck
 #include "output.h" // Output
-#include "memory.h" // memPhysMap
+#include "memory.h" // memVirtToPhys
 #include "script.h" // REG_CMD
 #include "machines.h" // Mach
 #include "lateload.h" // LATE_LOAD
 #include "winvectors.h" // findWinCEirq
 #include "irq.h"
-
-LATE_LOAD(AllocPhysMem, "coredll")
-LATE_LOAD(FreePhysMem, "coredll")
 
 /*
  * Theory of operation:
@@ -62,12 +59,10 @@ LATE_LOAD(FreePhysMem, "coredll")
 // The CCNT performance monitoring register
 DEF_GETIRQCPR(get_CCNT, p14, 0, c1, c1, 0)
 
-static inline int __irq
-start_trap(struct irqData *data) {
-    int isPXA = data->isPXA;
+static inline void __irq
+getClock(struct irqData *data, int isPXA) {
     if (isPXA)
         data->clock = get_CCNT();
-    return isPXA;
 }
 static inline void __irq
 prePoll(struct irqData *data, int isPXA) {
@@ -117,7 +112,8 @@ checkPolls(struct irqData *data, pollinfo *info)
 extern "C" void __irq
 irq_handler(struct irqData *data, struct irqregs *regs)
 {
-    int isPXA = start_trap(data);
+    int isPXA = data->isPXA;
+    getClock(data, isPXA);
     data->irqCount++;
 
     if (isPXA)
@@ -134,7 +130,8 @@ irq_handler(struct irqData *data, struct irqregs *regs)
 extern "C" int __irq
 abort_handler(struct irqData *data, struct irqregs *regs)
 {
-    int isPXA = start_trap(data);
+    int isPXA = data->isPXA;
+    getClock(data, isPXA);
     data->abortCount++;
 
     int ret = L1_abort_handler(data, regs);
@@ -153,7 +150,8 @@ abort_handler(struct irqData *data, struct irqregs *regs)
 extern "C" int __irq
 prefetch_handler(struct irqData *data, struct irqregs *regs)
 {
-    int isPXA = start_trap(data);
+    int isPXA = data->isPXA;
+    getClock(data, isPXA);
     data->prefetchCount++;
 
     int ret = L1_prefetch_handler(data, regs);
@@ -178,17 +176,24 @@ report_resume(irqData *, const char *header, traceitem *item)
 extern "C" void __irq
 resume_handler(struct irqData *data, struct irqregs *regs)
 {
-    start_trap(data);
+    int isPXA = data->isPXA;
+    getClock(data, isPXA);
+
+    L1_resume_handler(data, regs);
+    if (isPXA)
+        PXA_resume_handler(data, regs);
+
     add_trace(data, report_resume);
     checkPolls(data, &data->resumepoll);
-    if (data->max_l1trace_after_resume)
-        data->max_l1trace = data->max_l1trace_after_resume;
 }
 
 
 /****************************************************************
  * Code to report feedback from exception handlers
  ****************************************************************/
+
+LATE_LOAD(AllocPhysMem, "coredll")
+LATE_LOAD(FreePhysMem, "coredll")
 
 // Commands and variables are only applicable if AllocPhysMem is
 // available.
@@ -223,8 +228,8 @@ printTrace(uint32 msecs, struct irqData *data)
     }
     struct traceitem *cur = &data->traces[data->readPos % NR_TRACE];
     char header[64];
-    if (data->clock != (uint32)-1)
-        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, data->clock);
+    if (cur->clock != (uint32)-1)
+        _snprintf(header, sizeof(header), "%06d: %08x:", msecs, cur->clock);
     else
         _snprintf(header, sizeof(header), "%06d:", msecs);
     cur->reporter(data, header, cur);

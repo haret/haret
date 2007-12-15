@@ -23,7 +23,8 @@ DEF_SETIRQCPR(set_IBCR1, p15, 0, c14, c9, 0)
 DEF_SETIRQCPR(set_EVTSEL, p14, 0, c8, c1, 0)
 // Set the INTEN performance monitoring register
 DEF_SETIRQCPR(set_INTEN, p14, 0, c4, c1, 0)
-// Set the PMNC performance monitoring register
+// Get/set the PMNC performance monitoring register
+DEF_GETIRQCPR(get_PMNC, p14, 0, c0, c1, 0)
 DEF_SETIRQCPR(set_PMNC, p14, 0, c0, c1, 0)
 // Set the DBR0 software debug register
 DEF_SETIRQCPR(set_DBR0, p15, 0, c14, c0, 0)
@@ -34,17 +35,25 @@ DEF_SETIRQCPR(set_DCSR, p14, 0, c10, c0, 0)
 // Get the FSR software debug register
 DEF_GETIRQCPR(get_FSR, p15, 0, c5, c0, 0)
 
-// Enable CPU registers to catch insns and memory accesses
-void __irq
-startPXAtraps(struct irqData *data)
+static void __irq
+startPXAclock(struct irqData *data)
 {
-    if (! data->isPXA)
+    if (get_PMNC() != 0x14000000)
         return;
     // Enable performance monitor
     set_EVTSEL(0xffffffff);  // Disable explicit event counts
     set_INTEN(0);  // Don't use interrupts
     set_PMNC(0xf);  // Enable performance monitor; clear counter
     data->clock = 0;
+}
+
+// Enable CPU registers to catch insns and memory accesses
+void __irq
+startPXAtraps(struct irqData *data)
+{
+    if (! data->isPXA)
+        return;
+    startPXAclock(data);
     // Enable software debug
     if (data->dbcon || data->insns[0].addr1 != 0xFFFFFFFF) {
         set_DBCON(0);  // Clear DBCON
@@ -71,8 +80,8 @@ PXA_irq_handler(struct irqData *data, struct irqregs *regs)
 {
     if (get_DBCON() != data->dbcon) {
         // Performance counter not running - reenable.
-        add_trace(data, report_winceResume);
         startPXAtraps(data);
+        add_trace(data, report_winceResume);
     }
 }
 
@@ -153,6 +162,13 @@ PXA_prefetch_handler(struct irqData *data, struct irqregs *regs)
     return 1;
 }
 
+// Handler for wince resume
+void __irq
+PXA_resume_handler(struct irqData *data, struct irqregs *regs)
+{
+    startPXAclock(data);
+}
+
 // Reset CPU registers that conrol software debug / performance monitoring
 void
 stopPXAtraps(struct irqData *data)
@@ -167,6 +183,11 @@ stopPXAtraps(struct irqData *data)
     // Disable performance monitor
     set_PMNC(0);
 }
+
+
+/****************************************************************
+ * PXA Tracing init
+ ****************************************************************/
 
 // Commands and variables are only applicable if AllocPhysMem is
 // available and if this is a PXA based pda.

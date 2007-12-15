@@ -8,7 +8,6 @@
 #include <windows.h> // Sleep
 #include "pkfuncs.h" // SleepTillTick
 #include <ctype.h> // toupper
-#include <time.h> // time
 #include <stdio.h> // _snprintf
 
 #include "output.h" // Output

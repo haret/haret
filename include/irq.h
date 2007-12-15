@@ -187,6 +187,7 @@ DEF_SETIRQCPR(set_DBCON, p15, 0, c14, c4, 0)
 void PXA_irq_handler(struct irqData *data, struct irqregs *regs);
 int PXA_abort_handler(struct irqData *data, struct irqregs *regs);
 int PXA_prefetch_handler(struct irqData *data, struct irqregs *regs);
+void PXA_resume_handler(struct irqData *data, struct irqregs *regs);
 
 void startPXAtraps(struct irqData *data);
 void stopPXAtraps(struct irqData *data);
@@ -199,6 +200,7 @@ int prepPXAtraps(struct irqData *data);
 
 int L1_abort_handler(struct irqData *data, struct irqregs *regs);
 int L1_prefetch_handler(struct irqData *data, struct irqregs *regs);
+void L1_resume_handler(struct irqData *data, struct irqregs *regs);
 
 void startL1traps(struct irqData *data);
 void stopL1traps(struct irqData *data);
