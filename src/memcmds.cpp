@@ -376,13 +376,13 @@ DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
 struct pageinfo {
     const char name[12];
     uint32 mask;
-    uint32 l2_vaddr_shift;
+    uint32 map_shift;
 };
 
 static const struct pageinfo L1PageInfo[] = {
     { "UNMAPPED"},
     { "Coarse", MMU_L1_COARSE_MASK, 12 },
-    { "1MB section", MMU_L1_SECTION_MASK },
+    { "1MB section", MMU_L1_SECTION_MASK, 20},
     { "Fine", MMU_L1_FINE_MASK, 10 },
 };
 
@@ -396,8 +396,15 @@ static const struct pageinfo L2PageInfo[] = {
 static void
 memDumpMMU(const char *tok, const char *args)
 {
-    uint32 l1only = 0;
-    get_expression(&args, &l1only);
+    uint32 l1only = 0, shownomap = 1, start = 0, end = 0xffffffff;
+    if (get_expression(&args, &l1only) && get_expression(&args, &start)) {
+        uint32 size = 1;
+        get_expression(&args, &size);
+        end = start + size;
+        shownomap = 0;
+    }
+    if (l1only != 1)
+        l1only = 0;
 
     Output("----- Virtual address map -----");
     Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
@@ -436,51 +443,57 @@ memDumpMMU(const char *tok, const char *args)
             __flags_l1(flagbuf, l1d & ~pi->mask);
             switch (type) {
             case MMU_L1_UNMAPPED:
-                if ((l1d ^ pL1) & MMU_L1_TYPE_MASK)
+                if (shownomap && (l1d ^ pL1) & MMU_L1_TYPE_MASK)
                     Output("%08x  |          | %11s |", vaddr, pi->name);
                 continue;
             case MMU_L1_SECTION:
-                Output("%08x  | %08x | %11s |%s"
-                       , vaddr, paddr, pi->name, flagbuf);
+                if (paddr < end && paddr+(1<<pi->map_shift) > start)
+                    Output("%08x  | %08x | %11s |%s"
+                           , vaddr, paddr, pi->name, flagbuf);
                 continue;
             }
-            Output("%08x  |          | %11s |%s", vaddr, pi->name, flagbuf);
+            if (shownomap)
+                Output("%08x  |          | %11s |%s", vaddr, pi->name, flagbuf);
 
             if (l1only)
                 continue;
 
             // Walk the 2nd level descriptor table
-            uint l2_count = 1 << (20 - pi->l2_vaddr_shift);
+            uint l2_count = 1 << (20 - pi->map_shift);
             uint32 pL2, l2d = 0xffffffff;
             for (uint d = 0; d < l2_count; d++) {
                 pL2 = l2d;
                 l2d = memPhysRead(paddr + d * 4);
-                uint32 l2vaddr = vaddr + (d << pi->l2_vaddr_shift);
+                uint32 l2vaddr = vaddr + (d << pi->map_shift);
                 uint32 l2type = l2d & MMU_L2_TYPE_MASK;
                 const struct pageinfo *pi2 = &L2PageInfo[l2type];
                 uint32 l2paddr = l2d & pi2->mask;
                 __flags_l2(flagbuf, l2d & ~pi2->mask);
 
                 if (l2type == MMU_L2_UNMAPPED) {
-                    if ((l2d ^ pL2) & MMU_L2_TYPE_MASK)
+                    if (shownomap && (l2d ^ pL2) & MMU_L2_TYPE_MASK)
                         Output(" %08x |          | %11s |", l2vaddr, pi2->name);
                     continue;
                 }
-                Output(" %08x | %08x | %11s |%s"
-                       , l2vaddr, l2paddr, pi2->name, flagbuf);
+                if (l2paddr < end && l2paddr+(1<<pi->map_shift) > start)
+                    Output(" %08x | %08x | %11s |%s"
+                           , l2vaddr, l2paddr, pi2->name, flagbuf);
             }
         }
     } CATCH_EXCEPTION_HANDLER {
         Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
     }
 
-    Output(" ffffffff |          |             | End of virtual address space");
+    if (shownomap)
+        Output("End of virtual address space");
     DoneProgress();
 }
 REG_DUMP(0, "MMU", memDumpMMU,
-         "MMU [1]\n"
+         "MMU [<1|2> [<start> [<end>]]] \n"
          "  Show virtual memory map (4Gb address space). One may give an\n"
-         "  optional argument to trim output to the l1 tables.")
+         "  optional argument to trim output to the l1 tables. If <start>\n"
+         "  and <end> are specified, only those mappings within the\n"
+         "  physical address range are shown.")
 
 
 /****************************************************************
