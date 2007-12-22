@@ -7,7 +7,7 @@ import struct
 import getopt
 import re
 
-optlist, args = getopt.gnu_getopt(sys.argv[1:], "o:h?")
+optlist, args = getopt.gnu_getopt(sys.argv[1:], "o:vh?")
 opts = {}
 opts.update(optlist)
 
@@ -18,8 +18,17 @@ if len(args) != 4:
 
 outfile = opts.get("-o", None)
 if not outfile:
-    m = re.match(r"(.+?)-(.+?)-(.+?)-(glibc|uclibc)-(.+?)-(.+)-([0-9]{8})-(.+?)\.", args[2])
-    outfile = "%s-%s-liveramdisk-%s-%s-%s.exe" % (m.group(1), m.group(2), m.group(6), m.group(7), m.group(8))
+    print args[2]
+    m = re.match(r"(.+?)-(glibc|uclibc)-(ipk|deb)-(.+)-([0-9]{8}-)?(.+?)\.", args[2])
+    print m.groups()
+    outfile = "%s-liveramdisk-%s-%s.exe" % (m.group(1), m.group(4), m.group(6))
+    print outfile
+elif outfile.index("%v") > 0:
+    kernelBase = os.path.basename(args[1]).rsplit(".", 1)[0]
+    assert kernelBase.startswith("zImage-")
+    outfile = outfile.replace("%v", kernelBase[len("zImage-"):])
+    print outfile
+
 os.system("cat %s %s %s %s> %s"  % (args[0], args[1], args[2], args[3], outfile))
 
 #Angstrom-x11-image-glibc-ipk-2007.9-test-20070922-hx4700.rootfs
@@ -38,3 +47,15 @@ exe.write(struct.pack("i", 0))
 exe.write(struct.pack("i", 0))
 exe.write(struct.pack("i", 0))
 exe.close()
+
+if opts.has_key("-v"):
+    haretSt = os.stat(args[0])
+    print "HaRET:\t", haretSt[stat.ST_SIZE]
+    print "Kernel:\t", kernelSt[stat.ST_SIZE]
+    print "Initrd:\t", initrdSt[stat.ST_SIZE]
+    print "Script:\t", scriptSt[stat.ST_SIZE]
+    print "Header:\t", 8 + 4*6
+    print "-------------"
+    print "Total:\t", \
+	haretSt[stat.ST_SIZE] + kernelSt[stat.ST_SIZE] + \
+	initrdSt[stat.ST_SIZE] + scriptSt[stat.ST_SIZE] + 8 + 4*6
