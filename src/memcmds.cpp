@@ -489,10 +489,10 @@ memDumpMMU(const char *tok, const char *args)
     DoneProgress();
 }
 REG_DUMP(0, "MMU", memDumpMMU,
-         "MMU [<1|2> [<start> [<end>]]] \n"
+         "MMU [<1|2> [<start> [<size>]]] \n"
          "  Show virtual memory map (4Gb address space). One may give an\n"
          "  optional argument to trim output to the l1 tables. If <start>\n"
-         "  and <end> are specified, only those mappings within the\n"
+         "  and <size> are specified, only those mappings within the\n"
          "  physical address range are shown.")
 
 
