@@ -80,6 +80,14 @@ startL1traps(struct irqData *data)
     }
 }
 
+static void
+report_mapchanged(irqData *, const char *header, traceitem *item)
+{
+    uint32 mmuaddr=item->d0, val=item->d1;
+    Output("%s ERROR! Mapping at %08x changed from %08x to %08x"
+           , header, mmuaddr, MMU_L1_UNMAPPED, val);
+}
+
 // Return MMU table to its original state
 void __irq
 stopL1traps(struct irqData *data)
@@ -90,6 +98,9 @@ stopL1traps(struct irqData *data)
     for (uint i=0; i<data->alterCount; i++) {
         uint32 *desc = getMMUref(data, data->alterVAddrs[i]);
         uint32 *redirectdesc = getMMUref(data, newAddr(data, i));
+        if (*desc != MMU_L1_UNMAPPED)
+            // Something messed with the mapping?
+            add_trace(data, report_mapchanged, (uint32)desc, *desc);
         if ((*redirectdesc & MMU_L1_TYPE_MASK) == MMU_L1_SECTION)
             *desc = (*redirectdesc & TOPBITS) | (data->alterVAddrs[i] & BOTBITS);
         else
