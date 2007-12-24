@@ -1,9 +1,17 @@
-next version <kevin@koconnor.net>
+20071224 0.5.1 <kevin@koconnor.net>, <pmiscml@gmail.com>
+
+  * The "dump mmu" command now takes an optional physical address
+    range.  When this range is specified, only virtual addresses that
+    map to the specified physical address range is shown.  For
+    example:
+       dump mmu 2 0x10000000 1024*1024
 
   * The ibit and wbit commands can now take a bit range.  For example:
        ibit gpios 58..90
 
   * Initial support for detecting MSM7500 and OMAP15xx cpus.
+
+  * Fix several ommisions with HTC Universal support.
 
   * Basic support for decoding register names on MMUTRACE events in
     haretconsole.
@@ -13,6 +21,9 @@ next version <kevin@koconnor.net>
 
   * New variable "VIRTVRAM" - it stores the virtual address of the
     video ram reported by wince.
+
+  * Haret is no longer compiled with cegcc exceptions or rtti.  This
+    shrinks the binary by about 40K.
 
 20070915 0.5.0 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
