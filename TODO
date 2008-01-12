@@ -14,6 +14,8 @@ New features:
 
 Misc cleanups:
 
+* Make haret thread safe.
+
 * Scan all L1 based 1meg virtual->physical mappings at startup.  This
   will make memPhysMap_section available even in critical sections
   where the code can't call into wince.
@@ -47,11 +49,6 @@ Misc cleanups:
 
 * The strncpy calls (and snprintf, etc) should be audited to ensure
   that a null character is always at the end of the buffer.
-
-* It has been suggested that haret should be compiled with the C
-  compiler instead of C++.  This will be a significant amount of work
-  without much gain.  However, it will likely reduce the final binary
-  size.
 
 * Remove old PXA gpio watching code (wgpio)?
 
