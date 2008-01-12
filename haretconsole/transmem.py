@@ -47,7 +47,7 @@ def main():
     endaddr = int(sys.argv[3], 0)
     mem = parseMem(filename, startaddr, endaddr)
     for i in mem:
-        sys.stdout.write(struct.pack("<i", i))
+        sys.stdout.write(struct.pack("<I", i))
 
 if __name__ == '__main__':
     main()
