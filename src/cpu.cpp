@@ -67,29 +67,26 @@ static char *cpu_id()
   return buff;
 }
 
-static const char *cpu_mode()
+static const char *cpu_mode(uint mode)
 {
-  uint mode = cpuGetPSR() & 0x1f;
-
-  switch (mode)
-  {
+    switch (mode) {
     case 0x10:
-      return "user";
+        return "user";
     case 0x11:
-      return "FIQ";
+        return "FIQ";
     case 0x12:
-      return "IRQ";
+        return "IRQ";
     case 0x13:
-      return "supervisor";
+        return "supervisor";
     case 0x17:
-      return "abort";
+        return "abort";
     case 0x1b:
-      return "undefined";
+        return "undefined";
     case 0x1f:
-      return "system";
+        return "system";
     default:
-      return "unknown";
-  }
+        return "unknown";
+    }
 }
 
 // Print out info on haret, the machine, and wince.
@@ -107,6 +104,11 @@ printWelcome()
     SystemParametersInfo(SPI_GETPLATFORMTYPE, sizeof(bufplat),&bufplat, 0);
     SystemParametersInfo(SPI_GETOEMINFO, sizeof(bufoem),&bufoem, 0);
 
+    uint mode = cpuGetPSR() & 0x1f;
+    if (mode != 0x1f)
+        Output(C_ERROR "Haret is not running in 'system' mode.  Major"
+               " functionality will not be present.");
+
     const char *cpuid = "?";
     TRY_EXCEPTION_HANDLER {
         cpuid = cpu_id();
@@ -122,7 +124,7 @@ printWelcome()
            "CPU is %s running in %s mode\n"
            "Enter 'HELP' for a short command summary.\n",
            Mach->name, Mach->archname, bufplat, bufoem,
-           cpuid, cpu_mode());
+           cpuid, cpu_mode(mode));
 }
 
 uint32 cmd_cpuGetPSR(bool, uint32*, uint32) {
@@ -187,10 +189,10 @@ touchPages(uint32 *start, uint32 *end)
 // not actually load certain functions (or parts of a function) into
 // memory until they are actually used.  This presents problems for
 // certain haret functions that try to take full control of the CPU,
-// because part of the code could might not yet be mapped.  When this
-// code is accessed it causes a fault that hands control back to wm5.
-// A solution is to touch all code pages to ensure the code is really
-// in memory.
+// because part of the code might not yet be mapped.  When this code
+// is accessed it causes a fault that hands control back to wm5.  A
+// solution is to touch all code pages to ensure the code is really in
+// memory.
 static void
 touchAppPages(void)
 {
