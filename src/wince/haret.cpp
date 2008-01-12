@@ -17,18 +17,14 @@
 #include <windows.h>
 #include "pwindbas.h" // SetSystemMemoryDivision
 #include <stdio.h> // _snwprintf
-#include <wctype.h> // iswspace
 
-#include "xtypes.h"
 #include "resource.h" // DLG_HaRET
-#include "output.h" // Output, setupOutput
-#include "memory.h" // memPhysReset
-#include "script.h" // scrExecute, setupCommands
-#include "machines.h" // setupMachineType
-#include "network.h" // scrListen
-#include "linboot.h"
+#include "output.h" // Output
+#include "script.h" // scrExecute
+#include "machines.h" // Mach
+#include "network.h" // startListen
+#include "linboot.h" // bootHandleLinux
 
-#define WINDOW_CLASS TEXT("pmret")
 #define WINDOW_TITLE TEXT("HaRET")
 
 static bool try_linboot(void);
