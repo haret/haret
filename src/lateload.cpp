@@ -58,17 +58,12 @@ setup_LateLoading()
 static void
 cmdLoadFunc(const char *cmd, const char *args)
 {
-    char dllname[MAX_CMDLEN], funcname[MAX_CMDLEN];
-    if (get_token(&args, dllname, sizeof(dllname))
-        || get_token(&args, funcname, sizeof(funcname))) {
+    wchar_t wdllname[MAX_CMDLEN], wfuncname[MAX_CMDLEN];
+    if (get_wtoken(&args, wdllname, ARRAY_SIZE(wdllname))
+        || get_wtoken(&args, wfuncname, ARRAY_SIZE(wfuncname))) {
         ScriptError("Expected <dll name> <func name>");
         return;
     }
-
-    wchar_t wdllname[MAX_CMDLEN], wfuncname[MAX_CMDLEN];
-    mbstowcs(wdllname, dllname, ARRAY_SIZE(wdllname));
-    mbstowcs(wfuncname, funcname, ARRAY_SIZE(wfuncname));
-
     tryLoadFunc(wdllname, wfuncname);
 }
 REG_CMD(0, "LOADFUNC", cmdLoadFunc,

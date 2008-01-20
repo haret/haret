@@ -456,25 +456,22 @@ REG_CMD_ALT(0, "P|RINT", cmd_print, print,
         "  Same as MESSAGE except that it outputs the text without decorations\n"
         "  directly to the network pipe.")
 
+static uint32 MsgBoxResult;
+REG_VAR_INT(0, "RESULT", MsgBoxResult
+            , "Return code from MSGBOX command")
+
 static void
 cmd_msgbox(const char *tok, const char *x)
 {
-    char title[MAX_CMDLEN];
-    char msg[MAX_CMDLEN];
+    wchar_t title[MAX_CMDLEN];
+    wchar_t msg[MAX_CMDLEN];
     uint32 flags = 0;
 
-    get_token(&x, title, sizeof(title));
-    get_token(&x, msg, sizeof(msg));
+    get_wtoken(&x, title, ARRAY_SIZE(title));
+    get_wtoken(&x, msg, ARRAY_SIZE(msg));
     get_expression(&x, &flags);
 
-    wchar_t buffer_t[512];
-    wchar_t buffer_m[512];
-    mbstowcs(buffer_t, title, ARRAY_SIZE(buffer_t));
-    mbstowcs(buffer_m, msg, ARRAY_SIZE(buffer_m));
-        
-    int r = MessageBox(0, buffer_m, buffer_t, flags);
-    sprintf(title, "%d", r);
-    SetVar("RESULT", title);
+    MsgBoxResult = MessageBox(0, msg, title, flags);
 }
 REG_CMD(0, "MSGBOX", cmd_msgbox,
         "MSGBOX <title> <msg> <flags>\n"

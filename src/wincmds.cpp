@@ -38,13 +38,11 @@ static int LLXAvail() {
 static void
 cmd_LoadLibraryEx(const char *cmd, const char *args)
 {
-    char name[MAX_CMDLEN];
-    if (get_token(&args, name, sizeof(name))) {
+    wchar_t wname[MAX_CMDLEN];
+    if (get_wtoken(&args, wname, ARRAY_SIZE(wname))) {
         ScriptError("Expected <file name>");
         return;
     }
-    wchar_t wname[MAX_CMDLEN];
-    mbstowcs(wname, name, ARRAY_SIZE(wname));
 
     Output("Calling LoadLibraryEx on '%ls'", wname);
     HMODULE hMod = late_LoadLibraryExW(wname, 0, LOAD_LIBRARY_AS_DATAFILE);

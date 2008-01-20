@@ -16,6 +16,7 @@ void runMemScript(const char *script);
 bool get_expression(const char **s, uint32 *v, int priority = 0, int flags = 0);
 bool get_range(const char **s, uint32 *start, uint32 *end);
 int get_token(const char **s, char *storage, int storesize, int for_expr=0);
+int get_wtoken(const char **s, wchar_t *storage, int storesize, int for_expr=0);
 void ScriptError(const char *fmt, ...)
     __attribute__ ((format (printf, 1, 2)));
 int arg_snprintf(char *buf, int len, const char *args);

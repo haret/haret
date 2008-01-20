@@ -35,13 +35,11 @@ tlhAvail(void)
 static void
 cmd_kill(const char *cmd, const char *args)
 {
-    char name[MAX_CMDLEN];
-    if (get_token(&args, name, sizeof(name))) {
+    wchar_t wname[MAX_CMDLEN];
+    if (get_wtoken(&args, wname, ARRAY_SIZE(wname))) {
         ScriptError("process name expected");
         return;
     }
-    wchar_t wname[MAX_CMDLEN];
-    mbstowcs(wname, name, ARRAY_SIZE(wname));
     Output("Looking to kill '%ls'", wname);
 
     HANDLE hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

@@ -154,6 +154,18 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
     return 0;
 }
 
+// Extract the next argument as a wide character string.
+int
+get_wtoken(const char **args, wchar_t *storage, int storesize, int for_expr)
+{
+    char tmp[MAX_CMDLEN];
+    int ret = get_token(args, tmp, sizeof(tmp));
+    if (ret)
+        return ret;
+    mbstowcs(storage, tmp, storesize);
+    return 0;
+}
+
 static char peek_char (const char **s)
 {
   const char *x = *s;
@@ -403,7 +415,7 @@ error:
   return true;
 }
 
-// Convert an format and arg list on the command line into a string
+// Convert a format and arg list on the command line into a string
 // using snprintf.
 int
 arg_snprintf(char *buf, int len, const char *args)
