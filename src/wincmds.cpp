@@ -52,6 +52,14 @@ REG_CMD(LLXAvail, "LOADLIBRARYEX", cmd_LoadLibraryEx,
         "LOADLIBRARYEX <file name>\n"
         "  Call LoadLibraryEx on the specified file and print the handle.")
 
+// Apparently, some wince machines don't have NLedSetDevice, even
+// though MSDN says it should be present.
+LATE_LOAD(NLedSetDevice, "coredll")
+
+static int NLSDAvail() {
+    return !!late_NLedSetDevice;
+}
+
 static void
 LedSet(const char *cmd, const char *args)
 {
@@ -63,11 +71,11 @@ LedSet(const char *cmd, const char *args)
     NLED_SETTINGS_INFO settings;
     settings.LedNum = id;
     settings.OffOnBlink = value;
-    int ret = NLedSetDevice(NLED_SETTINGS_INFO_ID, &settings);
+    int ret = late_NLedSetDevice(NLED_SETTINGS_INFO_ID, &settings);
     if (!ret)
         Output("Return status of NLedSetDevice indicates failure");
 }
-REG_CMD(0, "NLEDSET", LedSet,
+REG_CMD(NLSDAvail, "NLEDSET", LedSet,
         "NLEDSET <id> <value>\n"
         "  Call NLedSetDevice to alter an LED setting.\n"
         "  <id> is the LED id.\n"
