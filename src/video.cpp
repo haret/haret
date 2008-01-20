@@ -1,8 +1,9 @@
 /*
-    Video Chip access
-    Copyright (C) 2003 Andrew Zabolotny
-
-    For conditions of use see file COPYING
+ * Video Chip access
+ * (C) Copyright 2008 Kevin O'Connor <kevin@koconnor.net>
+ * Copyright (C) 2003 Andrew Zabolotny
+ *
+ * For conditions of use see file COPYING
 */
 
 #include <windows.h> // ExtEscape
@@ -63,7 +64,7 @@ __LATE_LOAD(GXEndDraw, L"?GXEndDraw@@YAHXZ", L"gx"
  * Framebuffer detection code
  ****************************************************************/
 
-// Screen width and height (assigned by BeginDraw)
+// Screen width and height
 uint videoW, videoH;
 
 // Return the virtual address of video RAM
@@ -119,6 +120,7 @@ uint32 vidGetVRAM()
     return res;
 }
 
+// Script command wrappers
 static uint32 cmd_vidGetVRAM(bool, uint32*, uint32) {
     return vidGetVRAM();
 }
