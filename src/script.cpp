@@ -109,6 +109,20 @@ static bool GetVar(const char *vn, const char **s, uint32 *v)
  * Argument parsing
  ****************************************************************/
 
+static char peek_char(const char **s)
+{
+    const char *x = *s;
+
+    // Skip spaces at the beginning
+    while (*x && isspace(*x))
+        x++;
+
+    *s = x;
+    if (*x == '#')
+        return 0;
+    return *x;
+}
+
 static const char *quotes = "\"'";
 
 // Extract the next argument as a string.
@@ -117,12 +131,8 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
 {
     const char *x = *s;
 
-    // Skip spaces at the beginning
-    while (*x && isspace(*x))
-        x++;
-
     // If at the end of string, return empty token
-    if (!*x) {
+    if (! peek_char(&x)) {
         storage[0] = 0;
         return -1;
     }
@@ -164,18 +174,6 @@ get_wtoken(const char **args, wchar_t *storage, int storesize, int for_expr)
         return ret;
     mbstowcs(storage, tmp, storesize);
     return 0;
-}
-
-static char peek_char (const char **s)
-{
-  const char *x = *s;
-
-  // Skip spaces at the beginning
-  while (*x && isspace(*x))
-    x++;
-
-  *s = x;
-  return *x;
 }
 
 // Quick primitive expression evaluator
@@ -487,9 +485,7 @@ bool scrInterpret(const char *str, uint lineno)
     ScriptLine = lineno;
 
     const char *x = str;
-    while (*x && isspace(*x))
-        x++;
-    if (*x == '#' || !*x)
+    if (! peek_char(&x))
         return true;
 
     // Output command being executed to the log.
