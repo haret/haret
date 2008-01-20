@@ -5,6 +5,9 @@
  * This file may be distributed under the terms of the GNU GPL license.
  */
 
+#include <stdarg.h> // va_list
+#include <string.h> // memset
+
 #include "output.h" // Output
 #include "linboot.h" // __preload
 #include "video.h" // videoW, videoH
