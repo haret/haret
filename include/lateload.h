@@ -12,7 +12,7 @@
 // As above, but have the pointer point to the function "alt_XXX" if
 // the real function can't be pulled in from the dll.
 #define LATE_LOAD_ALT(Func, DLL) \
-    __LATE_LOAD(Func, L ## #Func, L ##DLL, (void*) & alt_ ##Func )
+    __LATE_LOAD(Func, L ## #Func, L ##DLL, & alt_ ##Func )
 
 // Use this to refer to lateload defined in another module.
 #define EXTERN_LATE_LOAD(Func) \
@@ -26,7 +26,7 @@
     typeof(&Func) late_ ##Func;                                 \
     struct late_load_s LateLoad ##Func                          \
         __attribute__((__section__ (".rdata.late"))) = {        \
-        DLL, Name, (void **) & late_ ##Func , Alt };
+        DLL, Name, (void **) & late_ ##Func , (void*) Alt };
 
 struct late_load_s {
     const wchar_t *dll, *funcname;

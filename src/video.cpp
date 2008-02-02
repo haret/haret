@@ -4,7 +4,7 @@
  * Copyright (C) 2003 Andrew Zabolotny
  *
  * For conditions of use see file COPYING
-*/
+ */
 
 #include <windows.h> // ExtEscape
 #include <gx.h> // GXOpenDisplay
@@ -51,13 +51,10 @@ typedef struct {
 static uint32 returnZero(void) { return 0; }
 
 __LATE_LOAD(GXOpenDisplay, L"?GXOpenDisplay@@YAHPAUHWND__@@K@Z", L"gx"
-            , (void*)&returnZero)
-__LATE_LOAD(GXCloseDisplay, L"?GXCloseDisplay@@YAHXZ", L"gx"
-            , (void*)&returnZero)
-__LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx"
-            , (void*)&returnZero)
-__LATE_LOAD(GXEndDraw, L"?GXEndDraw@@YAHXZ", L"gx"
-            , (void*)&returnZero)
+            , &returnZero)
+__LATE_LOAD(GXCloseDisplay, L"?GXCloseDisplay@@YAHXZ", L"gx", &returnZero)
+__LATE_LOAD(GXBeginDraw, L"?GXBeginDraw@@YAPAXXZ", L"gx", &returnZero)
+__LATE_LOAD(GXEndDraw, L"?GXEndDraw@@YAHXZ", L"gx", &returnZero)
 
 
 /****************************************************************
