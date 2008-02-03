@@ -117,7 +117,7 @@ bool
 watchListVar::setVarItem(void *p, const char *args)
 {
     // Parse args
-    uint32 mask = 0, size = 32;
+    uint32 mask = 0;
     memcheck *mc = (memcheck*)p;
     memset(mc, 0, sizeof(*mc));
     mc->setCmp = 1;
@@ -143,23 +143,30 @@ watchListVar::setVarItem(void *p, const char *args)
         mc->isInsn = 1;
         if (get_expression(&args, &mask))
             get_suppress(args, mc);
-    } else if (_stricmp(nexttoken, "CPSR") == 0
-               || _stricmp(nexttoken, "SPSR") == 0) {
+        mc->mask = ~mask;
+        return true;
+    }
+    if (_stricmp(nexttoken, "CPSR") == 0
+        || _stricmp(nexttoken, "SPSR") == 0) {
         args = nextargs;
         mc->addr = buildArmMRSInsn(nexttoken[0] == 'S');
         mc->isInsn = 1;
         if (get_expression(&args, &mask))
             get_suppress(args, mc);
-    } else {
-        // Normal address watch
-        if (!get_expression(&args, &mc->addr)) {
-            ScriptError("Expected <addr>");
-            return false;
-        }
-
-        if (get_expression(&args, &mask) && get_expression(&args, &size))
-            get_suppress(args, mc);
+        mc->mask = ~mask;
+        return true;
     }
+
+    // Normal address watch
+    if (!get_expression(&args, &mc->addr)) {
+        ScriptError("Expected <addr>");
+        return false;
+    }
+
+    uint32 size = 32;
+    if (get_expression(&args, &mask) && get_expression(&args, &size))
+        get_suppress(args, mc);
+    mc->mask = ~mask;
 
     switch (size) {
     case 32: mc->readSize=MO_SIZE32; break;
@@ -169,7 +176,12 @@ watchListVar::setVarItem(void *p, const char *args)
         ScriptError("Expected <32|16|8>");
         return false;
     }
-    mc->mask = ~mask;
+
+    if (((mc->addr >> mc->readSize) << mc->readSize) != mc->addr) {
+        ScriptError("Address %08x is not aligned for %d-bit accesses"
+                    , mc->addr, size);
+        return false;
+    }
 
     return true;
 }
