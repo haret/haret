@@ -150,6 +150,7 @@ uint8 *memPhysMap_wm(uint32 paddr)
   return phys_mem [0] + offs;
 }
 
+// Free the virtual memory pointers cache used by memPhysMap
 void memPhysReset ()
 {
   for (int i = 0; i < PHYS_CACHE_COUNT; i++)
@@ -344,6 +345,7 @@ err:  VirtualFree (pmWindow, 0, MEM_RELEASE);
   return (uint8 *)(pmAlignedWindow + pmLRU [0] * PHYS_CACHE_SIZE + offs);
 }
 
+// Free the virtual memory pointers cache used by memPhysMap
 void memPhysReset ()
 {
   if (pmInited)
@@ -439,6 +441,8 @@ static uint32 PhysicalMapMethod = 1;
 REG_VAR_INT(0, "PHYSMAPMETHOD", PhysicalMapMethod
             , "Physical map method (1=1meg cache, 0=VirtualCopy only)")
 
+// Map physical memory to a virtual address. The function ensures
+// that at least 32K memory ahead of given address is available
 uint8 *
 memPhysMap(uint32 paddr)
 {

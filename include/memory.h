@@ -59,7 +59,6 @@ typedef uint32 mmuL2Desc;
 // Tiny page address
 #define MMU_L2_TINY_MASK	0xfffffc00
 
-// Autodetect physical memory size.
 void mem_autodetect(void);
 
 // Types of memory accesses.
@@ -69,14 +68,11 @@ enum MemOps {
     MO_SIZE32 = 2,
 };
 
-// Map physical memory to a virtual address. The function ensures
-// that at least 32K memory ahead of given address is available
-extern uint8 *memPhysMap (uint32 paddr);
-// Free the virtual memory pointers cache used by memPhysMap
-extern void memPhysReset ();
-extern uint32 memPhysRead (uint32 paddr);
-extern bool memPhysWrite (uint32 paddr, uint32 value);
-extern uint32 memVirtToPhys (uint32 vaddr);
+extern uint8 *memPhysMap(uint32 paddr);
+extern void memPhysReset();
+extern uint32 memPhysRead(uint32 paddr);
+extern bool memPhysWrite(uint32 paddr, uint32 value);
+extern uint32 memVirtToPhys(uint32 vaddr);
 uint32 retryVirtToPhys(uint32 vaddr);
 uint32 cachedMVA(void *addr);
 
@@ -88,13 +84,27 @@ struct pageAddrs {
 void freePages(void *data, int pageCount);
 void *allocPages(struct pageAddrs *pages, int pageCount);
 
+// Test if 'addr' is in the range from 'start'..'start+size'
+#define IN_RANGE(addr, start, size) ({   \
+            uint32 __addr = (addr);      \
+            uint32 __start = (start);    \
+            uint32 __size = (size);      \
+            (__addr - __start < __size); \
+        })
+
+// Test if two ranges overlap - the caller must ensure the 'size'
+// parameters are greater than zero and not near 2**32.
+#define RANGES_OVERLAP(start1, size1, start2, size2) ({                 \
+            uint32 __start1 = (start1), __size1 = (size1);              \
+            uint32 __start2 = (start2), __size2 = (size2);              \
+            IN_RANGE(__start1 + __size1 - 1, __start2, __size2 + __size1 - 1); \
+        })
+
 // The size of physical memory to map at once
 #define PHYS_CACHE_SIZE 0x10000
 #define PHYS_CACHE_MASK (PHYS_CACHE_SIZE - 1)
 
-// Physical memory location (default 0xa0000000 as per Intel specs)
 extern uint32 memPhysAddr;
-// Physical memory size (detected at startup)
 extern uint32 memPhysSize;
 
 #endif /* _MEMORY_H */

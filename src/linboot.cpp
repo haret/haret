@@ -238,8 +238,8 @@ static inline uint32 __preload do_cpuGetPSR(void) {
 static inline int __preload
 fbOverlaps(struct preloadData *pd)
 {
-    uint end = pd->startRam + PHYSOFFSET_INITRD + pd->initrdSize + PAGE_SIZE;
-    return pd->physFB >= pd->startRam && pd->physFB < end;
+    return IN_RANGE(pd->physFB, pd->startRam
+                    , PHYSOFFSET_INITRD + pd->initrdSize);
 }
 
 // Code to launch kernel.
@@ -541,7 +541,7 @@ setupTrampoline()
         return 0;
     }
     uint32 physTramL1 = physAddrTram & 0xFFF00000;
-    if (virtTram > physTramL1 && virtTram < (physTramL1 + 0x100000)) {
+    if (IN_RANGE(virtTram, physTramL1, 0x100000)) {
         Output(C_ERROR "Trampoline physical/virtual addresses overlap.");
         return 0;
     }

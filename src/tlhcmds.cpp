@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 
+#include "memory.h" // IN_RANGE
 #include "xtypes.h" // uint
 #include "lateload.h" // LATE_LOAD
 #include "output.h" // Output
@@ -16,19 +17,25 @@
 #include "cpu.h" // MVAddr
 
 LATE_LOAD(CreateToolhelp32Snapshot, "toolhelp")
+LATE_LOAD(CloseToolhelp32Snapshot, "toolhelp")
 LATE_LOAD(Process32First, "toolhelp")
 LATE_LOAD(Process32Next, "toolhelp")
 LATE_LOAD(Module32First, "toolhelp")
 LATE_LOAD(Module32Next, "toolhelp")
-LATE_LOAD(CloseToolhelp32Snapshot, "toolhelp")
+LATE_LOAD(Heap32ListFirst, "toolhelp")
+LATE_LOAD(Heap32ListNext, "toolhelp")
+LATE_LOAD(Heap32First, "toolhelp")
+LATE_LOAD(Heap32Next, "toolhelp")
 
 static int
 tlhAvail(void)
 {
     return (late_CreateToolhelp32Snapshot
+            && late_CloseToolhelp32Snapshot
             && late_Process32First && late_Process32Next
             && late_Module32First && late_Module32Next
-            && late_CloseToolhelp32Snapshot);
+            && late_Heap32ListFirst && late_Heap32ListNext
+            && late_Heap32First && late_Heap32Next);
 }
 
 // Find a process by name and terminate it.
@@ -85,9 +92,8 @@ psDump(const char *cmd, const char *args)
 
     for (int ret=late_Process32First(hTH, &pe); ret
              ; ret=late_Process32Next(hTH, &pe))
-        Output("ps: pid=%08lx ppid=%lx pmem=%08lx"
-               " tcnt=%03ld perm=%08lx procname=%ls",
-               pe.th32ProcessID, pe.th32ParentProcessID, pe.th32MemoryBase
+        Output("pid=%08lx hid=%08lx mem=%08lx thrd=%03ld perm=%08lx procname=%ls"
+               , pe.th32ProcessID, pe.th32DefaultHeapID, pe.th32MemoryBase
                , pe.cntThreads, pe.th32AccessKey, pe.szExeFile);
 
     late_CloseToolhelp32Snapshot(hTH);
@@ -116,7 +122,7 @@ modDump(const char *cmd, const char *args)
 
     for (int ret=late_Module32First(hTH, &me); ret
              ; ret=late_Module32Next(hTH, &me))
-        Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%3ld pusg=%08lx"
+        Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%03ld pusg=%03ld"
                " base=%p size=%08lx hmod=%p mod=%ls exe=%ls",
                me.dwSize, me.dwFlags, me.th32ModuleID, me.th32ProcessID,
                me.GlblcntUsage, me.ProccntUsage,
@@ -128,6 +134,44 @@ modDump(const char *cmd, const char *args)
 REG_CMD(tlhAvail, "LSMOD", modDump,
         "LSMOD [<pid>]\n"
         "  List wince modules.")
+
+// CeGCC doesn't have right definition of Heap32First()...
+#if 0
+static void
+heapDump(const char *cmd, const char *args)
+{
+    uint32 pid = 0;
+    get_expression(&args, &pid);
+
+    HANDLE hTH = late_CreateToolhelp32Snapshot(TH32CS_SNAPHEAPLIST, pid);
+    if (hTH == INVALID_HANDLE_VALUE) {
+        Output("Unable to create tool help snapshot");
+        return;
+    }
+
+    HEAPLIST32 hl;
+    hl.dwSize = sizeof(hl);
+
+    for (int ret=late_Heap32ListFirst(hTH, &hl); ret
+             ; ret=late_Heap32ListNext(hTH, &hl)) {
+        Output("%4ld pid=%08lx hid=%08lx fl=%08lx"
+               , hl.dwSize, hl.th32ProcessID, hl.th32HeapID, hl.dwFlags);
+
+        HEAPENTRY32 he;
+        he.dwSize = sizeof(he);
+        for (int ret2=late_Heap32First(hTH, &he, hl.th32ProcessID, hl.th32HeapID)
+                 ; ret2; ret2=late_Heap32Next(hTH, &he))
+            Output("  %4ld addr=%08lx bs=%08lx fl=%08lx lock=%ld hdl=%p"
+                   , hl.dwSize, he.dwAddress, he.dwBlockSize, he.dwFlags
+                   , he.dwLockCount, he.hHandle);
+    }
+
+    late_CloseToolhelp32Snapshot(hTH);
+}
+REG_CMD(tlhAvail, "LSHEAP", heapDump,
+        "LSHEAP [<pid>]\n"
+        "  Dump heaps of a wince process.")
+#endif
 
 static void
 cmd_addr2module(const char *cmd, const char *args)
@@ -153,7 +197,7 @@ cmd_addr2module(const char *cmd, const char *args)
     for (int ret=late_Process32First(hTH, &pe); ret
              ; ret=late_Process32Next(hTH, &pe)) {
         membase = pe.th32MemoryBase;
-        if (membase <= addr && membase + 0x02000000 > addr) {
+        if (IN_RANGE(addr, membase, 0x02000000)) {
             Output("Address %08x in process: %ls (%08x - %08x)"
                    , addr, pe.szExeFile, membase, membase + 0x02000000);
             pid = pe.th32ProcessID;
@@ -182,7 +226,7 @@ cmd_addr2module(const char *cmd, const char *args)
         uint32 a = (uint32)me.modBaseAddr;
         if (pid && a < 0x02000000)
             a |= membase;
-        if (a <= addr && a + me.modBaseSize > addr) {
+        if (IN_RANGE(addr, a, me.modBaseSize)) {
             Output("  in module: %ls (%08x - %08x)", me.szModule
                    , a, (uint32)(a + me.modBaseSize));
             break;

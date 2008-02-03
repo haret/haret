@@ -177,7 +177,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
 #define Hbit(insn) ((insn)&(1<<5))
 
     // Emulate instrution
-    int addrsize;
+    uint32 addrsize;
     uint32 val;
     if ((insn & 0x0C000000) == 0x04000000) {
         if (!Pbit(insn) && (Wbit(insn) || Ibit(insn)))
@@ -254,7 +254,7 @@ tryEmulate(struct irqData *data, struct irqregs *regs
 
     for (uint i=0; i<data->traceCount; i++) {
         memcheck *t = &data->traceAddrs[i];
-        if (t->addr >= addr + addrsize || t->endaddr <= addr)
+        if (! RANGES_OVERLAP(addr, addrsize, t->addr, t->rangesize))
             continue;
         if (Lbit(insn)) {
             if (!(t->rw & 1))
@@ -375,9 +375,9 @@ public:
         }
         const char *flags = "rw";
         char _flags[16];
-        uint32 addrsize = 1;
+        uint32 rangesize = 1;
         uint32 mask = 0;
-        if (get_expression(&args, &addrsize))
+        if (get_expression(&args, &rangesize))
             if (!get_token(&args, _flags, sizeof(_flags))) {
                 flags = _flags;
                 if (get_expression(&args, &mask)) {
@@ -391,7 +391,7 @@ public:
         uint32 shift = 8 * (t->addr & 3);
         t->mask = rotl(~mask, shift);
         t->cmpVal = rotl(t->cmpVal, shift);
-        t->endaddr = t->addr + addrsize;
+        t->rangesize = rangesize;
         t->rw = 0;
         if (strchr(flags, 'r') || strchr(flags, 'R'))
             t->rw = 1;
@@ -416,7 +416,7 @@ public:
             t->cmpVal = rotr(t->cmpVal, shift);
 
             Output("%03d: 0x%08x %d '%s' %08x %s"
-                   , i, t->addr, t->endaddr - t->addr, flags
+                   , i, t->addr, t->rangesize, flags
                    , rotr(~t->mask, shift), disp_suppress(&tmp, buf));
         }
     }
@@ -501,8 +501,9 @@ prepL1traps(struct irqData *data)
     uint32 count = 0;
     for (uint i=0; i<data->traceCount; i++) {
         memcheck *t = &data->traceAddrs[i];
-        uint32 vaddr = t->addr & TOPBITS;
-        for (; vaddr < t->endaddr; vaddr += ONEMEG) {
+        for (uint32 vaddr = t->addr & TOPBITS
+                 ; RANGES_OVERLAP(vaddr, ONEMEG, t->addr, t->rangesize)
+                 ; vaddr += ONEMEG) {
             // See if this vaddr already done.
             int found = 0;
             for (uint j=0; j<count; j++)

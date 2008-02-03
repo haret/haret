@@ -396,12 +396,11 @@ static const struct pageinfo L2PageInfo[] = {
 static void
 memDumpMMU(const char *tok, const char *args)
 {
-    uint32 l1only = 0, shownomap = 1, start = 0, end = 0xffffffff;
+    uint32 l1only = 0, showall = 1, start = 0, size = 0;
     if (get_expression(&args, &l1only) && get_expression(&args, &start)) {
-        uint32 size = 1;
+        size = 1;
         get_expression(&args, &size);
-        end = start + size;
-        shownomap = 0;
+        showall = 0;
     }
     if (l1only != 1)
         l1only = 0;
@@ -443,16 +442,17 @@ memDumpMMU(const char *tok, const char *args)
             __flags_l1(flagbuf, l1d & ~pi->mask);
             switch (type) {
             case MMU_L1_UNMAPPED:
-                if (shownomap && (l1d ^ pL1) & MMU_L1_TYPE_MASK)
+                if (showall && (l1d ^ pL1) & MMU_L1_TYPE_MASK)
                     Output("%08x  |          | %11s |", vaddr, pi->name);
                 continue;
             case MMU_L1_SECTION:
-                if (paddr < end && paddr+(1<<pi->map_shift) > start)
+                if (showall
+                    || RANGES_OVERLAP(start, size, paddr, 1<<pi->map_shift))
                     Output("%08x  | %08x | %11s |%s"
                            , vaddr, paddr, pi->name, flagbuf);
                 continue;
             }
-            if (shownomap)
+            if (showall)
                 Output("%08x  |          | %11s |%s", vaddr, pi->name, flagbuf);
 
             if (l1only)
@@ -471,11 +471,12 @@ memDumpMMU(const char *tok, const char *args)
                 __flags_l2(flagbuf, l2d & ~pi2->mask);
 
                 if (l2type == MMU_L2_UNMAPPED) {
-                    if (shownomap && (l2d ^ pL2) & MMU_L2_TYPE_MASK)
+                    if (showall && (l2d ^ pL2) & MMU_L2_TYPE_MASK)
                         Output(" %08x |          | %11s |", l2vaddr, pi2->name);
                     continue;
                 }
-                if (l2paddr < end && l2paddr+(1<<pi->map_shift) > start)
+                if (showall
+                    || RANGES_OVERLAP(start, size, l2paddr, 1<<pi->map_shift))
                     Output(" %08x | %08x | %11s |%s"
                            , l2vaddr, l2paddr, pi2->name, flagbuf);
             }
@@ -484,7 +485,7 @@ memDumpMMU(const char *tok, const char *args)
         Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
     }
 
-    if (shownomap)
+    if (showall)
         Output("End of virtual address space");
     DoneProgress();
 }

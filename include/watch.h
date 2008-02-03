@@ -15,7 +15,7 @@ struct memcheck {
         uint32 addr;
         uint32 insn;
     };
-    uint32 endaddr;
+    uint32 rangesize;
 };
 
 int testChanged(struct memcheck *mc, uint32 curval, uint32 *pchanged);
