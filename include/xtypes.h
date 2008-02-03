@@ -8,8 +8,6 @@
 #ifndef _XTYPES_H
 #define _XTYPES_H
 
-#include <stddef.h>
-
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 typedef signed char int8;
