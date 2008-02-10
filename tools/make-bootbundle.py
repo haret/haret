@@ -13,14 +13,12 @@ opts.update(optlist)
 
 if len(args) != 4:
     print "make-bootbundle - Make a standalone HaRET boot bundle with kernel and initrd"
-    print "Usage: make-bootbundle.py [-o <outfile>] <path to haret.exe> <zImage> <initrd> <script>"
+    print "Usage: make-bootbundle.py -o <outfile> <path to haret.exe> <zImage> <initrd> <script>"
     sys.exit(0)
 
 outfile = opts["-o"]
 
 os.system("cat %s %s %s %s> %s"  % (args[0], args[1], args[2], args[3], outfile))
-
-#Angstrom-x11-image-glibc-ipk-2007.9-test-20070922-hx4700.rootfs
 
 exe = open(outfile, "r+b")
 kernelSt = os.stat(args[1])
