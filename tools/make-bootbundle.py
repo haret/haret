@@ -16,18 +16,7 @@ if len(args) != 4:
     print "Usage: make-bootbundle.py [-o <outfile>] <path to haret.exe> <zImage> <initrd> <script>"
     sys.exit(0)
 
-outfile = opts.get("-o", None)
-if not outfile:
-    print args[2]
-    m = re.match(r"(.+?)-(glibc|uclibc)-(ipk|deb)-(.+)-([0-9]{8}-)?(.+?)\.", args[2])
-    print m.groups()
-    outfile = "%s-liveramdisk-%s-%s.exe" % (m.group(1), m.group(4), m.group(6))
-    print outfile
-elif outfile.find("%v") > 0:
-    kernelBase = os.path.basename(args[1]).rsplit(".", 1)[0]
-    assert kernelBase.startswith("zImage-")
-    outfile = outfile.replace("%v", kernelBase[len("zImage-"):])
-    print outfile
+outfile = opts["-o"]
 
 os.system("cat %s %s %s %s> %s"  % (args[0], args[1], args[2], args[3], outfile))
 
