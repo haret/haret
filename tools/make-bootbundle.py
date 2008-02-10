@@ -23,7 +23,7 @@ if not outfile:
     print m.groups()
     outfile = "%s-liveramdisk-%s-%s.exe" % (m.group(1), m.group(4), m.group(6))
     print outfile
-elif outfile.index("%v") > 0:
+elif outfile.find("%v") > 0:
     kernelBase = os.path.basename(args[1]).rsplit(".", 1)[0]
     assert kernelBase.startswith("zImage-")
     outfile = outfile.replace("%v", kernelBase[len("zImage-"):])
