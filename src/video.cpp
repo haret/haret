@@ -80,7 +80,7 @@ uint16 *vidGetVirtVRAM()
     }
 
     // Try GAPI method.
-    if (late_GXOpenDisplay(GetDesktopWindow (), 0)) {
+    if (late_GXOpenDisplay(GetDesktopWindow(), 0)) {
         uint16 *vaddr = (uint16 *)late_GXBeginDraw();
         videoW = GetSystemMetrics(SM_CXSCREEN);
         videoH = GetSystemMetrics(SM_CYSCREEN);
