@@ -25,7 +25,7 @@ H1940,      S3c2410 ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*
 H2200,      PXA     ,hp iPAQ h22,                 H2200
 H3600b,     SA      ,Compaq iPAQ H3600
 H3700,      SA      ,Compaq iPAQ H3700
-H3870,      SA      ,Compaq iPAQ H3800
+H3800,      SA      ,Compaq iPAQ H3800,           H3800
 H3900,      PXA     ,Compaq iPAQ H39,             H3900
 H4000,      PXA     ,hp iPAQ h41,                 H4000
 H4300,      PXA     ,hp iPAQ h43,                 H4300
