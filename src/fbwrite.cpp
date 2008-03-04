@@ -81,7 +81,7 @@ fb_putuint(fbinfo *fbi, uint32 val)
     char *d = &buf[sizeof(buf) - 1];
     *d-- = '\0';
     for (;;) {
-        *d = val % 10;
+        *d = (val % 10) + '0';
         val /= 10;
         if (!val)
             break;
