@@ -103,5 +103,5 @@ def getASIC3Defs(base, sd_base, shift=0):
 	for bank, btuple in ASIC3_BANK.items():
 		for offset, function in btuple[1].items():
 			name = btuple[0] + "_" + function
-			out[base + (bank+offset)>>shift] = name
+			out[base + ((bank+offset)>>shift)] = name
 	return out
