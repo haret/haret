@@ -14,7 +14,11 @@ Apache,     PXA27x  ,PA10,                        HTCAPACHE, \
 AximX50,    PXA27x  ,Dell Axim X50;Dell Axim X51, X50,       \
         set ramaddr 0xa8000000,set ramsize 64*1024*1024
 AximX5,     PXA     ,Dell Axim X5,                AXIM
-Beetles,    PXA27x  ,hp iPAQ hw65,                HTCBEETLES
+Beetles,    PXA27x  ,hp iPAQ hw65,                HTCBEETLES, \
+        addlist GPIOS p2v(0x10000018) 0x0000 16, \
+        addlist GPIOS p2v(0x10000098) 0x0000 16, \
+        addlist GPIOS p2v(0x10000118) 0x0000 16, \
+        addlist GPIOS p2v(0x10000198) 0x0000 16
 Blueangel,  PXA     ,PH20,                        BLUEANGEL, \
         set ramsize 128*1024*1024
 Himalaya,   PXA     ,PH10A;PH10B,                 HIMALAYA
@@ -33,7 +37,12 @@ H5000,      PXA     ,HP iPAQ h5;hp iPAQ h5,       H5400
 H6340,      OMAP15xx,HP iPAQ h6340,               H6300,    set ramsize 64*1024*1024
 HX2000,     PXA27x  ,HP iPAQ hx2,                 HX2750,   set ramsize 64*1024*1024
 HX4700,     PXA27x  ,hp iPAQ hx47;HP iPAQ hx47,   H4700,    set ramsize 64*1024*1024
-Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   set ramsize 64*1024*1024
+Sable,      PXA27x  ,hp iPAQ hw69,                HW6900,   \
+	set ramsize 64*1024*1024, \
+        addlist GPIOS p2v(0x10000018) 0x0000 16, \
+        addlist GPIOS p2v(0x10000098) 0x0000 16, \
+        addlist GPIOS p2v(0x10000118) 0x0000 16, \
+        addlist GPIOS p2v(0x10000198) 0x0000 16
 Wizard,     OMAP850 ,WIZA100;WIZA200
 Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
         ibit IRQS 1, addlist IRQS p2v(0x08000004) 0xf000 16 0, \
@@ -43,9 +52,28 @@ Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
         addlist GPIOS p2v(0x08000008) 0xf000 16, \
         set resumeaddr 0x30100000
 Trinity,    S3c2442 ,TRIN100,                     HTC_TRINITY
-Athena,     PXA27x  ,ATHE100,                     HTCATHENA
+Athena,     PXA27x  ,ATHE100,                     HTCATHENA, \
+	addlist IRQS p2v(0x08000008) 0xf000 16, \
+        addlist GPIOS p2v(0x09000000) 0xf000 16, \
+        addlist GPIOS p2v(0x08000000) 0xf000 16, \
+        addlist GPIOS p2v(0x08000002) 0xf000 16, \
+        addlist GPIOS p2v(0x08000004) 0xf000 16, \
+        addlist GPIOS p2v(0x08000006) 0xf000 16, \
+        addlist GPIOS p2v(0x0800000a) 0xf000 16, \
+        addlist GPIOS p2v(0x0800000c) 0xf000 16, \
+        addlist GPIOS p2v(0x0800000e) 0xf000 16, \
+        addlist GPIOS p2v(0x08000010) 0xf000 16
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
-Artemis,    OMAP850 ,ARTE,                        ARTEMIS
+Artemis,    OMAP850 ,ARTE,                        ARTEMIS, \
+        addlist GPIOS p2v(0x04000000) 0xff00 16, \
+        addlist GPIOS p2v(0x04000002) 0xff00 16, \
+        addlist GPIOS p2v(0x04000004) 0xff00 16, \
+        addlist GPIOS p2v(0x04000006) 0xff00 16, \
+        addlist GPIOS p2v(0x04000008) 0xff00 16, \
+        addlist GPIOS p2v(0x0400000a) 0xff00 16, \
+        addlist GPIOS p2v(0x0400000c) 0xff00 16, \
+        addlist GPIOS p2v(0x0400000e) 0xff00 16, \
+        addlist GPIOS p2v(0x04000010) 0xff00 16
 Herald,     OMAP850 ,HERA,                        HERMES
 Prophet,    OMAP850 ,PM300
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
@@ -55,7 +83,16 @@ e740,       PXA     ,TOSHIBA e740
 Acer_n30,   S3c2410 ,Acer n30 Handheld,           N30
 Mio_P550,   S3c2440 ,Mio P550,                    MIO_P550
 Kaiser,     MSM7200 ,Kaiser
-Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560
+Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560, \
+        addlist GPIOS p2v(0x10000000) 0xf000 16, \
+        addlist GPIOS p2v(0x10000002) 0xf000 16, \
+        addlist GPIOS p2v(0x10000004) 0xf000 16, \
+        addlist GPIOS p2v(0x10000006) 0xf000 16, \
+        addlist GPIOS p2v(0x10000008) 0xf000 16, \
+        addlist GPIOS p2v(0x1000000a) 0xf000 16, \
+        addlist GPIOS p2v(0x1000000c) 0xf000 16, \
+        addlist GPIOS p2v(0x1000000e) 0xf000 16, \
+        addlist GPIOS p2v(0x10000010) 0xf000 16
 Loox400,    PXA     ,FUJITSU SIEMENS COMPUTERS Pocket LOOX, LOOX410
 MioA701,    PXA27x  ,Mio Technology Limited,      MIOA701
 
