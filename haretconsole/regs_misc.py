@@ -8,6 +8,7 @@ import memalias
 import regs_s3c
 import regs_pxa
 import regs_msm
+import regs_omap
 import regs_ati
 import regs_asic3
 
@@ -67,3 +68,20 @@ Regs_Universal.update(getEGPIOdefs(0x0a000000, 1))
 Regs_Universal.update(regs_asic3.getASIC3Defs(base=0x10000000, sd_base=0x0c000000
                                               , shift=1))
 memalias.RegsList['Universal'] = Regs_Universal
+
+# HTC Sable specific registers
+Regs_Sable = regs_pxa.Regs_pxa27x.copy()
+#Regs_Universal.update(getEGPIOdefs(0x0a000000, 1))
+Regs_Sable.update(regs_asic3.getASIC3Defs(base=0x10000000, sd_base=0x0c000000
+                                              , shift=1))
+memalias.RegsList['Sable'] = Regs_Sable
+
+# HTC Dresden (aka FSC Loox N560) specific registers
+Regs_Loox5xx = regs_pxa.Regs_pxa27x.copy()
+Regs_Loox5xx.update(getEGPIOdefs(0x10000000, 8))
+memalias.RegsList['Loox5xx'] = Regs_Loox5xx
+
+# HTC Artemis specific registers
+Regs_Artemis = regs_omap.Regs_omap850.copy()
+Regs_Artemis.update(getEGPIOdefs(0x04000000, 9))
+memalias.RegsList['Artemis'] = Regs_Artemis
