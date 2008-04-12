@@ -1,10 +1,12 @@
 // Support for Qualcomm MSMxxxx cpus.
 #include "script.h" // runMemScript
+#include "arch-arm.h" // cpuFlushCache_arm6
 #include "arch-msm.h"
 
 MachineMSM7500::MachineMSM7500()
 {
     name = "Generic MSM7500";
+    flushCache = cpuFlushCache_arm6;
     archname = "MSM7500";
     CPUInfo[0] = L"MSM7500";
 }

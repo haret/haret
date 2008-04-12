@@ -1,13 +1,6 @@
 #include "cpu.h" // DEF_GETCPR
 #include "arch-arm.h"
 
-// Assembler functions
-extern "C" {
-    void cpuFlushCache_arm920();
-    void cpuFlushCache_arm926();
-    void cpuFlushCache_arm6();
-}
-
 DEF_GETCPR(get_p15r0, 15, 0, c0, c0, 0)
 
 

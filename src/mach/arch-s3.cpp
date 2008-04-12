@@ -1,4 +1,5 @@
 #include "arch-s3.h"
+#include "arch-arm.h" // cpuFlushCache_arm920
 #include "s3c24xx.h"
 #include "memory.h" // memPhysMap
 #include "script.h" // runMemScript
@@ -6,6 +7,7 @@
 MachineS3c2442::MachineS3c2442()
 {
     name = "Generic Samsung s3c24xx";
+    flushCache = cpuFlushCache_arm920;
     archname = "s3c2442";
     CPUInfo[0] = L"SC32442";
 }

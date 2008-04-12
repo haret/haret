@@ -1,8 +1,16 @@
+// Definitions for ARM (the company) chips.
 #ifndef _ARCH_ARM_H
 #define _ARCH_ARM_H
 
-// Definitions for ARM (the company) chips.
 #include "machines.h" // Machine
+
+// Assembler functions
+extern "C" {
+    void cpuFlushCache_arm920();
+    void cpuFlushCache_arm925();
+    void cpuFlushCache_arm926();
+    void cpuFlushCache_arm6();
+}
 
 class Machine920t : public Machine {
 public:

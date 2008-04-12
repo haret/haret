@@ -1,5 +1,6 @@
 #include "memory.h" // memPhysMap
 #include "script.h" // runMemScript
+#include "arch-arm.h" // cpuFlushCache_arm926
 #include "arch-omap.h"
 
 
@@ -151,6 +152,7 @@ initOmap(void)
 MachineOMAP850::MachineOMAP850()
 {
     name = "Generic TI OMAP";
+    flushCache = cpuFlushCache_arm926;
     archname = "OMAP850";
     CPUInfo[0] = L"OMAP850";
 }
@@ -207,10 +209,6 @@ REGMACHINE(MachineOMAP850)
 /****************************************************************
  * OMAP15xx
  ****************************************************************/
-
-extern "C" {
-    void cpuFlushCache_arm925();
-}
 
 MachineOMAP15xx::MachineOMAP15xx()
 {
