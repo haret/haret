@@ -55,7 +55,7 @@ def dis(insn, match):
 TIMEPRE_S = memalias.TIMEPRE_S
 re_debug = re.compile(
     TIMEPRE_S + r'debug (?P<addr>.*):'
-    r' (?P<insn>.*)\(.*\) (?P<Rd>.*) (?P<Rn>.*)$')
+    r' (?P<insn>.*)\((?P<desc>.*)\) (?P<Rd>.*) (?P<Rn>.*)$')
 re_trace = re.compile(
     TIMEPRE_S + r'mmutrace (?P<addr>.*):'
     r' (?P<insn>.*)\((?P<desc>.*)\) (?P<vaddr>.*) (?P<val>.*)'
