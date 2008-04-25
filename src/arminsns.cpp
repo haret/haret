@@ -191,15 +191,15 @@ const char *
 getInsnName(uint32 insn)
 {
     const char *iname = "?";
-    int isLoad = insn & 0x00100000;
+    int isLoad = Lbit(insn);
     if ((insn & 0x0C000000) == 0x04000000) {
         if (isLoad) {
-            if (insn & (1<<22))
+            if (Bbit(insn))
                 iname = "ldrb";
             else
                 iname = "ldr";
         } else {
-            if (insn & (1<<22))
+            if (Bbit(insn))
                 iname = "strb";
             else
                 iname = "str";
@@ -219,6 +219,13 @@ getInsnName(uint32 insn)
             else if (lowbyte == 0x90)
                 iname = "swp?";
         }
+    } else if ((insn & 0x0E000000) == 0x08000000) {
+        // multiword instructions
+        const char *multiIns[] = {"stmda", "stmdb", "stmia", "stmib",
+                                  "ldmda", "ldmdb", "ldmia", "ldmib"};
+        int isPre = Pbit(insn);
+        int isInc = Ubit(insn);
+        iname = multiIns[isLoad*4 + isInc*2 + isPre];
     }
 
     return iname;

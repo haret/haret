@@ -148,6 +148,42 @@ report_memAccess(irqData *, const char *header, traceitem *item)
            , header, pc, insn, getInsnName(insn), addr, val, changed);
 }
 
+// Event reporting
+// Check if we're interested in this operation and if so record it.
+static void __irq
+reportAddr(struct irqData *data, uint32 addr, uint32 val,
+           uint32 old_pc, uint32 insn, uint32 addrsize)
+{
+    if (isIgnoredAddr(data, old_pc))
+        // Not interested in this address
+        return;
+
+    for (uint i=0; i<data->traceCount; i++) {
+        memcheck *t = &data->traceAddrs[i];
+        if (! RANGES_OVERLAP(addr, addrsize, t->addr, t->rangesize))
+            continue;
+        if (Lbit(insn)) {
+            if (!(t->rw & 1))
+                // Not interested in reads
+                continue;
+        } else {
+            if (!(t->rw & 2))
+                // Not interested in writes
+                continue;
+        }
+
+        uint32 shift = 8 * (addr & 3);
+        uint32 mask = ((1 << (8 * addrsize)) - 1) << shift;
+        uint32 cmpval = ((val << shift) & mask) | (t->cmpVal & ~mask);
+        uint32 changed;
+        if (testChanged(t, cmpval, &changed))
+            // Report insn
+            add_trace(data, report_memAccess, addr, old_pc, insn
+                      , val, changed >> shift);
+        break;
+    }
+}
+
 // Attempt to emulate a memory access fault, and then report the event
 // to the user.
 static void __irq
@@ -167,20 +203,13 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     if (--data->max_l1trace == 0)
         goto fail;
 
-#define Ibit(insn) ((insn)&(1<<25))
-#define Pbit(insn) ((insn)&(1<<24))
-#define Ubit(insn) ((insn)&(1<<23))
-#define Bbit(insn) ((insn)&(1<<22))
-#define Wbit(insn) ((insn)&(1<<21))
-#define Lbit(insn) ((insn)&(1<<20))
-#define Sbit(insn) ((insn)&(1<<6))
-#define Hbit(insn) ((insn)&(1<<5))
-
     // Emulate instrution
     uint32 addrsize;
     uint32 val;
     if ((insn & 0x0C000000) == 0x04000000) {
+        // load/store single single
         if (!Pbit(insn) && (Wbit(insn) || Ibit(insn)))
+            // insn not supported
             goto fail;
         addrsize = Bbit(insn) ? 1 : 4;
         if (Lbit(insn)) {
@@ -198,16 +227,24 @@ tryEmulate(struct irqData *data, struct irqregs *regs
             else
                 *(uint32*)newaddr = val;
         }
+
         if (Pbit(insn) == 0) {
+            // post index
             uint32 offset = insn & 0xFFF;
             uint32 Rn = addr + offset;
             if (!Ubit(insn))
+                // subtracting
                 Rn = addr - offset;
             setReg(regs, mask_Rn(insn), Rn);
         } else if (Wbit(insn))
+            // pre-index and write back
             // XXX - addr is an MVA - but reg might be a VA.
             setReg(regs, mask_Rn(insn), addr);
+
+        // report single op
+        reportAddr(data,addr,val,old_pc,insn,addrsize);
     } else if ((insn & 0x0E000090) == 0x00000090) {
+        // halfword transfer single
         if (!Pbit(insn) && (Wbit(insn) || !Bbit(insn)))
             goto fail;
         addrsize = 2;
@@ -241,41 +278,72 @@ tryEmulate(struct irqData *data, struct irqregs *regs
             setReg(regs, mask_Rn(insn), Rn);
         } else if (Wbit(insn))
             setReg(regs, mask_Rn(insn), addr);
+
+        // report single op
+        reportAddr(data,addr,val,old_pc,insn,addrsize);
+    } else if ((insn & 0x0E000000) == 0x08000000) {
+        // multi word transfer
+        if (Bbit(insn))
+            // this is 'S' = "PSR" bit - not supported
+            goto fail;
+
+        if ((insn & 0x0000FFFF) == 0)
+            // no registers being copied = invalid instruction
+            goto fail;
+
+        val = 0;
+        addrsize = 4; //suppress warnings
+        int regCount = 0;
+        // It is assumed that the first read/write caused the fault
+        // (If its possible that its not, this might break.)
+
+        // It is the lowest memory address which causes the fault and
+        // whether we are incrementing or decrementing, the lowest reg
+        // always goes in the lowest memory address.
+        for (int r=0; r<16; r++){
+            //for each register, upwards
+            if (! (insn & (1 << r)))
+                // register not being copied
+                continue;
+
+            if (Lbit(insn)) {
+                // load
+                val = *(uint32*)newaddr;
+                setReg(regs, r, val);
+            } else {
+                // store
+                val = getReg(regs, r);
+                *(uint32*)newaddr = val;
+            }
+            // report every read/write as seperate access
+            reportAddr(data, addr, val, old_pc, insn, addrsize);
+
+            addr += 4;
+            newaddr += 4;
+            regCount++;
+        }
+        // because of the different forms (pre-inc, post-dec etc),
+        // addr and newaddr may or may not be in the right place now,
+        // but we don't care
+
+        // if write-back, do so
+        if (Wbit(insn)) {
+            // regardless of pre/post indexing, base reg always ends
+            // up regCount from where it started
+
+            // fetch the address in the base register
+            uint32 baseReg = getReg(regs, mask_Rn(insn));
+            if (Ubit(insn))
+                // incrementing
+                baseReg += 4 * regCount;
+            else
+                // decrementing
+                baseReg -= 4 * regCount;
+            setReg(regs, mask_Rn(insn), baseReg);
+        }
     } else
         goto fail;
 
-    //
-    // Event reporting
-    //
-
-    if (isIgnoredAddr(data, old_pc))
-        // Not interested in this address
-        return;
-
-    for (uint i=0; i<data->traceCount; i++) {
-        memcheck *t = &data->traceAddrs[i];
-        if (! RANGES_OVERLAP(addr, addrsize, t->addr, t->rangesize))
-            continue;
-        if (Lbit(insn)) {
-            if (!(t->rw & 1))
-                // Not interested in reads
-                continue;
-        } else {
-            if (!(t->rw & 2))
-                // Not interested in writes
-                continue;
-        }
-
-        uint32 shift = 8 * (addr & 3);
-        uint32 mask = ((1 << (8 * addrsize)) - 1) << shift;
-        uint32 cmpval = ((val << shift) & mask) | (t->cmpVal & ~mask);
-        uint32 changed;
-        if (testChanged(t, cmpval, &changed))
-            // Report insn
-            add_trace(data, report_memAccess, addr, old_pc, insn
-                      , val, changed >> shift);
-        break;
-    }
     return;
 
 fail:
