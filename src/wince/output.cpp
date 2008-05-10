@@ -33,41 +33,49 @@ static const int PADOUTBUF = 32;
  ****************************************************************/
 
 static void
-writeScreen(const char *msg, int len)
+writeScreen(const char *msg, uint len)
 {
-  if (MainWindow == 0)
-    return;
+    if (MainWindow == 0)
+        return;
 
-  wchar_t buff[MAXOUTBUF];
-  mbstowcs(buff, msg, ARRAY_SIZE(buff));
+    wchar_t buff[MAXOUTBUF];
+    mbstowcs(buff, msg, ARRAY_SIZE(buff));
 
-  HWND hConsole = GetDlgItem (MainWindow, ID_LOG);
-  uint maxlen = SendMessage (hConsole, EM_GETLIMITTEXT, 0, 0);
+    HWND hConsole = GetDlgItem(MainWindow, ID_LOG);
+    uint maxlen = SendMessage(hConsole, EM_GETLIMITTEXT, 0, 0);
 
-  uint tl;
+    if (len >= maxlen)
+        // Message wont fit on screen.
+        return;
 
-  while ((tl = GetWindowTextLength (hConsole)) + len >= maxlen)
-  {
-    uint linelen = SendMessage (hConsole, EM_LINELENGTH, 0, 0) + 2;
-    Edit_SetSel (hConsole, 0, linelen);
-    Edit_ReplaceSel (hConsole, "");
-  }
+    // Remove lines until there is space in screen log
+    uint tl;
+    for (;;) {
+        tl = GetWindowTextLength(hConsole);
+        if (tl + len < maxlen)
+            break;
+        uint linelen = SendMessage(hConsole, EM_LINELENGTH, 0, 0) + 2;
+        Edit_SetSel(hConsole, 0, linelen);
+        Edit_ReplaceSel(hConsole, "");
+    }
 
-  Edit_SetSel (hConsole, tl, tl);
-  Edit_ReplaceSel (hConsole, buff);
+    // Paste message to screen log
+    Edit_SetSel(hConsole, tl, tl);
+    Edit_ReplaceSel(hConsole, buff);
 }
 
-void Status (const wchar_t *format, ...)
+void
+Status(const wchar_t *format, ...)
 {
-  wchar_t buffer [512];
-  va_list args;
-  va_start (args, format);
-  _vsnwprintf (buffer, ARRAY_SIZE(buffer), format, args);
-  va_end (args);
+    wchar_t buffer[512];
+    va_list args;
+    va_start(args, format);
+    _vsnwprintf(buffer, ARRAY_SIZE(buffer), format, args);
+    va_end(args);
 
-  HWND sb = GetDlgItem (MainWindow, ID_STATUSTEXT);
-  if (sb)
-    SetWindowText (sb, buffer);
+    HWND sb = GetDlgItem(MainWindow, ID_STATUSTEXT);
+    if (sb)
+        SetWindowText(sb, buffer);
 }
 
 static void
