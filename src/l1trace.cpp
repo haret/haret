@@ -206,7 +206,25 @@ tryEmulate(struct irqData *data, struct irqregs *regs
     // Emulate instrution
     uint32 addrsize;
     uint32 val;
-    if ((insn & 0x0C000000) == 0x04000000) {
+    if ((insn & 0x0Fb000F0) == 0x01000090) {
+        // Swap instruction
+        uint32 readval, writeval = getReg(regs, mask_Rm(insn));
+        if (Bbit(insn)) {
+            addrsize = 1;
+            asm("swpb %0, %1, [%2]"
+                : "=r" (readval)
+                : "r" (writeval), "r" (newaddr));
+        } else {
+            addrsize = 4;
+            asm("swp %0, %1, [%2]"
+                : "=r" (readval)
+                : "r" (writeval), "r" (newaddr));
+        }
+        setReg(regs, mask_Rd(insn), readval);
+        // report swap
+        reportAddr(data, addr, readval, old_pc, insn, addrsize);
+        reportAddr(data, addr, writeval, old_pc, insn, addrsize);
+    } else if ((insn & 0x0C000000) == 0x04000000) {
         // load/store single single
         if (!Pbit(insn) && (Wbit(insn) || Ibit(insn)))
             // insn not supported

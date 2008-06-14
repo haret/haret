@@ -3,6 +3,7 @@
 // Extract the Rd/Rn register numbers from an ARM instruction.
 #define mask_Rn(insn) (((insn)>>16) & 0xf)
 #define mask_Rd(insn) (((insn)>>12) & 0xf)
+#define mask_Rm(insn) ((insn) & 0xf)
 
 // Instruction bits, for simulation and reporting
 #define Ibit(insn) (!!((insn)&(1<<25)))
