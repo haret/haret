@@ -58,6 +58,7 @@ MachineArmV6::MachineArmV6()
 {
     name = "Generic ARM v6";
     flushCache = cpuFlushCache_arm6;
+    arm6mmu = 1;
 }
 
 int

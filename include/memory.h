@@ -28,6 +28,8 @@ typedef uint32 mmuL1Desc;
 #define MMU_L1_COARSE_MASK	0xfffffc00
 // Section descriptor
 #define MMU_L1_SECTION_MASK	0xfff00000
+#define MMU_L1_SUPER_SECTION_MASK 0xff000000
+#define MMU_L1_SUPER_SECTION_FLAG (1<<18)
 #define MMU_L1_AP_MASK		0x00000c00
 #define MMU_L1_AP_SHIFT		10
 #define MMU_L1_CACHEABLE	0x00000008
@@ -59,7 +61,7 @@ typedef uint32 mmuL2Desc;
 // Tiny page address
 #define MMU_L2_TINY_MASK	0xfffffc00
 
-void mem_autodetect(void);
+void setupMemory();
 
 // Types of memory accesses.
 enum MemOps {
@@ -75,6 +77,17 @@ extern bool memPhysWrite(uint32 paddr, uint32 value);
 extern uint32 memVirtToPhys(uint32 vaddr);
 uint32 retryVirtToPhys(uint32 vaddr);
 uint32 cachedMVA(void *addr);
+
+struct pageinfo {
+    const char name[16];
+    void (*flagfunc)(char *p, uint32 d);
+    uint8 isMapped;
+    uint32 mask;
+    uint16 L2MapShift;
+};
+
+const struct pageinfo *getL1Desc(uint32 l1d);
+const struct pageinfo *getL2Desc(uint32 l2d);
 
 struct pageAddrs {
     uint32 physLoc;

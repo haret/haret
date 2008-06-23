@@ -312,12 +312,11 @@ setupHaret()
     // Bind to DLLs dynamically.
     setup_LateLoading();
 
-    // Detect the memory on the machine via wince first.
-    Output("Detecting memory");
-    mem_autodetect();
-
     // Detect some system settings
     setupMachineType();
+
+    // Init memory maps.
+    setupMemory();
 
     // Setup variable/command lists.
     setupCommands();

@@ -16,21 +16,17 @@ Misc cleanups:
 
 * Make haret thread safe.
 
-* Scan all L1 based 1meg virtual->physical mappings at startup.  This
-  will make memPhysMap_section available even in critical sections
-  where the code can't call into wince.
+* It might be useful to make memPhysMap_section the default and
+  implement a new memPhysMap_temp that can call the wince VirtualCopy
+  function when there is no l1 mapping available.  Many places in the
+  code assume a reference from memPhysMap has a long lifespan, and if
+  the VirtualCopy method is invoked these places may fail
+  mysteriously.
 
-  * It might be useful to make memPhysMap_section the default and
-    implement a new memPhysMap_temp that can call the wince
-    VirtualCopy function when there is no l1 mapping available.  Many
-    places in the code assume a reference from memPhysMap has a long
-    lifespan, and if the VirtualCopy method is invoked these places
-    may fail mysteriously.
-
-  * It may also be useful to implement an optional "window size"
-    parameter to memPhysMap - some code assumes it can access large
-    areas from a memPhysMap reference, and this may not be true on all
-    machines.
+* It may also be useful to implement an optional "window size"
+  parameter to memPhysMap - some code assumes it can access large
+  areas from a memPhysMap reference, and this may not be true on all
+  machines.
 
 * Possibly remove "dump" based commands and re-implement them as
   regular commands.  It isn't clear why "dump mmu" isn't implemented

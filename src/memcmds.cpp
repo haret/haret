@@ -13,6 +13,7 @@
 #include "cpu.h" // DEF_GETCPR
 #include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "resource.h" // DLG_PROGRESS
+#include "machines.h" // Mach
 
 
 /****************************************************************
@@ -317,81 +318,10 @@ REG_CMD(0, "VWF", cmd_memtofile,
  * Dump mmu table
  ****************************************************************/
 
-static inline char *__flags_cb(char *p, uint32 &d)
-{
-    *p++ = ' ';
-    *p++ = (d & MMU_L1_CACHEABLE) ? 'C' : ' ';
-    *p++ = (d & MMU_L1_BUFFERABLE) ? 'B' : ' ';
-    d &= ~(MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE);
-    return p;
-}
-
-static inline char *__flags_other(char *p, uint32 d)
-{
-    d &= ~MMU_L1_TYPE_MASK;
-    if (d)
-        p += sprintf(p, " ?=%x", d);
-    *p = 0;
-    return p;
-}
-
-static inline char *__flags_ap(char *p, uint32 &d, int shift) {
-    *p++ = '0' + ((d>>shift) & 3);
-    d &= ~(3<<shift);
-    return p;
-}
-
-static void __flags_l1(char *p, uint32 d)
-{
-    uint32 dmn = (d & MMU_L1_DOMAIN_MASK) >> MMU_L1_DOMAIN_SHIFT;
-    d &= ~MMU_L1_DOMAIN_MASK;
-    p += sprintf(p, " D=%x", dmn);
-
-    if ((d & MMU_L1_TYPE_MASK) == MMU_L1_SECTION) {
-        p = __flags_cb(p, d);
-        *p++ = ' '; *p++ = 'A'; *p++ = 'P'; *p++ = '=';
-        p = __flags_ap(p, d, MMU_L1_AP_SHIFT);
-    }
-
-    p = __flags_other(p, d);
-}
-
-static void __flags_l2(char *p, uint32 d)
-{
-    p = __flags_cb(p, d);
-
-    *p++ = ' '; *p++ = 'A'; *p++ = 'P'; *p++ = '=';
-    int j = ((d & MMU_L2_TYPE_MASK) < MMU_L2_TINYPAGE) ? 4 : 1;
-    for (int i = 0; i < j; i++)
-        p = __flags_ap(p, d, MMU_L2_AP0_SHIFT + 2*i);
-
-    p = __flags_other(p, d);
-}
-
 DEF_GETCPR(get_p15r1, p15, 0, c1, c0, 0)
 DEF_GETCPR(get_p15r2, p15, 0, c2, c0, 0)
 DEF_GETCPR(get_p15r3, p15, 0, c3, c0, 0)
 DEF_GETCPR(get_p15r13, p15, 0, c13, c0, 0)
-
-struct pageinfo {
-    const char name[12];
-    uint32 mask;
-    uint32 map_shift;
-};
-
-static const struct pageinfo L1PageInfo[] = {
-    { "UNMAPPED"},
-    { "Coarse", MMU_L1_COARSE_MASK, 12 },
-    { "1MB section", MMU_L1_SECTION_MASK, 20},
-    { "Fine", MMU_L1_FINE_MASK, 10 },
-};
-
-static const struct pageinfo L2PageInfo[] = {
-    { "UNMAPPED"},
-    { "Large (64K)", MMU_L2_LARGE_MASK },
-    { "Small (4K)", MMU_L2_SMALL_MASK },
-    { "Tiny (1K)", MMU_L2_TINY_MASK },
-};
 
 static void
 memDumpMMU(const char *tok, const char *args)
@@ -408,20 +338,26 @@ memDumpMMU(const char *tok, const char *args)
     Output("----- Virtual address map -----");
     Output(" cp15: r1=%08x r2=%08x r3=%08x r13=%08x\n"
            , get_p15r1(), get_p15r2(), get_p15r3(), get_p15r13());
-    Output("Descriptor flags legend:\n"
-           " C: Cacheable\n"
-           " B: Bufferable\n"
-           " 0..3: Access Permissions (for up to 4 slices):\n"
-           "       0: Supervisor mode Read\n"
-           "       1: Supervisor mode Read/Write\n"
-           "       2: User mode Read\n"
-           "       3: User mode Read/Write\n");
+    Output(
+        "Descriptor flags legend:\n"
+        "  C: Cacheable    B: Bufferable     D: Domain #\n"
+        " AP: Access Permissions (for up to 4 slices):\n"
+        "       0: No Access             1: Supervisor mode read/write\n"
+        "       2: User mode read        3: User mode read/write");
+    if (Mach->arm6mmu) {
+        Output(
+        "       4: Reserved              5: Supervisor mode read only\n"
+        "       6: Supervisor/user read  7: Supervisor/user read\n"
+        " XN: No execute   P: ECC enabled   nG: Not-Global\n"
+        "  S: Shared       T: 'TEX' code\n"
+            );
+    }
 
     uint32 mmu = cpuGetMMU();
 
-    Output("  Virtual | Physical | Description |  Flags");
-    Output("  address | address  |             |");
-    Output("----------+----------+-------------+------------------------");
+    Output("  Virtual | Physical |   Description |  Flags");
+    Output("  address | address  |               |");
+    Output("----------+----------+---------------+----------------------");
 
     // Walk down the 1st level descriptor table
     InitProgress(DLG_PROGRESS, 0x1000);
@@ -435,49 +371,47 @@ memDumpMMU(const char *tok, const char *args)
             // Read 1st level descriptor
             l1d = memPhysRead(mmu + mb * 4);
             uint32 vaddr=mb<<20;
-            int type = l1d & MMU_L1_TYPE_MASK;
-            const struct pageinfo *pi = &L1PageInfo[type];
+            const struct pageinfo *pi = getL1Desc(l1d);
             uint32 paddr = l1d & pi->mask;
             char flagbuf[64];
-            __flags_l1(flagbuf, l1d & ~pi->mask);
-            switch (type) {
-            case MMU_L1_UNMAPPED:
+            pi->flagfunc(flagbuf, l1d & ~pi->mask);
+            if (! pi->isMapped) {
                 if (showall && (l1d ^ pL1) & MMU_L1_TYPE_MASK)
-                    Output("%08x  |          | %11s |", vaddr, pi->name);
+                    Output("%08x  |          | %13s |", vaddr, pi->name);
                 continue;
-            case MMU_L1_SECTION:
+            }
+            if (! pi->L2MapShift) {
                 if (showall
-                    || RANGES_OVERLAP(start, size, paddr, 1<<pi->map_shift))
-                    Output("%08x  | %08x | %11s |%s"
+                    || RANGES_OVERLAP(start, size, paddr, ~pi->mask + 1))
+                    Output("%08x  | %08x | %13s |%s"
                            , vaddr, paddr, pi->name, flagbuf);
                 continue;
             }
             if (showall)
-                Output("%08x  |          | %11s |%s", vaddr, pi->name, flagbuf);
+                Output("%08x  |          | %13s |%s", vaddr, pi->name, flagbuf);
 
             if (l1only)
                 continue;
 
             // Walk the 2nd level descriptor table
-            uint l2_count = 1 << (20 - pi->map_shift);
+            uint l2_count = 1 << (20 - pi->L2MapShift);
             uint32 pL2, l2d = 0xffffffff;
             for (uint d = 0; d < l2_count; d++) {
                 pL2 = l2d;
                 l2d = memPhysRead(paddr + d * 4);
-                uint32 l2vaddr = vaddr + (d << pi->map_shift);
-                uint32 l2type = l2d & MMU_L2_TYPE_MASK;
-                const struct pageinfo *pi2 = &L2PageInfo[l2type];
+                uint32 l2vaddr = vaddr + (d << pi->L2MapShift);
+                const struct pageinfo *pi2 = getL2Desc(l2d);
                 uint32 l2paddr = l2d & pi2->mask;
-                __flags_l2(flagbuf, l2d & ~pi2->mask);
+                pi2->flagfunc(flagbuf, l2d & ~pi2->mask);
 
-                if (l2type == MMU_L2_UNMAPPED) {
+                if (!pi2->isMapped) {
                     if (showall && (l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                        Output(" %08x |          | %11s |", l2vaddr, pi2->name);
+                        Output(" %08x |          | %13s |", l2vaddr, pi2->name);
                     continue;
                 }
                 if (showall
-                    || RANGES_OVERLAP(start, size, l2paddr, 1<<pi->map_shift))
-                    Output(" %08x | %08x | %11s |%s"
+                    || RANGES_OVERLAP(start, size, l2paddr, 1<<pi->L2MapShift))
+                    Output(" %08x | %08x | %13s |%s"
                            , l2vaddr, l2paddr, pi2->name, flagbuf);
             }
         }

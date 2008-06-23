@@ -34,6 +34,7 @@ public:
     const wchar_t *OEMInfo[16];
     const wchar_t *PlatformType;
     int machType;
+    int arm6mmu;
 
     virtual void init();
     virtual int preHardwareShutdown();

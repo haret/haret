@@ -13,10 +13,12 @@
 #include "memory.h"
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
+#include "exceptions.h" // TRY_EXCEPTION_HANDLER
+#include "machines.h" // Mach
 
 
 /****************************************************************
- * Memory setup
+ * Memory size detection
  ****************************************************************/
 
 // RAM start physical address
@@ -30,8 +32,8 @@ REG_VAR_INT(0, "RAMSIZE", memPhysSize
             , "Physical RAM size (default = autodetected)")
 
 /* Autodetect RAM physical size at startup */
-void
-mem_autodetect(void)
+static void
+mem_autodetect()
 {
     // Get OS info
     OSVERSIONINFOW vi;
@@ -366,75 +368,113 @@ void memPhysReset ()
 
 #endif
 
+// Pointer to a virtual address mapping of the MMU table
+static uint32 *MMUTable;
+
+// Map the MMU table into haret's address space.
+static void
+mapInMMU()
+{
+    int ret;
+    void *area;
+    void *mmu;
+    TRY_EXCEPTION_HANDLER {
+        mmu = (void*)(cpuGetMMU() >> 8);
+    } CATCH_EXCEPTION_HANDLER {
+        Output("Exception on mmu table lookup");
+        goto fail;
+    }
+
+    area = VirtualAlloc(NULL, 4096*4, MEM_RESERVE, PAGE_NOACCESS);
+    if (! area)
+        goto fail;
+
+    // Map mmu physical location into address space.
+    ret = VirtualCopy(area, mmu, 4096*4
+                      , PAGE_READWRITE | PAGE_PHYSICAL | PAGE_NOCACHE);
+    if (!ret)
+        goto fail;
+
+    MMUTable = (uint32*)area;
+    return;
+
+fail:
+    Output("Unable to map in mmu table!  Many functions will not work.");
+    // Point mmu table to a dummy array to prevent further crashes.
+    MMUTable = (uint32*)calloc(4096*4, 1);
+}
+
+// Get cp15/c1 register
+DEF_GETCPR(get_p15r1, p15, 0, c1, c0, 0)
+
+static int Arm6NoSubPages;
+static int16 PhysMapCached[4096];
+static int16 PhysMapUncached[4096];
+
 // Search a given mmu table for an l1 section mapping that provides a
 // virtual to physical mapping for a specified physical base location.
-static int
-searchMMUforPhys(uint32 *mmu, uint32 base, int cached=0)
+static void
+findReverseMMUmaps()
 {
+    if (Mach->arm6mmu) {
+        // Check for arm6 subpages feature.
+        uint32 r = get_p15r1();
+        if (r & (1<<23))
+            Arm6NoSubPages = 1;
+    }
+
+    // Clear maps.
+    memset(PhysMapCached, -1, sizeof(PhysMapCached));
+    memset(PhysMapUncached, -1, sizeof(PhysMapUncached));
+
+    // Populate maps.
+    int uncache_count = 0, cache_count = 0, ignore_count = 0;
     for (uint32 i=0; i<4096; i++) {
-        uint32 l1d = mmu[i];
+        uint32 l1d = MMUTable[i];
         if ((l1d & MMU_L1_TYPE_MASK) != MMU_L1_SECTION)
             // Only interested in section mappings.
             continue;
-        if ((l1d >> 20) != base)
-            // No address match.
+        if (Mach->arm6mmu && (l1d & MMU_L1_SUPER_SECTION_FLAG))
+            // No support for "supersection" mappings.
             continue;
+        uint16 base = l1d >> 20;
         uint32 cacheval = l1d & (MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE);
-        if (!cached && cacheval)
-            // Only interested in mappings that don't use the cache.
-            continue;
-        if (cached && cacheval != (MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE))
-            // Only interested in mappings that are cached.
-            continue;
-        // Found a hit.
-        return i;
-    }
-    return -1;
-}
-
-// Try to obtain a virtual to physical map by reusing one of the wm
-// 1-meg section mappings.  This also maintains an index of found
-// mappings to speed up future requests.
-static uint8 *
-memPhysMap_section(uint32 paddr)
-{
-    static int16 cache[4096];
-
-    uint32 base = paddr >> 20;
-
-    if (cache[base]) {
-        if (cache[base] < 0)
-            return NULL;
-        // Cache hit.  Just return what is in the cache.
-        return (uint8*)((((uint32)cache[base]) << 20)
-                        | (paddr & ((1<<20) - 1)));
-    }
-
-    // Get virtual address of MMU table.
-    static uint32 *mmuCache;
-    uint32 *mmu = mmuCache;
-    if (!mmu) {
-        uint32 mmu_paddr = cpuGetMMU();
-        mmu = (uint32*)memPhysMap_wm(mmu_paddr);
-        if (!mmu)
-            return NULL;
-        static int triedCache;
-        if (! triedCache) {
-            // Try to find a persistent mmu mapping.
-            triedCache = 1;
-            int pos = searchMMUforPhys(mmu, mmu_paddr >> 20);
-            if (pos >= 0)
-                mmu = mmuCache = (uint32*)((pos << 20)
-                                           | (mmu_paddr & ((1<<20) - 1)));
+        if (!cacheval && PhysMapUncached[base] == -1) {
+            // Found a new uncached mapping.
+            uncache_count++;
+            PhysMapUncached[base] = i;
+            //Output("Uncache map from %08x to %08x", i<<20, base<<20);
+        } else if (cacheval == (MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE)
+                   && PhysMapCached[base] == -1) {
+            // Found a new cached mapping.
+            cache_count++;
+            PhysMapCached[base] = i;
+            //Output("Cache map from %08x to %08x", i<<20, base<<20);
+        } else {
+            ignore_count++;
+            //Output("Ignoring map from %08x to %08x", i<<20, base<<20);
         }
     }
 
-    int pos = searchMMUforPhys(mmu, base);
-    cache[base] = pos;
-    if (pos < 0)
-        // Couldn't find a suitable section mapping.
+    Output("Found %d uncached and %d cached L1 mappings (ignored %d)."
+           , uncache_count, cache_count, ignore_count);
+}
+
+// Try to obtain a virtual to physical map by reusing one of the wm
+// 1-meg section mappings.
+static uint8 *
+memPhysMap_section(uint32 paddr, int cached=0)
+{
+    uint32 base = paddr >> 20;
+
+    int16 *m = PhysMapUncached;
+    if (cached)
+        m = PhysMapCached;
+
+    if (m[base] < 0)
         return NULL;
-    return (uint8*)((pos << 20) | (paddr & ((1<<20) - 1)));
+
+    return (uint8*)((((uint32)m[base]) << 20) | (paddr & ((1<<20) - 1)));
 }
 
 static uint32 PhysicalMapMethod = 1;
@@ -458,6 +498,230 @@ memPhysMap(uint32 paddr)
 #endif
 
     return memPhysMap_wm(paddr);
+}
+
+// This function is called at startup - initialize memory handling routines.
+void
+setupMemory()
+{
+    Output("Detecting ram size");
+    mem_autodetect();
+
+    Output("Mapping mmu table");
+    mapInMMU();
+
+    Output("Build L1 reverse map");
+    findReverseMMUmaps();
+}
+
+
+/****************************************************************
+ * MMU table flag reporting
+ ****************************************************************/
+
+static char *__flags_cb(char *p, uint32 &d)
+{
+    *p++ = ' ';
+    *p++ = (d & MMU_L1_CACHEABLE) ? 'C' : ' ';
+    *p++ = (d & MMU_L1_BUFFERABLE) ? 'B' : ' ';
+    d &= ~(MMU_L1_CACHEABLE|MMU_L1_BUFFERABLE);
+    return p;
+}
+
+static char *__flags_cond(char *p, uint32 &d
+                          , uint32 bits, uint32 shift, char *name)
+{
+    uint32 mask = ((1<<bits) - 1) << shift;
+    if (!(d & mask))
+        return p;
+    if (bits > 1)
+        p += sprintf(p, " %s=%x", name, (d&mask) >> shift);
+    else
+        p += sprintf(p, " %s", name);
+    d &= ~mask;
+    return p;
+}
+
+static void __flags_other(char *p, uint32 d)
+{
+    d &= ~MMU_L1_TYPE_MASK;
+    if (d)
+        p += sprintf(p, " ?=%x", d);
+    *p = 0;
+}
+
+static char *__flags_ap(char *p, uint32 &d, uint32 count, int shift
+                        , int apxbit = 0)
+{
+    uint32 add = 0;
+    if (Arm6NoSubPages && (d & (1<<apxbit))) {
+        d &= ~(1<<apxbit);
+        add = 4;
+    }
+    *p++ = ' '; *p++ = 'A'; *p++ = 'P'; *p++ = '=';
+    for (uint32 i = 0; i < count; i++) {
+        *p++ = '0' + ((d>>shift) & 3) + add;
+        d &= ~(3<<shift);
+        shift += 2;
+    }
+    return p;
+}
+
+static void flags_l1(char *p, uint32 d)
+{
+    p = __flags_cond(p, d, 4, 5, "D");
+
+    if (Mach->arm6mmu)
+        p = __flags_cond(p, d, 1, 9, "P");
+
+    __flags_other(p, d);
+}
+
+static void section_flags(char *p, uint32 d)
+{
+    p = __flags_cb(p, d);
+    p = __flags_ap(p, d, 1, MMU_L1_AP_SHIFT, 15);
+
+    if (! Mach->arm6mmu || !(d & MMU_L1_SUPER_SECTION_FLAG))
+        p = __flags_cond(p, d, 4, 5, "D");
+
+    if (Mach->arm6mmu) {
+        d &= ~MMU_L1_SUPER_SECTION_FLAG;
+
+        p = __flags_cond(p, d, 1, 9, "P");
+        p = __flags_cond(p, d, 3, 12, "T");
+
+        if (Arm6NoSubPages) {
+            p = __flags_cond(p, d, 1, 17, "nG");
+            p = __flags_cond(p, d, 1, 16, "S");
+            p = __flags_cond(p, d, 1, 4, "XN");
+        }
+    }
+
+    __flags_other(p, d);
+}
+
+static void small_flags(char *p, uint32 d)
+{
+    p = __flags_cb(p, d);
+    p = __flags_ap(p, d, 4, MMU_L2_AP0_SHIFT);
+    __flags_other(p, d);
+}
+
+static void tiny_flags(char *p, uint32 d)
+{
+    p = __flags_cb(p, d);
+    p = __flags_ap(p, d, 1, MMU_L2_AP0_SHIFT);
+    __flags_other(p, d);
+}
+
+static void large_flags(char *p, uint32 d)
+{
+    p = __flags_cb(p, d);
+    if (Mach->arm6mmu) {
+        p = __flags_cond(p, d, 3, 12, "T");
+        if (Arm6NoSubPages) {
+            p = __flags_ap(p, d, 1, MMU_L2_AP0_SHIFT, 9);
+            p = __flags_cond(p, d, 1, 11, "nG");
+            p = __flags_cond(p, d, 1, 10, "S");
+            p = __flags_cond(p, d, 1, 15, "XN");
+        } else {
+            p = __flags_ap(p, d, 4, MMU_L2_AP0_SHIFT);
+        }
+    } else {
+        p = __flags_ap(p, d, 4, MMU_L2_AP0_SHIFT);
+    }
+    __flags_other(p, d);
+}
+
+static void extended_flags(char *p, uint32 d)
+{
+    p = __flags_cb(p, d);
+    p = __flags_ap(p, d, 1, MMU_L2_AP0_SHIFT, 9);
+    p = __flags_cond(p, d, 3, 6, "T");
+    if (Arm6NoSubPages) {
+        p = __flags_cond(p, d, 1, 11, "nG");
+        p = __flags_cond(p, d, 1, 10, "S");
+        p = __flags_cond(p, d, 1, 0, "XN");
+    }
+    __flags_other(p, d);
+}
+
+static void noflags(char *p, uint32 d)
+{
+    *p = '\0';
+}
+
+
+/****************************************************************
+ * Virtual to Physical mage mapping
+ ****************************************************************/
+
+static const struct pageinfo L1PageInfo[] = {
+    { "UNMAPPED", noflags},
+    { "Coarse", flags_l1, 1, MMU_L1_COARSE_MASK, 12},
+    { "1MB section", section_flags, 1, MMU_L1_SECTION_MASK},
+    { "Fine", flags_l1, 1, MMU_L1_FINE_MASK, 10},
+};
+
+static const struct pageinfo L2PageInfo[] = {
+    { "UNMAPPED", noflags},
+    { "Large (64K)", large_flags, 1, MMU_L2_LARGE_MASK},
+    { "Small (4K)", small_flags, 1, MMU_L2_SMALL_MASK},
+    { "Tiny (1K)", tiny_flags, 1, MMU_L2_TINY_MASK},
+};
+
+static const struct pageinfo Arm6SuperSection = {
+    "16MB section", section_flags, 1, MMU_L1_SUPER_SECTION_MASK
+};
+static const struct pageinfo Arm6Reserved = {
+    "Reserved", noflags
+};
+static const struct pageinfo Arm6Extended = {
+    "Extended (4K)", extended_flags, 1, MMU_L2_SMALL_MASK
+};
+
+const struct pageinfo *
+getL1Desc(uint32 l1d)
+{
+    uint32 type = l1d & 3;
+    if (Mach->arm6mmu) {
+        if (type == 3)
+            return &Arm6Reserved;
+        if (type == 2 && (l1d & MMU_L1_SUPER_SECTION_FLAG))
+            return &Arm6SuperSection;
+    }
+    return &L1PageInfo[type];
+}
+
+const struct pageinfo *
+getL2Desc(uint32 l2d)
+{
+    uint32 type = l2d & 3;
+    if (Mach->arm6mmu) {
+        if (Arm6NoSubPages && (l2d & 2))
+            return &Arm6Extended;
+        if (type == 3)
+            return &Arm6Extended;
+    }
+    return &L2PageInfo[type];
+}
+
+// Translate a virtual address to physical
+uint32
+memVirtToPhys(uint32 vaddr)
+{
+    vaddr = MVAddr(vaddr);
+    uint32 desc = MMUTable[vaddr >> 20];
+    const struct pageinfo *pi = getL1Desc(desc);
+    if (pi->L2MapShift) {
+        desc = memPhysRead((desc & pi->mask)
+                           + ((vaddr & 0xfffff) >> pi->L2MapShift) * 4);
+        pi = getL2Desc(desc);
+    }
+    if (! pi->isMapped)
+        return (uint32)-1;
+    return (desc & pi->mask) | (vaddr & ~pi->mask);
 }
 
 
@@ -552,66 +816,8 @@ bool memPhysWrite (uint32 paddr, uint32 value)
 uint32
 cachedMVA(void *addr)
 {
-    uint32 *mmu = (uint32*)memPhysMap(cpuGetMMU());
     uint32 paddr = memVirtToPhys((uint32)addr);
-    uint32 base = paddr >> 20;
-    int pos = searchMMUforPhys(mmu, base, 1);
-    //Output(L"cachedMVA: paddr=%08x pos=%08x pos2=%08x", paddr, pos, pos2);
-    if (pos == -1)
-        return 0;
-    return (uint32)((pos << 20) | (paddr & ((1<<20) - 1)));
-}
-
-// Translate a virtual address to physical
-uint32 memVirtToPhys (uint32 vaddr)
-{
-  uint32 mmu = cpuGetMMU ();
-
-  // First of all, if vaddr < 32Mb, PID replaces top 7 bits
-  vaddr = MVAddr(vaddr);
-
-  // Bits 20..32 select the address of 1st level descriptor
-  uint32 paddr = mmu + ((vaddr >> 18) & ~3);
-  // We don't need anymore bits 20..32
-  vaddr &= 0x000fffff;
-
-  mmuL1Desc l1d = memPhysRead (paddr);
-  switch (l1d & MMU_L1_TYPE_MASK)
-  {
-    case MMU_L1_UNMAPPED:
-      return (uint32)-1;
-    case MMU_L1_SECTION:
-      paddr = (l1d & MMU_L1_SECTION_MASK) + vaddr;
-      return paddr;
-    case MMU_L1_COARSE_L2:
-      // Bits 12..19 select the 2nd level descriptor
-      paddr = (l1d & MMU_L1_COARSE_MASK) + ((vaddr >> 10) & ~3);
-      vaddr &= 0xfff;
-      break;
-    case MMU_L1_FINE_L2:
-      // Bits 10..19 select the 2nd level descriptor
-      paddr = (l1d & MMU_L1_FINE_MASK) + ((vaddr >> 8) & ~3);
-      vaddr &= 0x3ff;
-      break;
-  }
-
-  mmuL2Desc l2d = memPhysRead (paddr);
-  switch (l2d & MMU_L2_TYPE_MASK)
-  {
-    case MMU_L2_UNMAPPED:
-      return (uint32)-1;
-    case MMU_L2_LARGEPAGE:
-      paddr = (l2d & MMU_L2_LARGE_MASK) + vaddr;
-      break;
-    case MMU_L2_SMALLPAGE:
-      paddr = (l2d & MMU_L2_SMALL_MASK) + vaddr;
-      break;
-    case MMU_L2_TINYPAGE:
-      paddr = (l2d & MMU_L2_TINY_MASK) + vaddr;
-      break;
-  }
-
-  return paddr;
+    return (uint32)memPhysMap_section(paddr);
 }
 
 // Invalidate D TLB line
