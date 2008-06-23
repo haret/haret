@@ -39,7 +39,7 @@ def dis(insn, match):
         return InsnCache[insn]
     f = tempfile.NamedTemporaryFile(bufsize=0)
     f.write(struct.pack("<I", insn))
-    l = os.popen(BINLOC + " " + OBJDUMPARGS + " " + f.name)
+    l = os.popen("LANG=C %s %s %s" % (BINLOC, OBJDUMPARGS, f.name))
     lines = l.readlines()
     f.close()
     for line in lines:
@@ -53,13 +53,12 @@ def dis(insn, match):
     return out
 
 TIMEPRE_S = memalias.TIMEPRE_S
+INSN_S = r' (?P<addr>.*): (?P<insn>.*)\((?P<desc>.*)\) '
 re_debug = re.compile(
-    TIMEPRE_S + r'debug (?P<addr>.*):'
-    r' (?P<insn>.*)\((?P<desc>.*)\) (?P<Rd>.*) (?P<Rn>.*)$')
+    TIMEPRE_S + 'debug' + INSN_S + r'(?P<Rd>.*) (?P<Rn>.*)$')
 re_trace = re.compile(
-    TIMEPRE_S + r'mmutrace (?P<addr>.*):'
-    r' (?P<insn>.*)\((?P<desc>.*)\) (?P<vaddr>.*) (?P<val>.*)'
-    r' \((?P<changed>.*)\)$')
+    TIMEPRE_S + 'mmutrace' + INSN_S
+    + r'(?P<vaddr>.*) (?P<val>.*) \((?P<changed>.*)\)$')
 re_irq = re.compile(
     TIMEPRE_S + r'(?P<data>(break |irq |cpu resumed|WinCE resume).*)$')
 getClock = memalias.getClock
