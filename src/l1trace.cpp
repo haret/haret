@@ -433,13 +433,13 @@ L1_resume_handler(struct irqData *data, struct irqregs *regs)
  ****************************************************************/
 
 static uint32 AltL1Trace = 0xE1100000;
-REG_VAR_INT(testWirqAvail, "ALTL1TRACE", AltL1Trace,
+REG_VAR_INT(0, "ALTL1TRACE", AltL1Trace,
             "Alternate location to move L1TRACE accesses to")
 static uint32 MaxL1Trace = 0;
-REG_VAR_INT(testWirqAvail, "MAXL1TRACE", MaxL1Trace,
+REG_VAR_INT(0, "MAXL1TRACE", MaxL1Trace,
             "Maximum number of l1traces to report before giving up (debug feature)")
 static uint32 MaxL1TraceAfterResume = 0;
-REG_VAR_INT(testWirqAvail, "MAXL1TRACERESUME", MaxL1TraceAfterResume,
+REG_VAR_INT(0, "MAXL1TRACERESUME", MaxL1TraceAfterResume,
             "Maximum number of l1traces after resume (debug feature)")
 
 class traceListVar : public listVarBase {
@@ -508,8 +508,7 @@ public:
     }
 };
 __REG_VAR(
-    traceListVar, MMUTrace,
-    testWirqAvail,
+    traceListVar, MMUTrace, 0,
     "MMUTRACE",
     "Memory locations to trace during WIRQ.\n"
     "  List of <start> [<size> [<rw> [<mask> [<ignVal>]]]] 5-tuples\n"
@@ -525,7 +524,7 @@ __REG_VAR(
 
 static uint32 ignoreAddr[MAX_IGNOREADDR];
 static uint32 ignoreAddrCount;
-REG_VAR_INTLIST(testWirqAvail, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
+REG_VAR_INTLIST(0, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
                 "List of pc addresses to ignore when tracing")
 
 // When tracing a coarse (or fine) mapping in the page tables there is
@@ -536,7 +535,7 @@ REG_VAR_INTLIST(testWirqAvail, "TRACEIGNORE", &ignoreAddrCount, ignoreAddr,
 // user to override the sanity test because there are occasionally
 // valid uses.
 static uint32 PermissiveMMUtrace;
-REG_VAR_INT(testWirqAvail, "PERMISSIVEMMUTRACE", PermissiveMMUtrace,
+REG_VAR_INT(0, "PERMISSIVEMMUTRACE", PermissiveMMUtrace,
             "Permit tracing non-section memory addresses.")
 
 

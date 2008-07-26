@@ -76,7 +76,7 @@ extern uint32 memPhysRead(uint32 paddr);
 extern bool memPhysWrite(uint32 paddr, uint32 value);
 extern uint32 memVirtToPhys(uint32 vaddr);
 uint32 retryVirtToPhys(uint32 vaddr);
-uint32 cachedMVA(void *addr);
+void *cachedMVA(void *addr);
 
 struct pageinfo {
     const char name[16];
@@ -94,8 +94,12 @@ struct pageAddrs {
     char *virtLoc;
 };
 
-void freePages(void *data, int pageCount);
+void freePages(void *data);
 void *allocPages(struct pageAddrs *pages, int pageCount);
+
+struct continuousPageInfo;
+void freeContPages(struct continuousPageInfo *info);
+void *allocContPages(int pageCount, struct continuousPageInfo **info);
 
 // Test if 'addr' is in the range from 'start'..'start+size'
 #define IN_RANGE(addr, start, size) ({   \

@@ -452,7 +452,7 @@ allocTest(const char *tok, const char *args)
     Output("pg#: <virt>   <phys>");
     for (uint i=0; i<count; i++)
         Output("%03d: %08x %08x", i, (uint32)pages[i].virtLoc, pages[i].physLoc);
-    freePages(data, count);
+    freePages(data);
 }
 REG_CMD(0, "ALLOCTEST", allocTest,
         "ALLOCTEST <count>\n"

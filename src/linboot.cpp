@@ -350,7 +350,7 @@ cleanupBootMem(struct bootmem *bm)
 {
     if (!bm)
         return;
-    freePages(bm->allocedRam, bm->pageCount);
+    freePages(bm->allocedRam);
     free(bm);
 }
 

@@ -126,8 +126,6 @@ add_trace(struct irqData *data, tracereporter reporter
  * Misc declarations
  ****************************************************************/
 
-int testWirqAvail();
-
 // Contents of register description passed into the exception
 // handlers.  This layout corresponds with the assembler code in
 // irqchain.S.  If one changes a register it _will_ alter the machine

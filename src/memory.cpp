@@ -14,6 +14,7 @@
 #include "output.h" // Output
 #include "script.h" // REG_VAR_INT
 #include "exceptions.h" // TRY_EXCEPTION_HANDLER
+#include "lateload.h" // LATE_LOAD
 #include "machines.h" // Mach
 
 
@@ -731,12 +732,12 @@ memVirtToPhys(uint32 vaddr)
 
 // Free pages allocated with allocPages()
 void
-freePages(void *data, int pageCount)
+freePages(void *data)
 {
     int ret = UnmapViewOfFile(data);
     if (!ret)
-        Output(C_ERROR "UnmapViewOfFile failed %p / %d (code %ld)"
-               , data, pageCount, GetLastError());
+        Output(C_ERROR "UnmapViewOfFile failed %p (code %ld)"
+               , data, GetLastError());
 }
 
 // Allocate and pin 'pageCount' number of pages and fill 'pages'
@@ -769,7 +770,7 @@ allocPages(struct pageAddrs *pages, int pageCount)
     if (!ret) {
         Output(C_ERROR "Failed to lock %d pages (code %ld)"
                , pageCount, GetLastError());
-        freePages(data, pageCount);
+        freePages(data);
         return NULL;
     }
 
@@ -781,6 +782,137 @@ allocPages(struct pageAddrs *pages, int pageCount)
     }
 
     return data;
+}
+
+
+/****************************************************************
+ * Continuous page allocation
+ ****************************************************************/
+
+// Sort compare function (compare by physical address).
+static int physPageComp(const void *e1, const void *e2) {
+    pageAddrs *i1 = (pageAddrs*)e1, *i2 = (pageAddrs*)e2;
+    return (i1->physLoc < i2->physLoc ? -1
+            : (i1->physLoc > i2->physLoc ? 1 : 0));
+}
+
+struct continuousPageInfo {
+    void *rawdata;
+    struct pageAddrs pages[0];
+};
+#define size_continuousPageInfo(nrpages) \
+    ((uint32)(&((continuousPageInfo*)0)->pages[nrpages]))
+
+static void
+fcp_emulate(struct continuousPageInfo *info)
+{
+    if (! info)
+        return;
+    if (info->rawdata)
+        freePages(info->rawdata);
+    free(info);
+}
+
+static void *
+acp_emulate(uint32 pageCount, struct continuousPageInfo **info)
+{
+    struct continuousPageInfo *ci = NULL;
+    uint32 trycount = pageCount;
+    if (pageCount < 2)
+        // Huh?
+        goto fail;
+
+    for (;;) {
+        ci = (struct continuousPageInfo *)malloc(
+            size_continuousPageInfo(trycount));
+        if (! ci)
+            goto fail;
+        ci->rawdata = allocPages(ci->pages, trycount);
+        if (! ci->rawdata)
+            goto fail;
+
+        // Sort the pages by physical location.
+        qsort(ci->pages, trycount, sizeof(ci->pages[0]), physPageComp);
+
+        // See if a continuous range with sufficient size exists.
+        uint32 cont=1;
+        for (uint i=1; i<trycount; i++) {
+            if (ci->pages[i].physLoc != ci->pages[i-1].physLoc + PAGE_SIZE) {
+                cont = 1;
+                continue;
+            }
+            cont++;
+            if (cont >= pageCount) {
+                // Success.
+                Output("Found %d continuous pages by allocating %d virtual pages"
+                       , pageCount, trycount);
+                *info = ci;
+                return ci->pages[i-(pageCount-1)].virtLoc;
+            }
+        }
+
+        // Failed to find the continuous pages - retry with larger size.
+        fcp_emulate(ci);
+        trycount *= 2;
+    }
+
+fail:
+    // Allocation failed
+    Output("Unable to find %d continuous pages", pageCount);
+    fcp_emulate(ci);
+    *info = NULL;
+    return NULL;
+}
+
+LATE_LOAD(AllocPhysMem, "coredll")
+LATE_LOAD(FreePhysMem, "coredll")
+
+// Allocate continuous pages using wince AllocPhysMem call.
+static void *
+acp_builtin(int pageCount, struct continuousPageInfo **info)
+{
+    ulong dummy;
+    void *pages = late_AllocPhysMem(pageCount * PAGE_SIZE
+                                    , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
+    *info = (struct continuousPageInfo *)pages;
+    return pages;
+}
+
+// Free continuous pages that were allocated using AllocPhysMem.
+static void
+fcp_builtin(struct continuousPageInfo *info)
+{
+    if (info)
+        late_FreePhysMem(info);
+}
+
+void
+freeContPages(struct continuousPageInfo *info)
+{
+    if (late_AllocPhysMem && late_FreePhysMem)
+        return fcp_builtin(info);
+    else
+        return fcp_emulate(info);
+}
+
+void *
+allocContPages(int pageCount, struct continuousPageInfo **info)
+{
+    void *data;
+    if (late_AllocPhysMem && late_FreePhysMem)
+        data = acp_builtin(pageCount, info);
+    else
+        data = acp_emulate(pageCount, info);
+    if (! data)
+        return NULL;
+    void *vmdata = cachedMVA(data);
+    if (! vmdata) {
+        Output(C_INFO "Can't find vm addr of alloc'd physical ram %p"
+               , vmdata);
+        freeContPages(*info);
+        return NULL;
+    }
+    return vmdata;
 }
 
 
@@ -813,11 +945,11 @@ bool memPhysWrite (uint32 paddr, uint32 value)
 
 // Return a long lived (externally visible) virtual mapping from
 // another (possibly process local) virtual mapping.
-uint32
+void *
 cachedMVA(void *addr)
 {
     uint32 paddr = memVirtToPhys((uint32)addr);
-    return (uint32)memPhysMap_section(paddr);
+    return memPhysMap_section(paddr);
 }
 
 // Invalidate D TLB line

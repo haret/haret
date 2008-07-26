@@ -192,21 +192,12 @@ resume_handler(struct irqData *data, struct irqregs *regs)
  * Code to report feedback from exception handlers
  ****************************************************************/
 
-LATE_LOAD(AllocPhysMem, "coredll")
-LATE_LOAD(FreePhysMem, "coredll")
-
-// Commands and variables are only applicable if AllocPhysMem is
-// available.
-int testWirqAvail() {
-    return late_AllocPhysMem && late_FreePhysMem;
-}
-
 REG_VAR_WATCHLIST(0, "IRQS", IRQS,
                   "List of IRQs to watch (see var GPIOS for format)");
-REG_VAR_WATCHLIST(testWirqAvail, "TRACES", TRACES,
+REG_VAR_WATCHLIST(0, "TRACES", TRACES,
                   "List of memory addresses to trace during wirq"
                   " (see var GPIOS for format)");
-REG_VAR_WATCHLIST(testWirqAvail, "RESUMETRACES", RESUMETRACES,
+REG_VAR_WATCHLIST(0, "RESUMETRACES", RESUMETRACES,
                   "Physical memory addresses to check during a wince resume"
                   " (see var GPIOS)");
 
@@ -385,20 +376,14 @@ cmd_wirq(const char *cmd, const char *args)
     uint32 newIrqHandler, newAbortHandler, newPrefetchHandler;
 
     // Allocate space for the irq handlers in physically continuous ram.
-    void *rawCode = 0;
-    ulong dummy;
-    rawCode = late_AllocPhysMem(size_handlerCode()
-                                , PAGE_EXECUTE_READWRITE, 0, 0, &dummy);
-    irqChainCode *code = (irqChainCode *)cachedMVA(rawCode);
+    struct continuousPageInfo *pageinfo;
+    int pagecount = PAGE_ALIGN(size_handlerCode()) / PAGE_SIZE;
+    irqChainCode *code = (irqChainCode *)allocContPages(pagecount, &pageinfo);
     int ret;
     struct irqData *data = &code->data;
     struct irqAsmVars *asmVars = (irqAsmVars*)&code->cCode[offset_asmIrqVars()];
-    if (!rawCode) {
-        Output(C_INFO "Can't allocate memory for irq code");
-        goto abort;
-    }
     if (!code) {
-        Output(C_INFO "Can't find vm addr of alloc'd physical ram.");
+        Output(C_INFO "Can't allocate memory for irq code");
         goto abort;
     }
     memset(code, 0, size_handlerCode());
@@ -473,9 +458,8 @@ cmd_wirq(const char *cmd, const char *args)
 
     postLoop(data);
 abort:
-    if (rawCode)
-        late_FreePhysMem(rawCode);
+    freeContPages(pageinfo);
 }
-REG_CMD(testWirqAvail, "WI|RQ", cmd_wirq,
+REG_CMD(0, "WI|RQ", cmd_wirq,
         "WIRQ <seconds>\n"
         "  Watch which IRQ occurs for some period of time and report them.")

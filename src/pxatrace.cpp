@@ -189,12 +189,6 @@ stopPXAtraps(struct irqData *data)
  * PXA Tracing init
  ****************************************************************/
 
-// Commands and variables are only applicable if AllocPhysMem is
-// available and if this is a PXA based pda.
-static int testPXAAvail() {
-    return testWirqAvail() && testPXA();
-}
-
 // Externally modifiable settings for software debug
 static uint32 irqTrace = 0xFFFFFFFF;
 static uint32 irqTraceMask = 0;
@@ -203,17 +197,17 @@ static uint32 irqTraceType = 2;
 static uint32 irqTrace2Type = 2;
 static uint32 traceForWatch;
 
-REG_VAR_INT(testPXAAvail, "TRACE", irqTrace,
+REG_VAR_INT(testPXA, "TRACE", irqTrace,
             "Memory location to trace during WIRQ")
-REG_VAR_INT(testPXAAvail, "TRACEMASK", irqTraceMask,
+REG_VAR_INT(testPXA, "TRACEMASK", irqTraceMask,
             "Memory location mask to apply to TRACE during WIRQ")
-REG_VAR_INT(testPXAAvail, "TRACE2", irqTrace2,
+REG_VAR_INT(testPXA, "TRACE2", irqTrace2,
             "Second memory location to trace during WIRQ (only if no mask)")
-REG_VAR_INT(testPXAAvail, "TRACETYPE", irqTraceType,
+REG_VAR_INT(testPXA, "TRACETYPE", irqTraceType,
             "1=store only, 2=loads or stores, 3=loads only")
-REG_VAR_INT(testPXAAvail, "TRACE2TYPE", irqTrace2Type,
+REG_VAR_INT(testPXA, "TRACE2TYPE", irqTrace2Type,
             "1=store only, 2=loads or stores, 3=loads only")
-REG_VAR_INT(testWirqAvail, "TRACEFORWATCH", traceForWatch,
+REG_VAR_INT(testPXA, "TRACEFORWATCH", traceForWatch,
             "Ignore all TRACE reports (useful when using TRACES variable)")
 
 // Externally modifiable settings for software tracing
@@ -222,21 +216,21 @@ static uint32 insnTraceReg1 = 0, insnTraceReg2 = 1;
 static uint32 insnTrace2 = 0xFFFFFFFF, insnTrace2Reenable = 0xFFFFFFFF;
 static uint32 insnTrace2Reg1 = 0, insnTrace2Reg2 = 1;
 
-REG_VAR_INT(testPXAAvail, "INSN", insnTrace,
+REG_VAR_INT(testPXA, "INSN", insnTrace,
             "Instruction address to monitor during WIRQ")
-REG_VAR_INT(testPXAAvail, "INSNREENABLE", insnTraceReenable,
+REG_VAR_INT(testPXA, "INSNREENABLE", insnTraceReenable,
             "Instruction address to reenable breakpoint after INSN")
-REG_VAR_INT(testPXAAvail, "INSNREG1", insnTraceReg1,
+REG_VAR_INT(testPXA, "INSNREG1", insnTraceReg1,
             "Register to report during INSN breakpoint")
-REG_VAR_INT(testPXAAvail, "INSNREG2", insnTraceReg2,
+REG_VAR_INT(testPXA, "INSNREG2", insnTraceReg2,
             "Second register to report during INSN breakpoint")
-REG_VAR_INT(testPXAAvail, "INSN2", insnTrace2,
+REG_VAR_INT(testPXA, "INSN2", insnTrace2,
             "Second instruction address to monitor during WIRQ")
-REG_VAR_INT(testPXAAvail, "INSN2REENABLE", insnTrace2Reenable,
+REG_VAR_INT(testPXA, "INSN2REENABLE", insnTrace2Reenable,
             "Instruction address to reenable breakpoint after INSN2")
-REG_VAR_INT(testPXAAvail, "INSN2REG1", insnTrace2Reg1,
+REG_VAR_INT(testPXA, "INSN2REG1", insnTrace2Reg1,
             "Register to report during INSN2 breakpoint")
-REG_VAR_INT(testPXAAvail, "INSN2REG2", insnTrace2Reg2,
+REG_VAR_INT(testPXA, "INSN2REG2", insnTrace2Reg2,
             "Second register to report during INSN2 breakpoint")
 
 #define mask_DBCON_E0(val) (((val) & (0x3))<<0)
