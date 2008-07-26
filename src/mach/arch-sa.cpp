@@ -22,3 +22,5 @@ MachineSA::detect()
     // TODO - need to implement detection system.
     return 0;
 }
+
+REGMACHINE(MachineSA)
