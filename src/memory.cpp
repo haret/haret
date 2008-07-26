@@ -908,8 +908,9 @@ allocContPages(int pageCount, struct continuousPageInfo **info)
     void *vmdata = cachedMVA(data);
     if (! vmdata) {
         Output(C_INFO "Can't find vm addr of alloc'd physical ram %p"
-               , vmdata);
+               , data);
         freeContPages(*info);
+        *info = NULL;
         return NULL;
     }
     return vmdata;
@@ -948,8 +949,8 @@ bool memPhysWrite (uint32 paddr, uint32 value)
 void *
 cachedMVA(void *addr)
 {
-    uint32 paddr = memVirtToPhys((uint32)addr);
-    return memPhysMap_section(paddr);
+    uint32 paddr = retryVirtToPhys((uint32)addr);
+    return memPhysMap_section(paddr, 1);
 }
 
 // Invalidate D TLB line
