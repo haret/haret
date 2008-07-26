@@ -95,6 +95,7 @@ Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560, \
         addlist GPIOS p2v(0x10000010) 0xf000 16
 Loox400,    PXA     ,FUJITSU SIEMENS COMPUTERS Pocket LOOX, LOOX410
 MioA701,    PXA27x  ,Mio Technology Limited,      MIOA701
+Wallaby,    SA      ,PW10A1,                      XDA
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
