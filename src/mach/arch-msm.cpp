@@ -7,6 +7,7 @@ MachineMSM7500::MachineMSM7500()
 {
     name = "Generic MSM7500";
     flushCache = cpuFlushCache_arm6;
+    arm6mmu = 1;
     archname = "MSM7500";
     CPUInfo[0] = L"MSM7500";
 }
@@ -17,6 +18,7 @@ MachineMSM7500::init()
     runMemScript(
         "set ramaddr 0x10000000\n"
         "addlist irqs p2v(0xc0000000) 0x100 32 0\n"
+        "addlist irqs p2v(0xc0000004) 0 32 0\n"
         // out registers?
         "addlist gpios p2v(0xa9200800)\n"
         "addlist gpios p2v(0xa9300c00)\n"

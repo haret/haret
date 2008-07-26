@@ -14,6 +14,7 @@ from memalias import regOneBits
 
 Regs_msm7500 = {
     0xc0000000: ("IRQ", regOneBits("IRQ")),
+    0xc0000004: ("IRQ2", regOneBits("IRQ2-")),
 
     0xa9200800: ("out0", regOneBits("out0-")),
     0xa9200804: ("out2", regOneBits("out2-")),
