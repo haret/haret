@@ -84,13 +84,13 @@ static void
 report_memPoll(irqData *data, const char *header, traceitem *item)
 {
     watchListVar *w = (watchListVar*)item->d0;
-    uint32 pos=item->d1, val=item->d2, changed=item->d3;
-    w->reportWatch(header, pos, val, changed);
+    uint32 pos=item->d1, val=item->d2, changed=item->d3, pc=item->d4;
+    w->reportWatch(header, pos, val, changed, pc);
 }
 
 // Perform a set of memory polls and add to trace buffer.
 static void __irq
-checkPolls(struct irqData *data, pollinfo *info)
+checkPolls(struct irqData *data, pollinfo *info, uint32 pc = 0)
 {
     for (uint i=0; i<info->count; i++) {
         memcheck *mc = &info->list[i];
@@ -99,7 +99,7 @@ checkPolls(struct irqData *data, pollinfo *info)
         if (!ret)
             continue;
         ret = add_trace(data, report_memPoll, (uint32)info->cls, i
-                        , val, changed);
+                        , val, changed, pc);
         if (ret)
             // Couldn't add trace - reset compare function.
             mc->trySuppress = 0;
@@ -123,7 +123,7 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     // Trace time memory polling.
     prePoll(data, isPXA);
     checkPolls(data, &data->irqpoll);
-    checkPolls(data, &data->tracepoll);
+    checkPolls(data, &data->tracepoll, MVAddr_irq(regs->old_pc - 4));
     checkMMUMerge(data);
     postPoll(data, isPXA);
 }
@@ -142,7 +142,7 @@ abort_handler(struct irqData *data, struct irqregs *regs)
 
     // Trace time memory polling.
     prePoll(data, isPXA);
-    checkPolls(data, &data->tracepoll);
+    checkPolls(data, &data->tracepoll, MVAddr_irq(regs->old_pc - 4));
     checkMMUMerge(data);
     postPoll(data, isPXA);
 
@@ -163,7 +163,7 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
 
     // Trace time memory polling.
     prePoll(data, isPXA);
-    checkPolls(data, &data->tracepoll);
+    checkPolls(data, &data->tracepoll, MVAddr_irq(regs->old_pc - 4));
     checkMMUMerge(data);
     postPoll(data, isPXA);
 

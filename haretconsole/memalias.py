@@ -130,6 +130,7 @@ def bitDecode(m, bits, desc, val, changed, add_il):
 def memDecode(m, reginfo):
     regname, bitdefs = reginfo
     var = m.group('var')
+    pc = m.group('pc')
     val = int(m.group('val'), 16)
     changed = int(m.group('changed'), 16)
     notfirst = 1
@@ -141,7 +142,7 @@ def memDecode(m, reginfo):
     if not bitdefs:
         # Only a register name exists (no bit definitions)
         out = bitDecode(m, ~0, "%08s" % regname, val, changed, notfirst)
-        print "%s %8s %s" % (getClock(m), var, out,)
+        print "%s %8s %s%s" % (getClock(m), var, out, pc)
         return
     out = ""
     unnamedbits = changed
@@ -154,10 +155,10 @@ def memDecode(m, reginfo):
         # for the remaining bits.
         out += bitDecode(m, ~0, "?", val&unnamedbits, unnamedbits, notfirst)
     if notfirst:
-        print "%s %8s %8s:%s" % (getClock(m), var, regname, out)
+        print "%s %8s %8s:%s%s" % (getClock(m), var, regname, out, pc)
     else:
         # Show register value along with any additional info
-        print "%s %8s %8s=%08x:%s" % (getClock(m), var, regname, val, out)
+        print "%s %8s %8s=%08x:%s%s" % (getClock(m), var, regname, val, out, pc)
 
 
 ######################################################################
@@ -178,7 +179,7 @@ re_mmu = re.compile(
     r" (?P<newvaddr>.*) \(tbl (?P<tbldev>.*)\)$")
 re_mem = re.compile(
     TIMEPRE_S + r"(?P<type>insn|mem) (?P<var>.*)\((?P<varpos>\d+)\)"
-    r" (?P<vaddr>.*)=(?P<val>.*) \((?P<changed>.*)\)$")
+    r" (?P<vaddr>.*)=(?P<val>.*) \((?P<changed>.*)\)(?P<pc>( @~.*)?)$")
 
 # Storage of known named registers that are being "watched"
 # VirtMap[vaddr] = (name, ((bits, name), (bits,name), ...))

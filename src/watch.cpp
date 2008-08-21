@@ -224,16 +224,23 @@ watchListVar::beginWatch(int isStart)
 
 void
 watchListVar::reportWatch(const char *header, uint32 pos
-                          , uint32 newval, uint32 changed)
+                          , uint32 newval, uint32 changed, uint32 pc)
 {
     memcheck *mc = &watchlist[pos];
     const char *atype = "mem";
     if (mc->isInsn)
         atype = "insn";
 
-    Output("%s %s %s(%d) %08x=%08x (%08x)"
+    char pcbuf[32];
+    const char *pcstr = "";
+    if (pc) {
+        _snprintf(pcbuf, sizeof(pcbuf), " @~%08x", pc);
+        pcstr = pcbuf;
+    }
+
+    Output("%s %s %s(%d) %08x=%08x (%08x)%s"
            , header, atype, name, pos
-           , mc->addr, newval, changed);
+           , mc->addr, newval, changed, pcstr);
 }
 
 static watchListVar *

@@ -41,7 +41,7 @@ public:
     void showVar(const char *args);
     void beginWatch(int isStart=1);
     void reportWatch(const char *header, uint32 pos
-                     , uint32 newval, uint32 changed);
+                     , uint32 newval, uint32 changed, uint32 pc=0);
 };
 #define REG_VAR_WATCHLIST(Pred, Name, Var, Desc)       \
     __REG_VAR(watchListVar, Var, Pred, Name, Desc)
