@@ -97,6 +97,14 @@ struct irqData {
     uint32 clock;
     uint32 exitEarly;
     struct traceitem traces[NR_TRACE];
+
+    //
+    // MMU L1 table merging (see mmumerge.cpp)
+    //
+    uint32 mergeTableCount;
+    uint32 mergeTableStart;
+    uint32 l1Copy[4096];
+    uint32 l1Changed[4096];
 };
 
 // Add an item to the trace buffer.
@@ -203,3 +211,14 @@ void L1_resume_handler(struct irqData *data, struct irqregs *regs);
 void startL1traps(struct irqData *data);
 void stopL1traps(struct irqData *data);
 int prepL1traps(struct irqData *data);
+
+
+/****************************************************************
+ * MMU L1 table merging (see mmumerge.cpp)
+ ****************************************************************/
+void startMMUMerge(struct irqData *data);
+void __irq stopMMUMerge(struct irqData *data);
+void __irq checkMMUMerge(struct irqData *data);
+int prepMMUMerge(struct irqData *data);
+void dumpMMUMerge(struct irqData *data);
+

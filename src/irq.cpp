@@ -124,6 +124,7 @@ irq_handler(struct irqData *data, struct irqregs *regs)
     prePoll(data, isPXA);
     checkPolls(data, &data->irqpoll);
     checkPolls(data, &data->tracepoll);
+    checkMMUMerge(data);
     postPoll(data, isPXA);
 }
 
@@ -142,6 +143,7 @@ abort_handler(struct irqData *data, struct irqregs *regs)
     // Trace time memory polling.
     prePoll(data, isPXA);
     checkPolls(data, &data->tracepoll);
+    checkMMUMerge(data);
     postPoll(data, isPXA);
 
     return ret;
@@ -162,6 +164,7 @@ prefetch_handler(struct irqData *data, struct irqregs *regs)
     // Trace time memory polling.
     prePoll(data, isPXA);
     checkPolls(data, &data->tracepoll);
+    checkMMUMerge(data);
     postPoll(data, isPXA);
 
     return ret;
@@ -419,6 +422,10 @@ cmd_wirq(const char *cmd, const char *args)
     if (ret)
         goto abort;
 
+    ret = prepMMUMerge(data);
+    if (ret)
+        goto abort;
+
     ret = hookResume(
         memVirtToPhys((uint32)&code->cCode[offset_cResumeHandler()])
         , memVirtToPhys((uint32)data)
@@ -432,6 +439,7 @@ cmd_wirq(const char *cmd, const char *args)
     take_control();
     startPXAtraps(data);
     startL1traps(data);
+    startMMUMerge(data);
     Mach->flushCache();
     *irq_loc = newIrqHandler;
     *abort_loc = newAbortHandler;
@@ -447,6 +455,7 @@ cmd_wirq(const char *cmd, const char *args)
     take_control();
     stopPXAtraps(data);
     stopL1traps(data);
+    stopMMUMerge(data);
     Mach->flushCache();
     *irq_loc = asmVars->winceIrqHandler;
     *abort_loc = asmVars->winceAbortHandler;
@@ -456,6 +465,7 @@ cmd_wirq(const char *cmd, const char *args)
 
     unhookResume();
 
+    dumpMMUMerge(data);
     postLoop(data);
 abort:
     freeContPages(pageinfo);

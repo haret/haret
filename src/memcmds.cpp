@@ -14,6 +14,7 @@
 #include "exceptions.h" // TRY_EXCEPTION_HANDLER
 #include "resource.h" // DLG_PROGRESS
 #include "machines.h" // Mach
+#include "memcmds.h"
 
 
 /****************************************************************
@@ -370,50 +371,8 @@ memDumpMMU(const char *tok, const char *args)
 
             // Read 1st level descriptor
             l1d = memPhysRead(mmu + mb * 4);
-            uint32 vaddr=mb<<20;
-            const struct pageinfo *pi = getL1Desc(l1d);
-            uint32 paddr = l1d & pi->mask;
-            char flagbuf[64];
-            pi->flagfunc(flagbuf, l1d & ~pi->mask);
-            if (! pi->isMapped) {
-                if (showall && (l1d ^ pL1) & MMU_L1_TYPE_MASK)
-                    Output("%08x  |          | %13s |", vaddr, pi->name);
-                continue;
-            }
-            if (! pi->L2MapShift) {
-                if (showall
-                    || RANGES_OVERLAP(start, size, paddr, ~pi->mask + 1))
-                    Output("%08x  | %08x | %13s |%s"
-                           , vaddr, paddr, pi->name, flagbuf);
-                continue;
-            }
-            if (showall)
-                Output("%08x  |          | %13s |%s", vaddr, pi->name, flagbuf);
 
-            if (l1only)
-                continue;
-
-            // Walk the 2nd level descriptor table
-            uint l2_count = 1 << (20 - pi->L2MapShift);
-            uint32 pL2, l2d = 0xffffffff;
-            for (uint d = 0; d < l2_count; d++) {
-                pL2 = l2d;
-                l2d = memPhysRead(paddr + d * 4);
-                uint32 l2vaddr = vaddr + (d << pi->L2MapShift);
-                const struct pageinfo *pi2 = getL2Desc(l2d);
-                uint32 l2paddr = l2d & pi2->mask;
-                pi2->flagfunc(flagbuf, l2d & ~pi2->mask);
-
-                if (!pi2->isMapped) {
-                    if (showall && (l2d ^ pL2) & MMU_L2_TYPE_MASK)
-                        Output(" %08x |          | %13s |", l2vaddr, pi2->name);
-                    continue;
-                }
-                if (showall
-                    || RANGES_OVERLAP(start, size, l2paddr, 1<<pi->L2MapShift))
-                    Output(" %08x | %08x | %13s |%s"
-                           , l2vaddr, l2paddr, pi2->name, flagbuf);
-            }
+            parseL1Entry(mb, l1d, pL1, l1only, showall, start, size);
         }
     } CATCH_EXCEPTION_HANDLER {
         Output(C_ERROR "EXCEPTION CAUGHT AT MEGABYTE %d!", mb);
@@ -422,6 +381,68 @@ memDumpMMU(const char *tok, const char *args)
     if (showall)
         Output("End of virtual address space");
     DoneProgress();
+}
+
+//mb=entry no, l1d=l1 descriptor (the entry), pL1 = previous L1
+//l1only=don't parse L2, start:size is what to look for (phys)
+int parseL1Entry(uint32 mb, uint32 l1d, uint32 pL1,
+                    uint32 l1only, uint32 showall, uint32 start, uint32 size ){
+    int linesOut = 0; //no. lines outputted
+    uint32 vaddr=mb<<20;
+    const struct pageinfo *pi = getL1Desc(l1d);
+    uint32 paddr = l1d & pi->mask;
+    char flagbuf[64];
+    pi->flagfunc(flagbuf, l1d & ~pi->mask);
+    if (! pi->isMapped) {
+        if (showall && (l1d ^ pL1) & MMU_L1_TYPE_MASK){
+            Output("%08x  |          | %13s |", vaddr, pi->name);
+            linesOut++;
+        }
+        return linesOut;
+    }
+    if (! pi->L2MapShift) {
+        if (showall
+            || RANGES_OVERLAP(start, size, paddr, ~pi->mask + 1)){
+            Output("%08x  | %08x | %13s |%s"
+           , vaddr, paddr, pi->name, flagbuf);
+            linesOut++;
+        }
+        return linesOut;
+    }
+    if (showall){
+        Output("%08x  |          | %13s |%s", vaddr, pi->name, flagbuf);
+        linesOut++;
+    }
+
+    if (l1only)
+        return linesOut;
+
+    // Walk the 2nd level descriptor table
+    uint l2_count = 1 << (20 - pi->L2MapShift);
+    uint32 pL2, l2d = 0xffffffff;
+    for (uint d = 0; d < l2_count; d++) {
+        pL2 = l2d;
+        l2d = memPhysRead(paddr + d * 4);
+	uint32 l2vaddr = vaddr + (d << pi->L2MapShift);
+        const struct pageinfo *pi2 = getL2Desc(l2d);
+        uint32 l2paddr = l2d & pi2->mask;
+        pi2->flagfunc(flagbuf, l2d & ~pi2->mask);
+
+        if (!pi2->isMapped) {
+            if (showall && (l2d ^ pL2) & MMU_L2_TYPE_MASK){
+                Output(" %08x |          | %13s |", l2vaddr, pi2->name);
+                linesOut++;
+            }
+            continue;
+        }
+        if (showall
+            || RANGES_OVERLAP(start, size, l2paddr, 1<<pi->L2MapShift)){
+            Output(" %08x | %08x | %13s |%s"
+           , l2vaddr, l2paddr, pi2->name, flagbuf);
+            linesOut++;
+        }
+    }
+    return linesOut;
 }
 REG_DUMP(0, "MMU", memDumpMMU,
          "MMU [<1|2> [<start> [<size>]]] \n"
