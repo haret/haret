@@ -419,9 +419,13 @@ findReverseMMUmaps()
 {
     if (Mach->arm6mmu) {
         // Check for arm6 subpages feature.
-        uint32 r = get_p15r1();
-        if (r & (1<<23))
-            Arm6NoSubPages = 1;
+        TRY_EXCEPTION_HANDLER {
+            uint32 r = get_p15r1();
+            if (r & (1<<23))
+                Arm6NoSubPages = 1;
+        } CATCH_EXCEPTION_HANDLER {
+            Output("Exception on arm6 type lookup");
+        }
     }
 
     // Clear maps.
