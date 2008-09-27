@@ -10,6 +10,8 @@ MachineMSM7500::MachineMSM7500()
     arm6mmu = 1;
     archname = "MSM7500";
     CPUInfo[0] = L"MSM7500";
+    // Alias MSM72xx machines as well.
+    CPUInfo[1] = L"MSM72";
 }
 
 void

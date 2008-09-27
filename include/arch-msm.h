@@ -10,3 +10,5 @@ public:
 // XXX - assume they are the same for now.
 class MachineMSM7200 : public MachineMSM7500 {
 };
+class MachineMSM7201A : public MachineMSM7500 {
+};
