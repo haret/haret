@@ -83,16 +83,7 @@ e740,       PXA     ,TOSHIBA e740
 Acer_n30,   S3c2410 ,Acer n30 Handheld,           N30
 Mio_P550,   S3c2440 ,Mio P550,                    MIO_P550
 Kaiser,     MSM7200 ,Kaiser
-Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560, \
-        addlist GPIOS p2v(0x10000000) 0xf000 16, \
-        addlist GPIOS p2v(0x10000002) 0xf000 16, \
-        addlist GPIOS p2v(0x10000004) 0xf000 16, \
-        addlist GPIOS p2v(0x10000006) 0xf000 16, \
-        addlist GPIOS p2v(0x10000008) 0xf000 16, \
-        addlist GPIOS p2v(0x1000000a) 0xf000 16, \
-        addlist GPIOS p2v(0x1000000c) 0xf000 16, \
-        addlist GPIOS p2v(0x1000000e) 0xf000 16, \
-        addlist GPIOS p2v(0x10000010) 0xf000 16
+Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560
 Loox400,    PXA     ,FUJITSU SIEMENS COMPUTERS Pocket LOOX, LOOX410
 MioA701,    PXA27x  ,Mio Technology Limited,      MIOA701
 Wallaby,    SA      ,PW10A1,                      XDA
