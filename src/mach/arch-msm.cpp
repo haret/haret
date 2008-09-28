@@ -75,8 +75,8 @@ MachineMSM7xxx::init()
 {
     runMemScript(
         "set ramaddr 0x10000000\n"
-        "addlist irqs p2v(0xc0000080) 0x100 32 0\n"
-        "addlist irqs p2v(0xc0000084) 0 32 0\n"
+        "addlist irqs p2v(0xc0000000) 0x100 32 0\n"
+        "addlist irqs p2v(0xc0000004) 0 32 0\n"
         );
     defineMsmGpios();
 }
