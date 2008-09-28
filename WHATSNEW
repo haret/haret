@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
+20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 
   * Add support for "Centrality" arm cpus.
 
@@ -29,8 +29,8 @@ next version <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com
 
   * Support GETGXINFO method of finding the video frame buffer.
 
-  * Only dynamically bind to NLedSetDevice().  Some wince devices
-    don't have this function.
+  * Only dynamically bind to NLedSetDevice().  This fixes startup
+    problems on some wince devices that don't have this function.
 
 20071224 0.5.1 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
