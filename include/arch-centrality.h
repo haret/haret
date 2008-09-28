@@ -1,4 +1,4 @@
-// Definitions for Texas Instruments OMAP processors.
+// Definitions for "Centrality" processors.
 #include "machines.h" // Machine
 
 class MachineAT64x : public Machine {

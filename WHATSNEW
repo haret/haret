@@ -1,3 +1,37 @@
+next version <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
+
+  * Add support for "Centrality" arm cpus.
+
+  * Better support for MSM7xxx and MSM7xxxA machines.
+
+  * Support arm6 MMU extensions.  The arm6 mmu no longer supports 1K
+    "tiny" pages.  It also adds several new page flags.
+
+  * Scan for all 1Meg mappings suitable for virtToPhys translation at
+    haret startup.
+
+  * Check that haret is running in "system" mode at startup - warn if
+    not.
+
+  * Enhance "mmutrace" to support "stm", "ldm", and "swp"
+    instructions.
+
+  * Add new "mmumerge" feature to "wirq".  The "mmumerge" tool allows
+    one to detect if wince is changing the mmu mappings during a
+    "wirq" session.
+
+  * The high frequency polling system (the "TRACES" variable) will now
+    also report the approximate PC location.  This can help find what
+    code is changing memory when "mmutrace" isn't available.
+
+  * Support "wirq" even on older machines that don't have
+    "allocPhysMem".
+
+  * Support GETGXINFO method of finding the video frame buffer.
+
+  * Only dynamically bind to NLedSetDevice().  Some wince devices
+    don't have this function.
+
 20071224 0.5.1 <kevin@koconnor.net>, <pmiscml@gmail.com>
 
   * The "dump mmu" command now takes an optional physical address
