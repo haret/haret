@@ -9,13 +9,10 @@ from memalias import regOneBits
 
 
 ######################################################################
-# MSM7x00
+# MSM7xxx
 ######################################################################
 
-Regs_msm7500 = {
-    0xc0000000: ("IRQ", regOneBits("IRQ")),
-    0xc0000004: ("IRQ2", regOneBits("IRQ2-")),
-
+Regs_msm_gpio = {
     0xa9200800: ("out0", regOneBits("out0-")),
     0xa9200804: ("out2", regOneBits("out2-")),
     0xa9200808: ("out3", regOneBits("out3-")),
@@ -38,4 +35,17 @@ Regs_msm7500 = {
     0xa9300c20: ("in1", regOneBits("in1-")),
     0xa9300c60: ("intr1_en", regOneBits("intr1_en-")),
     }
-memalias.RegsList['ARCH:MSM7500'] = Regs_msm7500
+
+Regs_msm7xxx = Regs_msm_gpio.copy()
+Regs_msm7xxx.update({
+        0xc0000000: ("IRQ0", regOneBits("IRQ")),
+        0xc0000004: ("IRQ1", regOneBits("IRQ", 32)),
+    })
+memalias.RegsList['ARCH:MSM7xxx'] = Regs_msm7xxx
+
+Regs_msm7xxxA = Regs_msm_gpio.copy()
+Regs_msm7xxxA.update({
+        0xc0000080: ("IRQ0", regOneBits("IRQ")),
+        0xc0000084: ("IRQ1", regOneBits("IRQ", 32)),
+    })
+memalias.RegsList['ARCH:MSM7xxxA'] = Regs_msm7xxxA

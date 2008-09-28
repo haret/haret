@@ -1,14 +1,23 @@
 // Definitions for Texas Instruments OMAP processors.
 #include "machines.h" // Machine
 
-class MachineMSM7500 : public Machine {
+class MachineMSM7xxxA : public Machine {
 public:
-    MachineMSM7500();
+    MachineMSM7xxxA();
     void init();
 };
 
-// XXX - assume they are the same for now.
-class MachineMSM7200 : public MachineMSM7500 {
+class MachineMSM7xxx : public Machine {
+public:
+    MachineMSM7xxx();
+    void init();
 };
-class MachineMSM7201A : public MachineMSM7500 {
+
+// Aliases
+class MachineMSM7201A : public MachineMSM7xxxA {
+};
+
+class MachineMSM7200 : public MachineMSM7xxx {
+};
+class MachineMSM7500 : public MachineMSM7xxx {
 };

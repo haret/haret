@@ -43,7 +43,7 @@ Regs_Hermes.update(regs_ati.getWxxxxDefs(0x10000000))
 memalias.RegsList['Hermes'] = Regs_Hermes
 
 # HTC Kaiser specific registers
-Regs_Kaiser = regs_msm.Regs_msm7500.copy()
+Regs_Kaiser = regs_msm.Regs_msm7xxx.copy()
 Regs_Kaiser.update(getEGPIOdefs(0x98000000, 10))
 memalias.RegsList['Kaiser'] = Regs_Kaiser
 

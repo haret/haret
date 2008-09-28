@@ -3,24 +3,10 @@
 #include "arch-arm.h" // cpuFlushCache_arm6
 #include "arch-msm.h"
 
-MachineMSM7500::MachineMSM7500()
-{
-    name = "Generic MSM7500";
-    flushCache = cpuFlushCache_arm6;
-    arm6mmu = 1;
-    archname = "MSM7500";
-    CPUInfo[0] = L"MSM7500";
-    // Alias MSM72xx machines as well.
-    CPUInfo[1] = L"MSM72";
-}
-
-void
-MachineMSM7500::init()
+static void
+defineMsmGpios()
 {
     runMemScript(
-        "set ramaddr 0x10000000\n"
-        "addlist irqs p2v(0xc0000000) 0x100 32 0\n"
-        "addlist irqs p2v(0xc0000004) 0 32 0\n"
         // out registers?
         "addlist gpios p2v(0xa9200800)\n"
         "addlist gpios p2v(0xa9300c00)\n"
@@ -42,4 +28,57 @@ MachineMSM7500::init()
         );
 }
 
-REGMACHINE(MachineMSM7500)
+
+/****************************************************************
+ * MSM 7xxxA
+ ****************************************************************/
+
+MachineMSM7xxxA::MachineMSM7xxxA()
+{
+    name = "Generic MSM7xxxA";
+    flushCache = cpuFlushCache_arm6;
+    arm6mmu = 1;
+    archname = "MSM7xxxA";
+    CPUInfo[0] = L"MSM7201A";
+}
+
+void
+MachineMSM7xxxA::init()
+{
+    runMemScript(
+        "set ramaddr 0x10000000\n"
+        "addlist irqs p2v(0xc0000080) 0x100 32 0\n"
+        "addlist irqs p2v(0xc0000084) 0 32 0\n"
+        );
+    defineMsmGpios();
+}
+
+REGMACHINE(MachineMSM7xxxA)
+
+
+/****************************************************************
+ * MSM 7xxx
+ ****************************************************************/
+
+MachineMSM7xxx::MachineMSM7xxx()
+{
+    name = "Generic MSM7xxx";
+    flushCache = cpuFlushCache_arm6;
+    arm6mmu = 1;
+    archname = "MSM7xxx";
+    CPUInfo[0] = L"MSM7500";
+    CPUInfo[1] = L"MSM7200";
+}
+
+void
+MachineMSM7xxx::init()
+{
+    runMemScript(
+        "set ramaddr 0x10000000\n"
+        "addlist irqs p2v(0xc0000080) 0x100 32 0\n"
+        "addlist irqs p2v(0xc0000084) 0 32 0\n"
+        );
+    defineMsmGpios();
+}
+
+REGMACHINE(MachineMSM7xxx)
