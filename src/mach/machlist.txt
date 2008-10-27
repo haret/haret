@@ -87,7 +87,7 @@ Loox5xx,    PXA27x  ,FUJITSU SIEMENS COMPUTERS Pocket LOOX 5xx, LOOXN560
 Loox400,    PXA     ,FUJITSU SIEMENS COMPUTERS Pocket LOOX, LOOX410
 MioA701,    PXA27x  ,Mio Technology Limited,      MIOA701
 Wallaby,    SA      ,PW10A1,                      XDA
-Raphael,    MSM7201A,HTC Touch Pro T7272;RAPH100, HTCRAPHAEL, \
+Raphael,    MSM7201A,HTC Touch Pro T7272;RAPH100;RAPH800, HTCRAPHAEL, \
         set ramsize 0x6400000, \
         set ramaddr 0x20000000
 
