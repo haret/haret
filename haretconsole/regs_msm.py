@@ -29,6 +29,9 @@ irqs1 = (
     (17, "SDC31"), (18, "SDC40"), (19, "SDC41"), (20, "UART2DM_RX"),
     (21, "UART2DM_IRQ"))
 
+cken = (
+    (28, "SDC4"), (27, "SDC3"), (26, "uartDM2"), (17, "uartDM1"), (8, "SDC2"), (7, "SDC1"))
+
 Regs_msm_gpio = {
     0xa9200800: ("out0", regOneBits("out0-")),
     0xa9200804: ("out2", regOneBits("out2-")),
@@ -51,6 +54,8 @@ Regs_msm_gpio = {
     0xa9300c08: ("out1_en", regOneBits("out1_en-")),
     0xa9300c20: ("in1", regOneBits("in1-")),
     0xa9300c60: ("intr1_en", regOneBits("intr1_en-")),
+
+    0xa8600000: ("CKEN", cken),
 
 #    0xa92008a0: ("irq0", regOneBits("GPIO", 0)),
 #    0xa9300c70: ("irq1", regOneBits("GPIO", 16)),
