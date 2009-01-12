@@ -7,7 +7,9 @@
 //
 
 #include <winioctl.h> // CTL_CODE
-#define FILE_DEVICE_HAL 0x00000101
+#ifndef FILE_DEVICE_HAL
+# define FILE_DEVICE_HAL 0x00000101
+#endif
 
 #ifdef __cplusplus
 extern "C" {
