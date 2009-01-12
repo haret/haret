@@ -55,6 +55,7 @@ def main():
 #include "arch-omap.h"
 #include "arch-s3.h"
 #include "arch-pxa.h"
+#include "arch-imx.h"
 #include "arch-sa.h"
 #include "arch-msm.h"
 
