@@ -120,15 +120,13 @@ modDump(const char *cmd, const char *args)
     MODULEENTRY32 me;
     me.dwSize = sizeof(me);
 
+    Output("BaseAddr   | Size | Handle   | Usage | Module");
+    Output("-----------+------+----------+-------+------------");
     for (int ret=late_Module32First(hTH, &me); ret
              ; ret=late_Module32Next(hTH, &me))
-        Output("%4ld fl=%08lx mid=%08lx pid=%08lx gusg=%03ld pusg=%03ld"
-               " base=%p size=%08lx hmod=%p mod=%ls exe=%ls",
-               me.dwSize, me.dwFlags, me.th32ModuleID, me.th32ProcessID,
-               me.GlblcntUsage, me.ProccntUsage,
-               me.modBaseAddr, me.modBaseSize,
-               me.hModule, me.szModule, me.szExePath);
-
+        Output("%p | %06lx | %p | %5ld | %ls",
+            me.modBaseAddr, me.modBaseSize, me.hModule,
+            me.GlblcntUsage, me.szModule);
     late_CloseToolhelp32Snapshot(hTH);
 }
 REG_CMD(tlhAvail, "LSMOD", modDump,
