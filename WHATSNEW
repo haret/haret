@@ -1,3 +1,12 @@
+next version <kevin@koconnor.net>, Holger Schurig <hs4233@mail.mn-solutions.de>
+
+  * Add new script tools/extract-bootbundle.py that can extract the
+    haret/kernel/initrd/script parts of a boot bundle.
+
+  * Add support for "iMX" processors
+
+  * Simplify lsmod output
+
 20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 
   * Add support for "Centrality" arm cpus.
