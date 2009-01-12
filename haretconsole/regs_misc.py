@@ -7,6 +7,7 @@
 import memalias
 import regs_s3c
 import regs_pxa
+import regs_imx
 import regs_msm
 import regs_omap
 import regs_ati
