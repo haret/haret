@@ -8,7 +8,7 @@ import memalias
 
 Regs_iMX21 = {
  # Chapter 7: AHB-Lite IP Interface (AIPI1)
- 0x10000000: 'PSR0_1',
+ 0x10000000: ('PSR0_1', (('0','AIPI_Control'), ('1','DMA'), ('2','WDOG'), ('3','GPT1'), ('4','GPT2'), ('5','GPT3'), ('6','PWM'), ('7','RTC'), ('8','KPP'), ('9','OWIRE'), ('10','UART1'), ('11','UART2'), ('12','UART3'), ('13','UART4'), ('14','CSPI1'), ('15','CSPI2'), ('16','SSI1'), ('17','SSI2'), ('18','I2C'), ('19','SDHC1'), ('20','SDHC2'), ('21','GPIO'), ('22','AUDMUX'), ('23','CSPI3'), )),
  0x10000004: ('PSR1_1', (('0','AIPI_Control'), ('1','DMA'), ('2','WDOG'), ('3','GPT1'), ('4','GPT2'), ('5','GPT3'), ('6','PWM'), ('7','RTC'), ('8','KPP'), ('9','OWIRE'), ('10','UART1'), ('11','UART2'), ('12','UART3'), ('13','UART4'), ('14','CSPI1'), ('15','CSPI2'), ('16','SSI1'), ('17','SSI2'), ('18','I2C'), ('19','SDHC1'), ('20','SDHC2'), ('21','GPIO'), ('22','AUDMUX'), ('23','CSPI3'), )),
  0x10000008: ('PAR_1', (('0','AIPI1_CTL'), ('1','DMA'), ('2','WDOG'), ('3','GPT1'), ('4','GPT2'), ('5','GPT3'), ('6','PWM'), ('7','RTC'), ('8','KPP'), ('9','OWIRE'), ('10','UART1'), ('11','UART2'), ('12','UART3'), ('13','UART4'), ('14','CSPI1'), ('15','CSPI2'), ('16','SSI1'), ('17','SSI2'), ('18','I2C'), ('19','SDHC1'), ('20','SDHC2'), ('21','GPIO'), ('22','AUDMUX'), ('23','CSPI3'), )),
  # Chapter 18: Direct Memory Access Controller (DMAC)
@@ -209,7 +209,7 @@ Regs_iMX21 = {
  0x1000a040: ('UTXD_1', (('0-7','TX_DATA'), )),
  0x1000a080: ('UCR1_1', (('0','UART_EN'), ('1','DOZE'), ('3','TXDMA_EN'), ('4','SNDBRK'), ('5','RTSDEN'), ('6','TXMPTYEN'), ('7','IREN'), ('8','RXDMAEN'), ('9','RRDYEN'), ('10-11','ICD'), ('12','IDEN'), ('13','TRDYEN'), ('14','ADBR'), ('15','ADEN'), )),
  0x1000a084: ('UCR2_1', (('0','nSRST'), ('1','RXEN'), ('2','TXEN'), ('3','ATEN'), ('4','RTSEN'), ('5','WS'), ('6','STPB'), ('7','PROE'), ('8','PREN'), ('9-10','RTEC'), ('11','ESCEN'), ('12','CTS'), ('13','CTSC'), ('14','IRTS'), ('15','ESCI'), )),
- 0x1000a088: ('UCR3_1', (('0','ACIEN'), ('1','INVT'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
+ 0x1000a088: ('UCR3_1', (('0','ACIEN'), ('1','INVT'), ('2','RXDMUXSEL'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
  0x1000a08c: ('UCR4_1', (('0','DREN'), ('1','OREN'), ('2','BKEN'), ('3','TCEN'), ('4','LPBYP'), ('5','IRSC'), ('7','WKEN'), ('8','ENIRI'), ('9','INVR'), ('10-15','CTSTL'), )),
  0x1000a090: ('UFCR_1', (('0-5','RXTL'), ('6','DCEDTE'), ('7-9','RFDIV'), ('10-15','TXTL'), )),
  0x1000a094: ('USR1_1', (('4','AWAKE'), ('5','AIRINT'), ('6','RXDS'), ('8','AGTIM'), ('9','RRDY'), ('10','FRAMERR'), ('11','ESCF'), ('12','RTSD'), ('13','TRDY'), ('14','RTSS'), ('15','PARTIYERR'), )),
@@ -226,7 +226,7 @@ Regs_iMX21 = {
  0x1000b040: ('UTXD_2', (('0-7','TX_DATA'), )),
  0x1000b080: ('UCR1_2', (('0','UART_EN'), ('1','DOZE'), ('3','TXDMA_EN'), ('4','SNDBRK'), ('5','RTSDEN'), ('6','TXMPTYEN'), ('7','IREN'), ('8','RXDMAEN'), ('9','RRDYEN'), ('10-11','ICD'), ('12','IDEN'), ('13','TRDYEN'), ('14','ADBR'), ('15','ADEN'), )),
  0x1000b084: ('UCR2_2', (('0','nSRST'), ('1','RXEN'), ('2','TXEN'), ('3','ATEN'), ('4','RTSEN'), ('5','WS'), ('6','STPB'), ('7','PROE'), ('8','PREN'), ('9-10','RTEC'), ('11','ESCEN'), ('12','CTS'), ('13','CTSC'), ('14','IRTS'), ('15','ESCI'), )),
- 0x1000b088: ('UCR3_2', (('0','ACIEN'), ('1','INVT'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
+ 0x1000b088: ('UCR3_2', (('0','ACIEN'), ('1','INVT'), ('2','RXDMUXSEL'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
  0x1000b08c: ('UCR4_2', (('0','DREN'), ('1','OREN'), ('2','BKEN'), ('3','TCEN'), ('4','LPBYP'), ('5','IRSC'), ('7','WKEN'), ('8','ENIRI'), ('9','INVR'), ('10-15','CTSTL'), )),
  0x1000b090: ('UFCR_2', (('0-5','RXTL'), ('6','DCEDTE'), ('7-9','RFDIV'), ('10-15','TXTL'), )),
  0x1000b094: ('USR1_2', (('4','AWAKE'), ('5','AIRINT'), ('6','RXDS'), ('8','AGTIM'), ('9','RRDY'), ('10','FRAMERR'), ('11','ESCF'), ('12','RTSD'), ('13','TRDY'), ('14','RTSS'), ('15','PARTIYERR'), )),
@@ -243,7 +243,7 @@ Regs_iMX21 = {
  0x1000c040: ('UTXD_3', (('0-7','TX_DATA'), )),
  0x1000c080: ('UCR1_3', (('0','UART_EN'), ('1','DOZE'), ('3','TXDMA_EN'), ('4','SNDBRK'), ('5','RTSDEN'), ('6','TXMPTYEN'), ('7','IREN'), ('8','RXDMAEN'), ('9','RRDYEN'), ('10-11','ICD'), ('12','IDEN'), ('13','TRDYEN'), ('14','ADBR'), ('15','ADEN'), )),
  0x1000c084: ('UCR2_3', (('0','nSRST'), ('1','RXEN'), ('2','TXEN'), ('3','ATEN'), ('4','RTSEN'), ('5','WS'), ('6','STPB'), ('7','PROE'), ('8','PREN'), ('9-10','RTEC'), ('11','ESCEN'), ('12','CTS'), ('13','CTSC'), ('14','IRTS'), ('15','ESCI'), )),
- 0x1000c088: ('UCR3_3', (('0','ACIEN'), ('1','INVT'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
+ 0x1000c088: ('UCR3_3', (('0','ACIEN'), ('1','INVT'), ('2','RXDMUXSEL'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
  0x1000c08c: ('UCR4_3', (('0','DREN'), ('1','OREN'), ('2','BKEN'), ('3','TCEN'), ('4','LPBYP'), ('5','IRSC'), ('7','WKEN'), ('8','ENIRI'), ('9','INVR'), ('10-15','CTSTL'), )),
  0x1000c090: ('UFCR_3', (('0-5','RXTL'), ('6','DCEDTE'), ('7-9','RFDIV'), ('10-15','TXTL'), )),
  0x1000c094: ('USR1_3', (('4','AWAKE'), ('5','AIRINT'), ('6','RXDS'), ('8','AGTIM'), ('9','RRDY'), ('10','FRAMERR'), ('11','ESCF'), ('12','RTSD'), ('13','TRDY'), ('14','RTSS'), ('15','PARTIYERR'), )),
@@ -260,7 +260,7 @@ Regs_iMX21 = {
  0x1000d040: ('UTXD_4', (('0-7','TX_DATA'), )),
  0x1000d080: ('UCR1_4', (('0','UART_EN'), ('1','DOZE'), ('3','TXDMA_EN'), ('4','SNDBRK'), ('5','RTSDEN'), ('6','TXMPTYEN'), ('7','IREN'), ('8','RXDMAEN'), ('9','RRDYEN'), ('10-11','ICD'), ('12','IDEN'), ('13','TRDYEN'), ('14','ADBR'), ('15','ADEN'), )),
  0x1000d084: ('UCR2_4', (('0','nSRST'), ('1','RXEN'), ('2','TXEN'), ('3','ATEN'), ('4','RTSEN'), ('5','WS'), ('6','STPB'), ('7','PROE'), ('8','PREN'), ('9-10','RTEC'), ('11','ESCEN'), ('12','CTS'), ('13','CTSC'), ('14','IRTS'), ('15','ESCI'), )),
- 0x1000d088: ('UCR3_4', (('0','ACIEN'), ('1','INVT'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
+ 0x1000d088: ('UCR3_4', (('0','ACIEN'), ('1','INVT'), ('2','RXDMUXSEL'), ('4','AWAKEN'), ('5','AIRINTEN'), ('6','RXDSEN'), ('7','ADNIMP'), ('8','RI'), ('9','DCD'), ('10','DSR'), ('11','FRAERREN'), ('12','PARERREN'), ('13','DTREN'), ('14-15','DPEC'), )),
  0x1000d08c: ('UCR4_4', (('0','DREN'), ('1','OREN'), ('2','BKEN'), ('3','TCEN'), ('4','LPBYP'), ('5','IRSC'), ('7','WKEN'), ('8','ENIRI'), ('9','INVR'), ('10-15','CTSTL'), )),
  0x1000d090: ('UFCR_4', (('0-5','RXTL'), ('6','DCEDTE'), ('7-9','RFDIV'), ('10-15','TXTL'), )),
  0x1000d094: ('USR1_4', (('4','AWAKE'), ('5','AIRINT'), ('6','RXDS'), ('8','AGTIM'), ('9','RRDY'), ('10','FRAMERR'), ('11','ESCF'), ('12','RTSD'), ('13','TRDY'), ('14','RTSS'), ('15','PARTIYERR'), )),
@@ -749,10 +749,13 @@ Regs_iMX21 = {
  0x10027848: ('DSCR11', (('0-2','DS_NFIO2'), ('3-5','DS_NFIO1'), ('6-8','DS_NFIO0'), ('9-11','DS_NFWE_B'), ('12-14','DS_NFRE_B'), ('16-18','DS_NFALE'), ('19-21','DS_NFCLE'), ('22-24','DS_NFWP_B'), ('25-27','DS_NFCE_B'), ('28-30','DS_NFRB_B'), )),
  0x1002784c: ('DSCR12', (('0-2','DS_PIXCLK'), ('3-5','DS_MCLK'), ('6-8','DS_LSCLK'), )),
  0x10027850: ('PCSR', (('16','S0_AMPR_SEL'), ('17','S1_AMPR_SEL'), ('18','S2_AMPR_SEL'), ('19','S3_AMPR_SEL'), )),
+ # Chapter 35: Fast Infrared Interface (FIR)
+ 0x10028000: ('FIRITCR', (('0','TE'), )),
  # Chapter 35: Fast InfraRead Interface (FIRI)
- 0x10028000: 'FIRITCR',
  0x10028004: 'FIRITCTR',
- 0x10028008: 'FIRIRCR',
+ # Chapter 35: Fast Infrared Interface (FIR)
+ 0x10028008: ('FIRIRCR', (('0','RE'), )),
+ # Chapter 35: Fast InfraRead Interface (FIRI)
  0x1002800c: 'FIRITSR',
  0x10028010: 'FIRIRSR',
  0x10028014: 'FIRIXMITFIFO',
@@ -786,8 +789,8 @@ Regs_iMX21 = {
  0x10040004: 'NIMASK',
  0x10040008: 'INTENNUM',
  0x1004000c: 'INTDISNUM',
- 0x10040010: ('INTENABLEH', (('0','INTEN32'), ('1','INTEN33'), ('2','INTEN34'), ('3','INTEN35'), ('4','INTEN36'), ('5','INTEN37'), ('6','INTEN38'), ('7','INTEN39'), ('8','INTEN40'), ('9','INTEN41'), ('10','INTEN42'), ('11','INTEN43'), ('12','INTEN44'), ('13','INTEN45'), ('14','INTEN46'), ('15','INTEN47'), ('16','INTEN48'), ('17','INTEN49'), ('18','INTEN50'), ('19','INTEN51'), ('20','INTEN52'), ('21','INTEN53'), ('22','INTEN54'), ('23','INTEN55'), ('24','INTEN56'), ('25','INTEN57'), ('26','INTEN58'), ('27','INTEN59'), ('28','INTEN60'), ('29','INTEN61'), ('30','INTEN62'), ('31','INTEN63'), )),
- 0x10040014: ('INTENABLEL', (('0','INTEN0'), ('1','INTEN1'), ('2','INTEN2'), ('3','INTEN3'), ('4','INTEN4'), ('5','INTEN5'), ('6','INTEN6'), ('7','INTEN7'), ('8','INTEN8'), ('9','INTEN9'), ('10','INTEN10'), ('11','INTEN11'), ('12','INTEN12'), ('13','INTEN13'), ('14','INTEN14'), ('15','INTEN15'), ('16','INTEN16'), ('17','INTEN17'), ('18','INTEN18'), ('19','INTEN19'), ('20','INTEN20'), ('21','INTEN21'), ('22','INTEN22'), ('23','INTEN23'), ('24','INTEN24'), ('25','INTEN25'), ('26','INTEN26'), ('27','INTEN27'), ('28','INTEN28'), ('29','INTEN29'), ('30','INTEN30'), ('31','INTEN31'), )),
+ 0x10040010: ('INTENABLEH', (('0','INTEN_DMACH0'), ('1','INTEN_DMACH1'), ('2','INTEN_DMACH2'), ('3','INTEN_DMACH3'), ('4','INTEN_DMACH4'), ('5','INTEN_DMACH5'), ('6','INTEN_DMACH6'), ('7','INTEN_DMACH7'), ('8','INTEN_DMACH8'), ('9','INTEN_DMACH9'), ('10','INTEN_DMACH10'), ('11','INTEN_DMACH11'), ('12','INTEN_DMACH12'), ('13','INTEN_DMACH13'), ('14','INTEN_DMACH14'), ('15','INTEN_DMACH15'), ('16','INTEN_48'), ('17','INTEN_EMMAENC'), ('18','INTEN_EMMADEC'), ('19','INTEN_EMMAPRP'), ('20','INTEN_EMMAPP'), ('21','INTEN_USBWKUP'), ('22','INTEN_USBDMA'), ('23','INTEN_USBHOST'), ('24','INTEN_USBFUNC'), ('25','INTEN_USBMNP'), ('26','INTEN_USBCTRL'), ('27','INTEN_59'), ('28','INTEN_SLCDC'), ('29','INTEN_LCDC'), ('30','INTEN_62'), ('31','INTEN_63'), )),
+ 0x10040014: ('INTENABLEL', (('0','INTEN_0'), ('1','INTEN_1'), ('2','INTEN_2'), ('3','INTEN_3'), ('4','INTEN_4'), ('5','INTEN_5'), ('6','INTEN_CSPI3'), ('7','INTEN_7'), ('8','INTEN_GPIO'), ('9','INTEN_FIRI'), ('10','INTEN_SDHC2'), ('11','INTEN_SDHC1'), ('12','INTEN_I2C'), ('13','INTEN_SSI2'), ('14','INTEN_SSI1'), ('15','INTEN_CSPI2'), ('16','INTEN_CSPI1'), ('17','INTEN_UART4'), ('18','INTEN_UART3'), ('19','INTEN_UART2'), ('20','INTEN_UART1'), ('21','INTEN_KPP'), ('22','INTEN_RTC'), ('23','INTEN_PWM'), ('24','INTEN_GPT3'), ('25','INTEN_GPT2'), ('26','INTEN_GPT1'), ('27','INTEN_WDOG'), ('28','INTEN_PCMCIA'), ('29','INTEN_NANDFC'), ('30','INTEN_BMI'), ('31','INTEN_CSI'), )),
  0x10040018: ('INTTYPEH', (('0','INTTYPE32'), ('1','INTTYPE33'), ('2','INTTYPE34'), ('3','INTTYPE35'), ('4','INTTYPE36'), ('5','INTTYPE37'), ('6','INTTYPE38'), ('7','INTTYPE39'), ('8','INTTYPE40'), ('9','INTTYPE41'), ('10','INTTYPE42'), ('11','INTTYPE43'), ('12','INTTYPE44'), ('13','INTTYPE45'), ('14','INTTYPE46'), ('15','INTTYPE47'), ('16','INTTYPE48'), ('17','INTTYPE49'), ('18','INTTYPE50'), ('19','INTTYPE51'), ('20','INTTYPE52'), ('21','INTTYPE53'), ('22','INTTYPE54'), ('23','INTTYPE55'), ('24','INTTYPE56'), ('25','INTTYPE57'), ('26','INTTYPE58'), ('27','INTTYPE59'), ('28','INTTYPE60'), ('29','INTTYPE61'), ('30','INTTYPE62'), ('31','INTTYPE63'), )),
  0x1004001c: ('INTTYPEL', (('0','INTTYPE0'), ('1','INTTYPE1'), ('2','INTTYPE2'), ('3','INTTYPE3'), ('4','INTTYPE4'), ('5','INTTYPE5'), ('6','INTTYPE6'), ('7','INTTYPE7'), ('8','INTTYPE8'), ('9','INTTYPE9'), ('10','INTTYPE10'), ('11','INTTYPE11'), ('12','INTTYPE12'), ('13','INTTYPE13'), ('14','INTTYPE14'), ('15','INTTYPE15'), ('16','INTTYPE16'), ('17','INTTYPE17'), ('18','INTTYPE18'), ('19','INTTYPE19'), ('20','INTTYPE20'), ('21','INTTYPE21'), ('22','INTTYPE22'), ('23','INTTYPE23'), ('24','INTTYPE24'), ('25','INTTYPE25'), ('26','INTTYPE26'), ('27','INTTYPE27'), ('28','INTTYPE28'), ('29','INTTYPE29'), ('30','INTTYPE30'), ('31','INTTYPE31'), )),
  0x10040020: 'NIPRIORITY7',
@@ -800,8 +803,8 @@ Regs_iMX21 = {
  0x1004003c: 'NIPRIORITY0',
  0x10040040: 'NIVECSR',
  0x10040044: 'FIVECSR',
- 0x10040048: 'INTSRCH',
- 0x1004004c: 'INTSRCL',
+ 0x10040048: ('INTSRCH', (('0','INT_DMACH0'), ('1','INT_DMACH1'), ('2','INT_DMACH2'), ('3','INT_DMACH3'), ('4','INT_DMACH4'), ('5','INT_DMACH5'), ('6','INT_DMACH6'), ('7','INT_DMACH7'), ('8','INT_DMACH8'), ('9','INT_DMACH9'), ('10','INT_DMACH10'), ('11','INT_DMACH11'), ('12','INT_DMACH12'), ('13','INT_DMACH13'), ('14','INT_DMACH14'), ('15','INT_DMACH15'), ('16','INT_48'), ('17','INT_EMMAENC'), ('18','INT_EMMADEC'), ('19','INT_EMMAPRP'), ('20','INT_EMMAPP'), ('21','INT_USBWKUP'), ('22','INT_USBDMA'), ('23','INT_USBHOST'), ('24','INT_USBFUNC'), ('25','INT_USBMNP'), ('26','INT_USBCTRL'), ('27','INT_59'), ('28','INT_SLCDC'), ('29','INT_LCDC'), ('30','INT_62'), ('31','INT_63'), )),
+ 0x1004004c: ('INTSRCL', (('0','INT_0'), ('1','INT_1'), ('2','INT_2'), ('3','INT_3'), ('4','INT_4'), ('5','INT_5'), ('6','INT_CSPI3'), ('7','INT_7'), ('8','INT_GPIO'), ('9','INT_FIRI'), ('10','INT_SDHC2'), ('11','INT_SDHC1'), ('12','INT_I2C'), ('13','INT_SSI2'), ('14','INT_SSI1'), ('15','INT_CSPI2'), ('16','INT_CSPI1'), ('17','INT_UART4'), ('18','INT_UART3'), ('19','INT_UART2'), ('20','INT_UART1'), ('21','INT_KPP'), ('22','INT_RTC'), ('23','INT_PWM'), ('24','INT_GPT3'), ('25','INT_GPT2'), ('26','INT_GPT1'), ('27','INT_WDOG'), ('28','INT_PCMCIA'), ('29','INT_NANDFC'), ('30','INT_BMI'), ('31','INT_CSI'), )),
  0x10040050: 'INTFRCH',
  0x10040054: 'INTFRCL',
  0x10040058: 'NIPNDH',

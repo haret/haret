@@ -21,6 +21,9 @@ MachineIMX21::init()
 {
 	runMemScript(
 		"set ramaddr 0xc0000000\n"
+		// IRQs
+		"addlist IRQS p2v(0x10040048) 0 32 0\n"
+		"addlist IRQS p2v(0x1004004c) 0 32 0\n"
 	);
 }
 
