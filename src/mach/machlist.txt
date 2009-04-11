@@ -27,7 +27,7 @@ Universal,  PXA27x  ,PU10,                        HTCUNIVERSAL
 H1910,      PXA     ,hp iPAQ h191,                H1900
 H1940,      S3c2410 ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*1024
 H2200,      PXA     ,hp iPAQ h22,                 H2200
-H3600b,     SA      ,Compaq iPAQ H3600
+H3600b,     SA      ,Compaq iPAQ H3600,           H3600
 H3700,      SA      ,Compaq iPAQ H3700
 H3800,      SA      ,Compaq iPAQ H3800,           H3800
 H3900,      PXA     ,Compaq iPAQ H39,             H3900
@@ -95,8 +95,8 @@ PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
 
 PLATFORM=Palm PC2
-H3100,      SA      ,Compaq iPAQ H3100
-H3600a,     SA      ,Compaq iPAQ H3600
+H3100,      SA      ,Compaq iPAQ H3100,           H3100
+H3600a,     SA      ,Compaq iPAQ H3600,           H3600
 
 PLATFORM=SmartPhone
 Tornado,    OMAP850 ,Vodafone v1240,              OMAP_TORNADO
