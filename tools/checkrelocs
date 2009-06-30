@@ -8,8 +8,8 @@
 # not reliably access other parts of the haret system.  (Having an
 # external relocation will result in a mysterious runtime error.)
 
-LD=$BASE/bin/arm-wince-mingw32ce-ld
-OBJDUMP=$BASE/bin/arm-wince-mingw32ce-objdump
+LD=$BASE/bin/arm-mingw32ce-ld
+OBJDUMP=$BASE/bin/arm-mingw32ce-objdump
 TMP=tmp_link.o
 IGNORE=" ARM_26D | ARM_32[ ]*\.text\+"
 

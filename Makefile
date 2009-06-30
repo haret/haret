@@ -41,13 +41,13 @@ vpath %.rc src/wince
 BASE ?= /opt/mingw32ce
 export BASE
 
-RC = $(BASE)/bin/arm-wince-mingw32ce-windres
+RC = $(BASE)/bin/arm-mingw32ce-windres
 RCFLAGS = -r -l 0x409 -Iinclude
 
-CXX = $(BASE)/bin/arm-wince-mingw32ce-g++
-STRIP = $(BASE)/bin/arm-wince-mingw32ce-strip
+CXX = $(BASE)/bin/arm-mingw32ce-g++
+STRIP = $(BASE)/bin/arm-mingw32ce-strip
 
-DLLTOOL = $(BASE)/bin/arm-wince-mingw32ce-dlltool
+DLLTOOL = $(BASE)/bin/arm-mingw32ce-dlltool
 DLLTOOLFLAGS =
 
 define compile
