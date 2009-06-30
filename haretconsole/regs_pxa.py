@@ -1,6 +1,7 @@
 # Register definitions for PXA processors
 #
 # (C) Copyright 2007 Kevin O'Connor <kevin@koconnor.net>
+# (C) Copyright 2009 Stefan Schmidt <stefan@datenfreihafen.org>
 #
 # This file may be distributed under the terms of the GNU GPL license.
 
@@ -13,6 +14,63 @@ regTwoBits = memalias.regTwoBits
 # PXA
 ######################################################################
 
+# PXA 3xx registers
+irqs1 = (
+    (0, "SSP3"), (2, "USBh2"), (3, "USBh1"), (4, "Keypad"), (6, "pI2C"),
+    (7, "OS Timer"), (8, "GPIO0"), (9, "GPIO1"), (10, "GPIOx"),
+    (11, "USBc"), (12, "PML"), (13, "SSP4"), (14, "AC97"), # 11 not PXA31x
+    (15, "USIM"), (16, "SSP2"), (17, "LCD"), (18, "I2C"), (20, "UART3"),
+    (21, "UART2"), (22, "UART1"), (23, "MMC1"), (24, "SSP"), (25, "DMA"),
+    (26, "TMR0"), (27, "TMR1"), (28, "TMR2"), (29, "TMR3"), (30, "RTC0"),
+    (31, "RTC1"))
+irqs2 = (
+    (1, "QCap"), (2, "CIR"), (4, "Touchscreen"), # 4 PXA32x only
+    (6, "USIM2"), (7, "GraphicsController"), (9, "MMC2"), (12, "1-Wire"),
+    (13, "NAND"), (14, "U2DC"), (15, "SGP"), (16, "MVED_DMA"), # 16 PXA31x only
+    (17, "EXT_WAKEUP0"), (18, "EXTERNAL_WAKEUP1"), (19, "DMC"), # 18 PXA32x only
+    (20, "CLOCK"), (21, "BPB2IMG"), (22, "MVED"), (23, "MMC3")) # 21, 22, 23 PXA31x only
+
+ckenA = (
+    (29, "SSP4"), (28, "SSP3"), (27, "SSP2"), (26, "SSP1"),
+    (25, "Touchscreen"), (24, "AC97"), (23, "UART3"), (22, "UART1"), # 25 PXA32x only
+    (21, "UART2"), (20, "UDC"), (19, "WTM"), (18, "USIM1"), # 20 not PXA31x
+    (17, "USIM0"), (15, "CIR"), (14, "Keypad"), (13, "MMC1"),
+    (12, "MMC0"), (11, "BootROM"), (10, "IM"), (9, "SMC"), (8, "DMC"),
+    (7, "Graphic"), (6, "U2DC"), (5, "MMC3"), (4, "NAND"), # 7 PXA32x only, 5 PXA31x only
+    (3, "CI"), (2, "USBh"), (1, "LCD"))
+ckenB = (
+    (17, "MiniLCD"), (16, "MiniIM"), (11, "Video"), # 11 PXA31x only
+    (10, "Graphic"), (9, "SystemBus"), (8, "1-Wire"), (7, "GPIO"), # 10 not PXA32x
+    (4, "I2C"), (1, "PWM3+1"), (0, "PWM2+0"))
+
+Regs_pxa3xx = {
+    0x40D00000: ("ICIP", irqs1), 0x40D0009C: ("ICIP2", irqs2),
+    0x40E00048: ("GEDR0", regOneBits("GPIO")),
+    0x40E0004c: ("GEDR1", regOneBits("GPIO", 32)),
+    0x40E00050: ("GEDR2", regOneBits("GPIO", 64)),
+    0x40E00148: ("GEDR3", regOneBits("GPIO", 96)),
+
+    0x40E00000: ("GPLR0", regOneBits("GPIO")),
+    0x40E00004: ("GPLR1", regOneBits("GPIO", 32)),
+    0x40E00008: ("GPLR2", regOneBits("GPIO", 64)),
+    0x40E00100: ("GPLR3", regOneBits("GPIO", 96)),
+
+    0x40E0000C: ("GPDR0", regOneBits("GPIO")),
+    0x40E00010: ("GPDR1", regOneBits("GPIO", 32)),
+    0x40E00014: ("GPDR2", regOneBits("GPIO", 64)),
+    0x40E0010C: ("GPDR3", regOneBits("GPIO", 96)),
+
+# FIXME: Add AF description
+
+    # Clocks, FIXME: a lot is missing for PXA3xx here
+    0x4134000C: ("CKEN_A", ckenA),
+    0x41340010: ("CKEN_B", ckenB),
+    0x41350000: ("OSCC", (("12", "ROS"), (11, "PEN"), (10, "TENS3"),
+                          (9, "TENS2"), (8, "TENS0"), ("0-7", "VCXOST"))),
+    }
+memalias.RegsList['ARCH:PXA3xx'] = Regs_pxa3xx
+
+# PXA 27x registers
 irqs1 = (
     (0, "SSP3"), (1, "MSL"), (2, "USBh2"), (3, "USBh1"),
     (4, "Keypad"), (5, "MemoryStick"), (6, "pI2C"), (7, "OS Timer"),
