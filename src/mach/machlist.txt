@@ -26,6 +26,7 @@ Magician,   PXA27x  ,PM10,                        MAGICIAN
 Universal,  PXA27x  ,PU10,                        HTCUNIVERSAL
 H1910,      PXA     ,hp iPAQ h191,                H1900
 H1940,      S3c2410 ,HP iPAQ h193;HP iPAQ h194,   H1940,    set ramsize 64*1024*1024
+RX1950,     S3c2442 ,HP iPAQ rx195,               RX1950,   set ramsize 32*1024*1024
 H2200,      PXA     ,hp iPAQ h22,                 H2200
 H3600b,     SA      ,Compaq iPAQ H3600,           H3600
 H3700,      SA      ,Compaq iPAQ H3700
