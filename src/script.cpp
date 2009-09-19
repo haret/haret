@@ -146,7 +146,7 @@ get_token(const char **s, char *storage, int storesize, int for_expr)
         while (*e && (*e != quote))
             e++;
     else if (for_expr)
-        while (*e && isalnum(*e))
+        while (*e && (isalnum(*e) || (*e == '_')))
             e++;
     else
         while (*e && !isspace(*e))
