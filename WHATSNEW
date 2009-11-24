@@ -1,4 +1,7 @@
-next version <kevin@koconnor.net>, Holger Schurig <hs4233@mail.mn-solutions.de>
+next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick
+
+  * Add KERNEL_OFFSET variable to configure how far from the start of
+    ram to place the kernel.
 
   * Add new script tools/extract-bootbundle.py that can extract the
     haret/kernel/initrd/script parts of a boot bundle.
