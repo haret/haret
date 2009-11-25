@@ -13,6 +13,12 @@ public:
     void init();
 };
 
+class MachineQSD8xxx : public Machine {
+public:
+    MachineQSD8xxx();
+    void init();
+};
+
 // Aliases
 class MachineMSM7201A : public MachineMSM7xxxA {
 };

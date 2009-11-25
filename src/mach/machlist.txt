@@ -92,6 +92,7 @@ Raphael,    MSM7201A,HTC Touch Pro T7272;RAPH100;RAPH800, HTCRAPHAEL, \
         set ramsize 0x6400000, \
         set ramaddr 0x20000000
 SGH_i900,   PXA27x  ,SGH-i900,                    SGH_I900
+Leo,        QSD8xxx ,HTC HD2 T8585,               HTCLEO
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820

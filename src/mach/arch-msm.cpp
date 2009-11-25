@@ -28,6 +28,43 @@ defineMsmGpios()
         );
 }
 
+static void
+defineQsdGpios()
+{
+    // QSD8xxx has eight GPIO banks (0-7)
+    // GPIO1 base: 0xA9000000 + 0x800
+    // GPIO2 base: 0xA9100000 + 0xc00
+    runMemScript(
+        // output registers
+        "addlist gpios p2v(0xa9000800)\n"
+        "addlist gpios p2v(0xa9100c00)\n"
+        "addlist gpios p2v(0xa9000804)\n"
+        "addlist gpios p2v(0xa9000808)\n"
+        "addlist gpios p2v(0xa900080c)\n"
+        "addlist gpios p2v(0xa9000810)\n"
+        "addlist gpios p2v(0xa9000814)\n"
+        "addlist gpios p2v(0xa9000818)\n"
+        // input read registers
+        "addlist gpios p2v(0xa9000850)\n"
+        "addlist gpios p2v(0xa9100c20)\n"
+        "addlist gpios p2v(0xa9000854)\n"
+        "addlist gpios p2v(0xa9000858)\n"
+        "addlist gpios p2v(0xa900085c)\n"
+        "addlist gpios p2v(0xa9000860)\n"
+        "addlist gpios p2v(0xa9000864)\n"
+        "addlist gpios p2v(0xa900086c)\n"
+        // output enable registers
+        "addlist gpios p2v(0xa9000820)\n"
+        "addlist gpios p2v(0xa9100c08)\n"
+        "addlist gpios p2v(0xa9000824)\n"
+        "addlist gpios p2v(0xa9000828)\n"
+        "addlist gpios p2v(0xa900082c)\n"
+        "addlist gpios p2v(0xa9000830)\n"
+        "addlist gpios p2v(0xa9000834)\n"
+        "addlist gpios p2v(0xa9000838)\n"
+        );
+}
+
 
 /****************************************************************
  * MSM 7xxxA
@@ -82,3 +119,29 @@ MachineMSM7xxx::init()
 }
 
 REGMACHINE(MachineMSM7xxx)
+
+/****************************************************************
+ * QSD 8xxx
+ ****************************************************************/
+
+MachineQSD8xxx::MachineQSD8xxx()
+{
+    name = "Generic QSD8xxx";
+    flushCache = cpuFlushCache_arm7;
+    arm6mmu = 1;
+    archname = "QSD8xxx";
+    CPUInfo[0] = L"QSD8250B";
+}
+
+void
+MachineQSD8xxx::init()
+{
+    runMemScript(
+        "set ramaddr 0x18800000\n"
+        "addlist irqs p2v(0xac000080) 0x100 32 0\n" // 0x100 masks out the 9th interrupt (DEBUG_TIMER_EXP)
+        "addlist irqs p2v(0xac000084) 0 32 0\n"
+    );
+    defineQsdGpios();
+}
+
+REGMACHINE(MachineQSD8xxx)
