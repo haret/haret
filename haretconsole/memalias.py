@@ -28,7 +28,7 @@ def regTwoBits(name, start=0):
 # Helper - create description for registers that are composed of an
 # incrementing list of four bit fields.
 def regFourBits(name, start=0):
-    return tuple([("%d,%d,%d,%d" % (i, i+1, i+2, i+3), "%s%d" % (name, i/4 + start))
+    return tuple([("%d-%d" % (i, i+3), "%s%d" % (name, i/4 + start))
                   for i in range(0, 32, 4)])
 
 import regs_pxa
@@ -72,7 +72,7 @@ def parsebits(defs):
 
 # Internal function called at script startup time.  It processes the
 # register maps into an internal uniform format.  The format is:
-# RegsList = {"archname": {paddr: ("regname", ((bit_n, "bitname"),...))}}
+# RegsList = {"archname": {paddr: ("regname", ((bitmask, "bitname"),...))}}
 def preproc():
     global RegsList
     rl = {}
@@ -107,8 +107,8 @@ def getClock(m):
     LastClock = clock
     return "%s(%s)" % (t, out)
 
-# Return a string representation of a set of changed bits.
-def bitDecode(m, bits, desc, val, changed, add_il):
+# Extract the specified bits from a value
+def extractValue(val, bits, changed):
     count = 0
     outval = 0
     pos = []
@@ -120,6 +120,11 @@ def bitDecode(m, bits, desc, val, changed, add_il):
             if bit & changed:
                 pos.append(i)
             count += 1
+    return (outval, pos)
+
+# Return a string representation of a set of changed bits.
+def bitDecode(m, bits, desc, val, changed, add_il):
+    outval, pos = extractValue(val, bits, changed)
     if add_il:
         varpos = int(m.group('varpos'))
         ignorelist = " ".join(["%d" % (varpos*32+i) for i in pos])
@@ -182,14 +187,20 @@ re_mem = re.compile(
     r" (?P<vaddr>.*)=(?P<val>.*) \((?P<changed>.*)\)(?P<pc>( @~.*)?)$")
 
 # Storage of known named registers that are being "watched"
-# VirtMap[vaddr] = (name, ((bits, name), (bits,name), ...))
+# VirtMap[vaddr] = (paddr, (name, ((bits, name), (bits,name), ...)))
 VirtMap = {}
 # Storage of known mmutrace mappings
 # VirtTrace[vaddr & 0xFFF00000] = paddr
 VirtTrace = {}
+# Most recent observed values from watch
+# WatchValues[paddr] = val
+WatchValues = {}
 # The active architecture named registers
-# ArchRegs = {paddr: (name, ((bits, name), (bits,name), ...)) }
+# ArchRegs[paddr] = (name, ((bits, name), (bits,name), ...))
 ArchRegs = {}
+# The address of a register name
+# ArchRegNames[name] = (paddr, bits)
+ArchRegNames ={}
 
 def lookupVirt(vaddr):
     """Locate register info for a vaddr returned from mmutrace report."""
@@ -206,7 +217,7 @@ def handleWatch(m):
         key = int(m.group('paddr'), 16)
     else:
         name = key = "insn:"+m.group('insn')
-    VirtMap[name] = ArchRegs.get(key)
+    VirtMap[name] = (key, ArchRegs.get(key))
     print m.string
 
 def handleMem(m):
@@ -214,7 +225,8 @@ def handleMem(m):
     name = m.group('vaddr')
     if m.group('type') == 'insn':
         name = "insn:"+name
-    reginfo = VirtMap.get(name)
+    paddr, reginfo = VirtMap.get(name, (None, None))
+    WatchValues[paddr] = int(m.group('val'), 16)
     if reginfo is None:
         # No named register - invent a "dummy" one
         reginfo = (name, ())
@@ -231,6 +243,7 @@ def handleBegin(m):
     LastClock = 0
     VirtMap.clear()
     VirtTrace.clear()
+    WatchValues.clear()
     print m.string
 
 def handleDetect(m):
@@ -240,6 +253,15 @@ def handleDetect(m):
     if ar is None:
         ar = RegsList.get("ARCH:"+m.group('arch'), {})
     ArchRegs = ar
+    ArchRegNames.clear()
+    for paddr, reginfo in ar.items():
+        regname, bitdefs = reginfo
+        if not bitdefs:
+            ArchRegNames[regname] = (paddr, ~0)
+            continue
+        for bits, desc in bitdefs:
+            ArchRegNames["%s/%s" % (regname, desc)] = (paddr, bits)
+            ArchRegNames[desc] = (paddr, bits)
     print m.string
 
 def procline(line):
