@@ -70,3 +70,24 @@ MachineArmV6::detect()
 }
 
 REGMACHINE(MachineArmV6)
+
+/****************************************************************
+ * ARM v7
+ ****************************************************************/
+
+MachineArmV7::MachineArmV7()
+{
+    name = "Generic ARM v7";
+    flushCache = cpuFlushCache_arm7;
+    arm6mmu = 1;
+}
+
+int
+MachineArmV7::detect()
+{
+    uint32 p15r0 = get_p15r0();
+    return (((p15r0 >> 24) == 'A' || (p15r0 >> 24) == 'Q') // Q = Qualcomm, see cpu.cpp
+            && ((p15r0 >> 16) & 0xf) == 15);
+}
+
+REGMACHINE(MachineArmV7)

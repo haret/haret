@@ -34,6 +34,7 @@ static char *cpu_id()
     case 'A': PUTS ("ARM "); break;
     case 'D': PUTS ("DEC "); break;
     case 'i': PUTS ("Intel "); break;
+    case 'Q': PUTS ("Qualcomm "); break;
     default:  PUTS ("Unknown "); break;
   }
 
@@ -52,6 +53,7 @@ static char *cpu_id()
     case 5: PUTS ("5TE "); break;
     case 6: PUTS ("5TEJ "); break;
     case 7: PUTS ("6 "); break;
+    case 15: PUTS ("7 "); break;
     default: PUTSF ("unknown(%d) ", (p15r0 >> 16) & 15); break;
   }
 

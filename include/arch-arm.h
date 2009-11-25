@@ -10,6 +10,7 @@ extern "C" {
     void cpuFlushCache_arm925();
     void cpuFlushCache_arm926();
     void cpuFlushCache_arm6();
+    void cpuFlushCache_arm7();
 }
 
 class Machine920t : public Machine {
@@ -27,6 +28,12 @@ public:
 class MachineArmV6 : public Machine {
 public:
     MachineArmV6();
+    int detect();
+};
+
+class MachineArmV7 : public Machine {
+public:
+    MachineArmV7();
     int detect();
 };
 

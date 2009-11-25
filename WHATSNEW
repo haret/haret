@@ -10,6 +10,10 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick
 
   * Simplify lsmod output
 
+  * Add generic support for ARM v7 cores
+
+  * Add detection for implementor Qualcomm
+
 20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 
   * Add support for "Centrality" arm cpus.
