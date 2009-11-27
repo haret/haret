@@ -93,6 +93,13 @@ Raphael,    MSM7201A,HTC Touch Pro T7272;RAPH100;RAPH800, HTCRAPHAEL, \
         set ramaddr 0x20000000
 SGH_i900,   PXA27x  ,SGH-i900,                    SGH_I900
 Leo,        QSD8xxx ,HTC HD2 T8585,               HTCLEO
+Topaz,      MSM7201A,"Touch Diamond2 T5353",      HTCTOPAZ, \
+        set ramsize 0x5100000, \
+        set ramaddr 0x10000000
+Rhodium,    MSM7201A,"HTC Touch Pro2 T7373",      HTCTOPAZ, \
+        set ramsize 0x5100000, \
+        set ramaddr 0x10000000
+Jornada9xx0,OMAP850 ,"HP, Jornada 900",           JORNADA928
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820
@@ -104,3 +111,7 @@ H3600a,     SA      ,Compaq iPAQ H3600,           H3600
 PLATFORM=SmartPhone
 Tornado,    OMAP850 ,Vodafone v1240,              OMAP_TORNADO
 Libra,      MSM7500 ,LIBR100
+
+PLATFORM=PLATFORM_TYPE
+E4430,      S3c2440 ,MDPNAE443X2TR01,             E4430, \
+        set ramsize 64*1024*1024
