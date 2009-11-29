@@ -130,7 +130,8 @@ MachineQSD8xxx::MachineQSD8xxx()
     flushCache = cpuFlushCache_arm7;
     arm6mmu = 1;
     archname = "QSD8xxx";
-    CPUInfo[0] = L"QSD8250B";
+    CPUInfo[0] = L"QSD8250B"; // First seen on HTC Leo
+    CPUInfo[1] = L"QSD8250"; // First seen on Acer S200 (F1)
 }
 
 void

@@ -2533,6 +2533,20 @@ extern unsigned int __machine_arch_type;
 #define MACH_TYPE_MXT_TD60             2550
 #define MACH_TYPE_ESYX                 2551
 #define MACH_TYPE_DOVE_DB              2552
+#define MACH_TYPE_BULLDOG              2553
+#define MACH_TYPE_DERELL_ME2000        2554
+#define MACH_TYPE_BCMRING_BASE         2555
+#define MACH_TYPE_BCMRING_EVM          2556
+#define MACH_TYPE_BCMRING_EVM_JAZZ     2557
+#define MACH_TYPE_BCMRING_SP           2558
+#define MACH_TYPE_BCMRING_SV           2559
+#define MACH_TYPE_BCMRING_SV_JAZZ      2560
+#define MACH_TYPE_BCMRING_TABLET       2561
+#define MACH_TYPE_BCMRING_VP           2562
+#define MACH_TYPE_BCMRING_EVM_SEIKOR   2563
+#define MACH_TYPE_BCMRING_SP_WQVGA     2564
+#define MACH_TYPE_BCMRING_CUSTOM       2565
+#define MACH_TYPE_ACER_S200            2566
 
 #ifdef CONFIG_ARCH_EBSA110
 # ifdef machine_arch_type
@@ -32784,6 +32798,174 @@ extern unsigned int __machine_arch_type;
 # define machine_is_dove_db2()	(machine_arch_type == MACH_TYPE_DOVE_DB)
 #else
 # define machine_is_dove_db2()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BULLDOG
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BULLDOG
+# endif
+# define machine_is_bulldog()	(machine_arch_type == MACH_TYPE_BULLDOG)
+#else
+# define machine_is_bulldog()	(0)
+#endif
+
+#ifdef CONFIG_MACH_DERELL_ME2000
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_DERELL_ME2000
+# endif
+# define machine_is_derell_me2000()	(machine_arch_type == MACH_TYPE_DERELL_ME2000)
+#else
+# define machine_is_derell_me2000()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_BASE
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_BASE
+# endif
+# define machine_is_bcmring_base()	(machine_arch_type == MACH_TYPE_BCMRING_BASE)
+#else
+# define machine_is_bcmring_base()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_EVM
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_EVM
+# endif
+# define machine_is_bcmring_evm()	(machine_arch_type == MACH_TYPE_BCMRING_EVM)
+#else
+# define machine_is_bcmring_evm()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_EVM_JAZZ
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_EVM_JAZZ
+# endif
+# define machine_is_bcmring_evm_jazz()	(machine_arch_type == MACH_TYPE_BCMRING_EVM_JAZZ)
+#else
+# define machine_is_bcmring_evm_jazz()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_SP
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_SP
+# endif
+# define machine_is_bcmring_sp()	(machine_arch_type == MACH_TYPE_BCMRING_SP)
+#else
+# define machine_is_bcmring_sp()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_SV
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_SV
+# endif
+# define machine_is_bcmring_sv()	(machine_arch_type == MACH_TYPE_BCMRING_SV)
+#else
+# define machine_is_bcmring_sv()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_SV_JAZZ
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_SV_JAZZ
+# endif
+# define machine_is_bcmring_sv_jazz()	(machine_arch_type == MACH_TYPE_BCMRING_SV_JAZZ)
+#else
+# define machine_is_bcmring_sv_jazz()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_TABLET
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_TABLET
+# endif
+# define machine_is_bcmring_tablet()	(machine_arch_type == MACH_TYPE_BCMRING_TABLET)
+#else
+# define machine_is_bcmring_tablet()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_VP
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_VP
+# endif
+# define machine_is_bcmring_vp()	(machine_arch_type == MACH_TYPE_BCMRING_VP)
+#else
+# define machine_is_bcmring_vp()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_EVM_SEIKOR
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_EVM_SEIKOR
+# endif
+# define machine_is_bcmring_evm_seikor()	(machine_arch_type == MACH_TYPE_BCMRING_EVM_SEIKOR)
+#else
+# define machine_is_bcmring_evm_seikor()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_SP_WQVGA
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_SP_WQVGA
+# endif
+# define machine_is_bcmring_sp_wqvga()	(machine_arch_type == MACH_TYPE_BCMRING_SP_WQVGA)
+#else
+# define machine_is_bcmring_sp_wqvga()	(0)
+#endif
+
+#ifdef CONFIG_MACH_BCMRING_CUSTOM
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_BCMRING_CUSTOM
+# endif
+# define machine_is_bcmring_custom()	(machine_arch_type == MACH_TYPE_BCMRING_CUSTOM)
+#else
+# define machine_is_bcmring_custom()	(0)
+#endif
+
+#ifdef CONFIG_MACH_ACER_S200
+# ifdef machine_arch_type
+#  undef machine_arch_type
+#  define machine_arch_type	__machine_arch_type
+# else
+#  define machine_arch_type	MACH_TYPE_ACER_S200
+# endif
+# define machine_is_acer_s200()	(machine_arch_type == MACH_TYPE_ACER_S200)
+#else
+# define machine_is_acer_s200()	(0)
 #endif
 
 /*
