@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick
+next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn Stolk
 
   * Add KERNEL_OFFSET variable to configure how far from the start of
     ram to place the kernel.
@@ -18,6 +18,8 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick
 
   * Add support for the HTC Leo, HTC Topaz, HTC Rhodium, HP Jornada 900,
     Medion GoPal E4430, Acer neoTouch S200 F1
+
+  * New command: SETBIT[P|V]
 
 20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 

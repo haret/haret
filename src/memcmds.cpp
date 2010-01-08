@@ -231,6 +231,66 @@ REG_CMD(0, "PFW", cmd_memfill,
         "  The [B]yte/[H]alfword/[W]ord suffixes selects the size of\n"
         "  <value> and in which units the <count> is measured.")
 
+/****************************************************************
+ * Writing or clearing bits to memory
+ ****************************************************************/
+
+static void
+setbitVirt(uint8 *vaddr, uint32 bitnr, uint32 bitval)
+{
+    TRY_EXCEPTION_HANDLER {
+        if (bitval)
+        {
+          *(uint32*)vaddr |= (1 << bitnr - 1);
+        }
+        else
+        {
+          *(uint32*)vaddr &= ~(1 << bitnr - 1);
+        }
+    } CATCH_EXCEPTION_HANDLER {
+        Output(C_ERROR "EXCEPTION while writing bit %d at address %p",
+               bitnr, vaddr);
+    }
+}
+
+static void
+setbitPhys(uint32 paddr, uint32 bitnr, uint32 bitval)
+{
+  uint8 *vaddr = memPhysMap(paddr);
+  setbitVirt(vaddr, bitnr, bitval);
+}
+
+
+static void
+cmd_setbit(const char *tok, const char *x)
+{
+    uint32 addr, bitnr, bitval;
+    char fill_type = toupper(tok[6]);
+
+    // Get parameters
+    if (!get_expression(&x, &addr)
+        || !get_expression(&x, &bitnr)
+        || !get_expression(&x, &bitval)) {
+        ScriptError("Expected <addr> <bitnr> <0|1>");
+        return;
+    }
+
+    switch (fill_type) {
+    case 'V':
+        setbitVirt((uint8*)addr, bitnr, bitval);
+        break;
+    case 'P':
+        setbitPhys(addr, bitnr, bitval);
+        break;
+    }
+}
+
+
+REG_CMD_ALT(0, "SETBITV", cmd_setbit, setbitv, 0)
+REG_CMD(0, "SETBITP", cmd_setbit,
+        "SETBIT[V|P] <addr> <bitnr> <0|1>\n"
+        "  Sets or clears a bit calculated from the given [P]hysical\n"
+        "  or [V]irtual base address.")
 
 /****************************************************************
  * Dumping memory directly to file
