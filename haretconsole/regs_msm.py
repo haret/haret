@@ -76,6 +76,10 @@ Regs_msm7xxxA.update({
         0xc0000080: ("IRQ0", irqs0),
         0xc0000084: ("IRQ1", irqs1),
 #        0xa92008b0: ("irq5", regOneBits("GPIO", 107)),
+        0xa9200844: ("in5", regOneBits("in5-")),
+        0xa9200850: ("out5", regOneBits("out5-")),
+        0xa9200854: ("out5_en", regOneBits("out5_en-")),
+        0xa92008b8: ("intr5_en", regOneBits("intr5_en-")),
     })
 memalias.RegsList['ARCH:MSM7xxxA'] = Regs_msm7xxxA
 
