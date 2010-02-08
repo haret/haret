@@ -79,6 +79,8 @@ Herald,     OMAP850 ,HERA,                        HERALD
 Prophet,    OMAP850 ,PM300
 RX3000,     S3c2440 ,HP iPAQ rx3,                 RX3715,   set ramsize 64*1024*1024
 Treo700wx,  PXA27x  ,Palm Treo 700w,              T700WX,   set ramsize 64*1024*1024
+Treo850w,   MSM7201A,Palm Treo 850w,              HTCPANTHER
+Treo850e,   MSM7201A,Palm Treo 850e,              HTCPANTHER_CDMA
 e310,       SA      ,Toshiba e310
 e740,       PXA     ,TOSHIBA e740
 Acer_n30,   S3c2410 ,Acer n30 Handheld,           N30

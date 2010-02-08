@@ -17,7 +17,7 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn St
   * Add generic support for QSD8xxx
 
   * Add support for the HTC Leo, HTC Topaz, HTC Rhodium, HP Jornada 900,
-    Medion GoPal E4430, Acer neoTouch S200 F1
+    Medion GoPal E4430, Acer neoTouch S200 F1, HTC Panther (Palm Treo Pro)
 
   * New command: SETBIT[P|V]
 
