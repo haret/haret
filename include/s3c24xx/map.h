@@ -35,3 +35,4 @@
 #define S3C2410_CS7 (0x38000000)
 
 #define S3C24XX_VA_GPIO (0x00)
+

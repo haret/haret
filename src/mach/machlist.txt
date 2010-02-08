@@ -101,6 +101,11 @@ Rhodium,    MSM7201A,"HTC Touch Pro2 T7373",      HTCTOPAZ, \
         set ramaddr 0x10000000
 Jornada9xx0,OMAP850 ,"HP, Jornada 900",           JORNADA928
 Acer_S200  ,QSD8xxx ,"Acer S200",                 ACER_S200
+M800,       S3c2442 ,M800V02,                     M800 
+X800,       S3c2442 ,X800,                        M800 
+DX900,      S3c6400 ,DX900V040,                   DX900
+X900,       S3c6400 ,V900V050,                    ACER_ETEN_X900
+M900,       S3c6410 ,M900V030;GT-I8000,                    ACER_TEMPO_M900
 
 PLATFORM=Jupiter
 Jornada820, SA      ,"HP, Jornada 820",           JORNADA820

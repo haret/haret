@@ -1,4 +1,4 @@
-next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn Stolk
+next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn Stolk, Tanguy Pruvot
 
   * Add KERNEL_OFFSET variable to configure how far from the start of
     ram to place the kernel.
@@ -20,6 +20,8 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn St
     Medion GoPal E4430, Acer neoTouch S200 F1
 
   * New command: SETBIT[P|V]
+
+  * Add Samsung S3C64x0 support and gpio function set (tested on Acer M900 device)
 
 20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 
