@@ -23,6 +23,8 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn St
 
   * Add Samsung S3C64x0 support and gpio function set (tested on Acer M900 device)
 
+  * PLAYSOUND now accepts a filename parameter
+
 20080928 0.5.2 <kevin@koconnor.net>, <ipaqlinux@oliford.co.uk>, <pmiscml@gmail.com>
 
   * Add support for "Centrality" arm cpus.

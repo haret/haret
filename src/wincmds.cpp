@@ -156,18 +156,24 @@ static void
 playSound(const char *cmd, const char *args)
 {
     uint32 seconds;
+    wchar_t wname[MAX_CMDLEN];
+
     if (!get_expression(&args, &seconds))
         seconds = 0;
 
-    Output("Playing chord.wav for %d seconds",seconds);
-    int ret=PlaySound(L"\\Windows\\chord.wav", 0, SND_LOOP|SND_ASYNC|SND_FILENAME);
+    if (get_wtoken(&args, wname, ARRAY_SIZE(wname))) {
+        swprintf(wname, L"\\Windows\\chord.wav");
+    }
+
+    Output("Playing %ls for %d seconds",wname,seconds);
+    int ret=PlaySound(wname, 0, SND_LOOP|SND_ASYNC|SND_FILENAME);
     Sleep(seconds*1000);
     if (ret)
         PlaySound(0, 0, 0);
 }
 REG_CMD(0, "PLAYSOUND", playSound,
-        "PLAYSOUND [<seconds>]\n"
-        "  Plays chord.wav")
+        "PLAYSOUND [<seconds>] [<sound file>]\n"
+        "  Plays sound file")
 
 // From MSDN docs.
 #define SETPOWERMANAGEMENT 6147
