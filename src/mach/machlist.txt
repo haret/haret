@@ -98,7 +98,7 @@ Leo,        QSD8xxx ,HTC HD2 T8585;HTC_HD2;T-Mobile_LEO,       HTCLEO
 Topaz,      MSM7201A,"Touch Diamond2 T5353",      HTCTOPAZ, \
         set ramsize 0x5100000, \
         set ramaddr 0x10000000
-Rhodium,    MSM7201A,"HTC Touch Pro2 T7373",      HTCTOPAZ, \
+Rhodium,    MSM7201A,"HTC Touch Pro2 T7373";T7380,      HTCTOPAZ, \
         set ramsize 0x5100000, \
         set ramaddr 0x10000000
 Jornada9xx0,OMAP850 ,"HP, Jornada 900",           JORNADA928
