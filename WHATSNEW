@@ -1,7 +1,10 @@
 next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn Stolk, Tanguy Pruvot, cr2
 
   * Add KERNEL_OFFSET variable to configure how far from the start of
-    ram to place the kernel.
+    ram to place the kernel. Note that this is a delta from the default!
+
+  * Add INITRD_OFFSET variable to configure how far from the start of
+    the kernel to place the initrd. Note that this is also a delta!
 
   * Add new script tools/extract-bootbundle.py that can extract the
     haret/kernel/initrd/script parts of a boot bundle.

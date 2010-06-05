@@ -38,6 +38,8 @@ static uint32 bootMachineType = 0;
 static uint32 FBDuringBoot = 1;
 // Kernel text offset delta value
 static uint32 kernelOffset = 0x0;
+// Initrd offset delta value
+static uint32 initrdOffset = 0x0;
 
 REG_VAR_STR(0, "KERNEL", bootKernel, "Linux kernel file name")
 REG_VAR_STR(0, "INITRD", bootInitrd, "Initial Ram Disk file name")
@@ -47,6 +49,7 @@ REG_VAR_INT(0, "MTYPE", bootMachineType
 REG_VAR_INT(0, "FBDURINGBOOT", FBDuringBoot
             , "Enable/disable writing status lines to screen during boot")
 REG_VAR_INT(0, "KERNEL_OFFSET", kernelOffset, "Kernel text offset delta value")
+REG_VAR_INT(0, "INITRD_OFFSET", initrdOffset, "Initrd offset delta value")
 
 /*
  * Theory of operation:
@@ -92,7 +95,7 @@ REG_VAR_INT(0, "KERNEL_OFFSET", kernelOffset, "Kernel text offset delta value")
 #define PHYSOFFSET_TAGS   0x100
 // Recommended kernel placement = RAM start + kernelOffset + 32K
 #define PHYSOFFSET_KERNEL 0x8000
-// Initrd will be put at the address of kernel + 5MB
+// Initrd will be put at the address of kernel + 5MB + initrdOffset
 #define PHYSOFFSET_INITRD (PHYSOFFSET_KERNEL + 0x500000)
 // Maximum size of the tags structure.
 #define TAGSIZE (PAGE_SIZE - 0x100)
@@ -159,6 +162,7 @@ struct preloadData {
     char *tags;
     uint32 kernelOffset;
     uint32 kernelSize;
+    uint32 initrdOffset;
     uint32 initrdSize;
     const char **indexPages[MAX_INDEX];
 
@@ -243,7 +247,7 @@ static inline int __preload
 fbOverlaps(struct preloadData *pd)
 {
     return IN_RANGE(pd->physFB, pd->startRam
-                    , PHYSOFFSET_INITRD + pd->kernelOffset + pd->initrdSize);
+                    , PHYSOFFSET_INITRD + pd->initrdOffset + pd->kernelOffset + pd->initrdSize);
 }
 
 // Code to launch kernel.
@@ -278,7 +282,7 @@ preloader(struct preloadData *data)
     FB_PRINTF(&data->fbi, "Kernel relocated\\n");
 
     // Copy initrd (if applicable)
-    char *destInitrd = (char *)data->startRam + PHYSOFFSET_INITRD + data->kernelOffset;
+    char *destInitrd = (char *)data->startRam + PHYSOFFSET_INITRD + data->initrdOffset + data->kernelOffset;
     int initrdCount = PAGE_ALIGN(data->initrdSize) / PAGE_SIZE;
     do_copyPages(destInitrd, data->indexPages, kernelCount, initrdCount);
 
@@ -435,9 +439,9 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
                  && relPhys < PHYSOFFSET_KERNEL + kernelOffset + kernelSize)
             ovpg = &pgs_kernel[(relPhys - PHYSOFFSET_KERNEL - kernelOffset) / PAGE_SIZE];
         else if (initrdSize
-                 && (relPhys >= PHYSOFFSET_INITRD + kernelOffset
-                     && relPhys < PHYSOFFSET_INITRD + kernelOffset + initrdSize))
-            ovpg = &pgs_initrd[(relPhys - PHYSOFFSET_INITRD - kernelOffset) / PAGE_SIZE];
+                 && (relPhys >= PHYSOFFSET_INITRD + initrdOffset + kernelOffset
+                     && relPhys < PHYSOFFSET_INITRD + initrdOffset + kernelOffset + initrdSize))
+            ovpg = &pgs_initrd[(relPhys - PHYSOFFSET_INITRD - initrdOffset - kernelOffset) / PAGE_SIZE];
         else
             // This page wont be overwritten.
             continue;
@@ -461,7 +465,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
            , pgs_index->virtLoc, pgs_index->physLoc);
 
     // Setup linux tags.
-    setup_linux_params(pg_tag->virtLoc, memPhysAddr + PHYSOFFSET_INITRD
+    setup_linux_params(pg_tag->virtLoc, memPhysAddr + PHYSOFFSET_INITRD + initrdOffset
                     + kernelOffset, initrdSize);
     Output("Built kernel tags area");
 
@@ -482,6 +486,7 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     pd->tags = (char *)pg_tag->physLoc;
     pd->kernelOffset = kernelOffset;
     pd->kernelSize = kernelSize;
+    pd->initrdOffset = initrdOffset;
     pd->initrdSize = initrdSize;
     for (int i=0; i<indexCount; i++)
         pd->indexPages[i] = (const char **)pgs_index[i].physLoc;
