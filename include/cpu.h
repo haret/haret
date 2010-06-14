@@ -16,6 +16,8 @@
 #define PAGE_ALIGNED __attribute__ ((aligned (4096)))
 // Return an integer rounded up to the nearest page
 #define PAGE_ALIGN(v) (((v)+PAGE_SIZE-1) / PAGE_SIZE * PAGE_SIZE)
+// Return an integer rounded down to the nearest page
+#define PAGE_ALIGN_DOWN(addr) (addr - (addr % PAGE_SIZE))
 
 // Macros useful for defining CPU coprocessor accessor functions
 #define DEF_GETCPRATTR(Name, Cpr, Op1, CRn, CRm, Op2, Attr, Clob)       \
