@@ -17,6 +17,7 @@ class MachineQSD8xxx : public Machine {
 public:
     MachineQSD8xxx();
     void init();
+    void hardwareShutdown(struct fbinfo *);
 };
 
 // Aliases

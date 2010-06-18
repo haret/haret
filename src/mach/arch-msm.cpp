@@ -2,6 +2,7 @@
 #include "script.h" // runMemScript
 #include "arch-arm.h" // cpuFlushCache_arm6
 #include "arch-msm.h"
+#include "memory.h" // memPhysMap
 
 static void
 defineMsmGpios()
@@ -146,6 +147,27 @@ MachineQSD8xxx::init()
         "addlist irqs p2v(0xac000084) 0 32 0\n"
     );
     defineQsdGpios();
+}
+
+void
+MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
+{
+    uint32 volatile *AGPT_MATCH_VAL = (uint32*)memPhysMap(0xAC100000);
+    uint32 volatile *AGPT_ENABLE    = (uint32*)memPhysMap(0xAC100008);
+    uint32 volatile *AGPT_CLEAR     = (uint32*)memPhysMap(0xAC10000C);
+    uint32 volatile *ADGT_MATCH_VAL = (uint32*)memPhysMap(0xAC100010);
+    uint32 volatile *ADGT_ENABLE    = (uint32*)memPhysMap(0xAC100018);
+    uint32 volatile *ADGT_CLEAR     = (uint32*)memPhysMap(0xAC10001C);
+
+    // Disable GP timer
+    *AGPT_ENABLE = 0;
+    *AGPT_CLEAR = 0;
+    *AGPT_MATCH_VAL = ~0;
+
+    // Disable DG timer
+    *ADGT_ENABLE = 0;
+    *ADGT_CLEAR = 0;
+    *ADGT_MATCH_VAL = ~0;
 }
 
 REGMACHINE(MachineQSD8xxx)
