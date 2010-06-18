@@ -37,7 +37,7 @@ public:
     int arm6mmu;
 
     virtual void init();
-    virtual int preHardwareShutdown();
+    virtual int preHardwareShutdown(struct fbinfo *);
     virtual void hardwareShutdown(struct fbinfo *);
     virtual int detect();
     void (*flushCache)(void);

@@ -52,7 +52,9 @@ goNewLine(fbinfo *fbi)
 }
 
 // Write a charcter to the framebuffer.
-static void __preload
+// Use fbi->putcFunc(...) when calling this function to allow
+// arch-specific overrides.
+void __preload
 fb_putc(fbinfo *fbi, char c)
 {
     if (c == '\n') {
@@ -70,7 +72,7 @@ static void __preload
 fb_puts(fbinfo *fbi, const char *s)
 {
     for (; *s; s++)
-        fb_putc(fbi, *s);
+        fbi->putcFunc(fbi, *s);
 }
 
 // Write an unsigned integer to the screen.
@@ -98,7 +100,7 @@ fb_putsinglehex(fbinfo *fbi, uint32 val)
         val = '0' + val;
     else
         val = 'a' + val - 10;
-    fb_putc(fbi, val);
+    fbi->putcFunc(fbi, val);
 }
 
 // Write an integer in hexadecimal to the screen.
@@ -127,7 +129,7 @@ fb_printf(fbinfo *fbi, const char *fmt, ...)
     const char *s = fmt;
     for (; *s; s++) {
         if (*s != '%') {
-            fb_putc(fbi, *s);
+            fbi->putcFunc(fbi, *s);
             continue;
         }
         const char *n = s+1;
@@ -135,12 +137,12 @@ fb_printf(fbinfo *fbi, const char *fmt, ...)
         const char *sarg;
         switch (*n) {
         case '%':
-            fb_putc(fbi, '%');
+            fbi->putcFunc(fbi, '%');
             break;
         case 'd':
             val = va_arg(args, int32);
             if (val < 0) {
-                fb_putc(fbi, '-');
+                fbi->putcFunc(fbi, '-');
                 val = -val;
             }
             fb_putuint(fbi, val);
@@ -158,7 +160,7 @@ fb_printf(fbinfo *fbi, const char *fmt, ...)
             fb_puts(fbi, sarg);
             break;
         default:
-            fb_putc(fbi, *s);
+            fbi->putcFunc(fbi, *s);
             n = s;
         }
         s = n;
@@ -188,6 +190,8 @@ fb_init(fbinfo *fbi)
     fbi->scry = videoH;
     fbi->maxx = videoW / FONTWIDTH;
     fbi->maxy = videoH / FONTHEIGHT;
+
+    fbi->putcFunc = &fb_putc;
 
     Output("Video buffer at %p sx=%d sy=%d mx=%d my=%d"
            , fbi->fb, fbi->scrx, fbi->scry, fbi->maxx, fbi->maxy);

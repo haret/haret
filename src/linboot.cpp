@@ -154,6 +154,8 @@ setup_linux_params(char *tagaddr, uint32 phys_initrd_addr, uint32 initrd_size)
 struct preloadData {
     uint32 machtype;
     uint32 startRam;
+    uint32 preloadStart;
+    uint32 preloadPhys;
 
     char *tags;
     uint32 tagsOffset;
@@ -254,6 +256,7 @@ static void __preload
 preloader(struct preloadData *data)
 {
     data->fbi.fb = (uint16 *)data->physFB;
+    data->fbi.putcFunc = (fb_putc_t)((char*)data->fbi.putcFunc - data->preloadStart + data->preloadPhys);
     data->fbi.fonts = (unsigned char *)data->physFonts;
     FB_PRINTF(&data->fbi, "In preloader\\n");
 
@@ -499,6 +502,8 @@ prepForKernel(uint32 kernelSize, uint32 initrdSize)
     for (int i=0; i<indexCount; i++)
         pd->indexPages[i] = (const char **)pgs_index[i].physLoc;
     pd->startRam = memPhysAddr;
+    pd->preloadStart = (uint32)&preload_start;
+    pd->preloadPhys = pg_preload->physLoc;
     bm->pd = pd;
 
     Output("Tags will be at offset 0x%08x (0x%x)", pd->tagsOffset, pd->tagsSize);
@@ -588,7 +593,7 @@ launchKernel(struct bootmem *bm)
     Output("MMU setup: mmu=%p/%08x", virtAddrMmu, cpuGetMMU());
 
     // Call per-arch setup.
-    int ret = Mach->preHardwareShutdown();
+    int ret = Mach->preHardwareShutdown(&bm->pd->fbi);
     if (ret) {
         Output(C_ERROR "Setup for machine shutdown failed");
         return;

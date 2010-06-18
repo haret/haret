@@ -32,7 +32,7 @@ Machine::init()
 }
 
 int
-Machine::preHardwareShutdown()
+Machine::preHardwareShutdown(struct fbinfo *fbi)
 {
     return 0;
 }
