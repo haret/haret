@@ -122,17 +122,6 @@ cpuFlushCache_arm6:
 		mcr	p15, 0, r0, c8, c7, 0		@ drain I+D TLBs
 		mov	pc, r14
 
-@ Flush CPU caches on arm v7
-@
-@ Dirties r0
-		.global cpuFlushCache_arm7
-cpuFlushCache_arm7:
-		mov	r0, #0
-		mcr	p15, 0, r0, c7, c14, 2		@ clean & invalidate D line / unified line
-		mcr	p15, 0, r0, c7, c5, 0		@ I+BTB cache invalidate
-		mcr	p15, 0, r0, c8, c7, 0		@ invalidate I+D TLBs
-		mov	pc, r14
-
 @ Assembler stub that (when relocated) can store the location of a
 @ stack and C executable function to jump to.
         .section .text.preload

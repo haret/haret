@@ -15,6 +15,7 @@ OUT=out/
 
 # Default compiler flags (note -march=armv4 is needed for 16 bit insns)
 CXXFLAGS = -Wall -O -g -MD -march=armv4 -Iinclude -fno-exceptions -fno-rtti
+CXXFLAGS_ARMV5 = -Wall -O -g -MD -march=armv5 -Iinclude -fno-exceptions -fno-rtti
 LDFLAGS = -Wl,--major-subsystem-version=2,--minor-subsystem-version=10
 # LDFLAGS to debug invalid imports in exe
 #LDFLAGS = -Wl,-M -Wl,--cref
@@ -50,9 +51,21 @@ STRIP = $(BASE)/bin/arm-mingw32ce-strip
 DLLTOOL = $(BASE)/bin/arm-mingw32ce-dlltool
 DLLTOOLFLAGS =
 
-define compile
-@echo "  Compiling $1"
+define compile_armv4
+@echo "  Compiling (armv4) $1"
 $(Q)$(CXX) $(CXXFLAGS) -c $1 -o $2
+endef
+
+define compile_armv5
+@echo "  Compiling (armv5) $1"
+$(Q)$(CXX) $(CXXFLAGS_ARMV5) -c $1 -o $2
+endef
+
+define compile
+$(if $(findstring -armv5.,$1),
+	$(call compile_armv5,$1,$2),
+	$(call compile_armv4,$1,$2)
+)
 endef
 
 $(OUT)%.o: %.cpp ; $(call compile,$<,$@)
@@ -94,7 +107,8 @@ $(OUT)mach-autogen.o: src/mach/machlist.txt
 
 COREOBJS := $(MACHOBJS) haret-res.o libcfunc.o \
   script.o memory.o video.o asmstuff.o lateload.o output.o cpu.o \
-  linboot.o fbwrite.o font_mini_4x6.o winvectors.o exceptions.o
+  linboot.o fbwrite.o font_mini_4x6.o winvectors.o exceptions.o \
+  asmstuff-armv5.o
 
 HARETOBJS := $(COREOBJS) haret.o gpio.o uart.o wincmds.o \
   watch.o irqchain.o irq.o pxatrace.o mmumerge.o l1trace.o arminsns.o \
@@ -138,3 +152,4 @@ $(OUT):
 	mkdir $@
 
 -include $(OUT)*.d
+
