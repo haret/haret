@@ -14,9 +14,12 @@ public:
 };
 
 class MachineQSD8xxx : public Machine {
+protected:
+    void configureFb(struct fbinfo *);
 public:
     MachineQSD8xxx();
     void init();
+    int preHardwareShutdown(struct fbinfo *);
     void hardwareShutdown(struct fbinfo *);
 };
 

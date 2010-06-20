@@ -3,6 +3,12 @@
 #include "arch-arm.h" // cpuFlushCache_arm6
 #include "arch-msm.h"
 #include "memory.h" // memPhysMap
+#include "linboot.h" // __preload
+#include "video.h" // vidGetVRAM
+#include "fbwrite.h" // fb_putc / struct fbinfo
+#include "cpu.h" // DEF_GETCPRATTR
+
+DEF_GETCPRATTR(getMMUReg, p15, 0, c1, c0, 0, __preload,)
 
 static void
 defineMsmGpios()
@@ -168,6 +174,67 @@ MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
     *ADGT_ENABLE = 0;
     *ADGT_CLEAR = 0;
     *ADGT_MATCH_VAL = ~0;
+}
+
+struct QSD8xxxFbDmaData
+{
+    volatile uint8 *fbDmaSize;
+    volatile uint8 *fbDmaPhysFb;
+    volatile uint8 *fbDmaStride;
+    volatile uint8 *fbDmaStart;
+    uint32 fbPhysAddr;
+};
+
+static void __preload
+QSD8xxxFbPutc(struct fbinfo *fbi, char c)
+{
+    // Draw the character to the fb as usual
+    fb_putc(fbi, c);
+
+    // Only initiate DMA transfer after a newline
+    if (c != '\n')
+        return;
+
+    // Initiate the DMA transfer to update the display
+    QSD8xxxFbDmaData* data = (QSD8xxxFbDmaData*)fbi->putcFuncData;
+    if (getMMUReg() & 0x1)
+    {
+        *(uint32 *)data->fbDmaSize = (fbi->scry << 16) | (fbi->scrx);
+        *(uint32 *)data->fbDmaPhysFb = data->fbPhysAddr;
+        *(uint32 *)data->fbDmaStride = fbi->scrx * 2;
+        *(uint32 *)data->fbDmaStart = 0;
+    }
+    else
+    {
+        *(uint32 *)(0xaa200000 + 0x90004) = (fbi->scry << 16) | (fbi->scrx);
+        *(uint32 *)(0xaa200000 + 0x90008) = data->fbPhysAddr;
+        *(uint32 *)(0xaa200000 + 0x9000c) = fbi->scrx * 2;
+        *(uint32 *)(0xaa200000 + 0x00044) = 0;
+    }
+}
+
+void
+MachineQSD8xxx::configureFb(struct fbinfo *fbi)
+{
+    // Cast the data pointer so we can use it to contain our own data
+    QSD8xxxFbDmaData* data = (QSD8xxxFbDmaData*)fbi->putcFuncData;
+
+    // Get a mapping for the physical addresses we'll need to do the DMA
+    data->fbDmaSize = memPhysMap(0xaa200000 + 0x90004);
+    data->fbDmaPhysFb = memPhysMap(0xaa200000 + 0x90008);
+    data->fbDmaStride = memPhysMap(0xaa200000 + 0x9000c);
+    data->fbDmaStart = memPhysMap(0xaa200000 + 0x00044);
+    data->fbPhysAddr = vidGetVRAM();
+
+    // Override the fb_putc() with our own function
+    fbi->putcFunc = &QSD8xxxFbPutc;
+}
+
+int
+MachineQSD8xxx::preHardwareShutdown(struct fbinfo *fbi)
+{
+    configureFb(fbi);
+    return 0;
 }
 
 REGMACHINE(MachineQSD8xxx)
