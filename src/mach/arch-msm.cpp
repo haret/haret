@@ -156,8 +156,48 @@ MachineQSD8xxx::init()
 }
 
 void
-MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
+MachineQSD8xxx::shutdownInterrupts()
 {
+    uint32 dummyRead;
+
+    // Map the interrupt controller registers
+    uint32 volatile *VIC_INT_SELECT0		= (uint32*)memPhysMap(0xAC000000+0x0000);
+    uint32 volatile *VIC_INT_SELECT1		= (uint32*)memPhysMap(0xAC000000+0x0004);
+    uint32 volatile *VIC_INT_EN0		= (uint32*)memPhysMap(0xAC000000+0x0010);
+    uint32 volatile *VIC_INT_EN1		= (uint32*)memPhysMap(0xAC000000+0x0014);
+    uint32 volatile *VIC_INT_TYPE0		= (uint32*)memPhysMap(0xAC000000+0x0040);
+    uint32 volatile *VIC_INT_TYPE1		= (uint32*)memPhysMap(0xAC000000+0x0044);
+    uint32 volatile *VIC_INT_POLARITY0		= (uint32*)memPhysMap(0xAC000000+0x0050);
+    uint32 volatile *VIC_INT_POLARITY1		= (uint32*)memPhysMap(0xAC000000+0x0054);
+    uint32 volatile *VIC_CONFIG			= (uint32*)memPhysMap(0xAC000000+0x006C);
+    uint32 volatile *VIC_INT_MASTEREN		= (uint32*)memPhysMap(0xAC000000+0x0068);
+    uint32 volatile *VIC_IRQ_VEC_RD		= (uint32*)memPhysMap(0xAC000000+0x00D0);
+    uint32 volatile *VIC_IRQ_VEC_PEND_RD	= (uint32*)memPhysMap(0xAC000000+0x00D4);
+    uint32 volatile *VIC_IRQ_VEC_WR		= (uint32*)memPhysMap(0xAC000000+0x00D8);
+
+    // Disable the interrupt controller
+    *VIC_INT_MASTEREN = 0;
+    *VIC_CONFIG = 0;
+    *VIC_INT_EN0 = 0;
+    *VIC_INT_EN1 = 0;
+    *VIC_INT_SELECT0 = 0;
+    *VIC_INT_SELECT1 = 0;
+    *VIC_INT_POLARITY0 = 0;
+    *VIC_INT_POLARITY1 = 0;
+    *VIC_INT_TYPE0 = 0;
+    *VIC_INT_TYPE1 = 0;
+
+    // Reset the interrupt priority register
+    // (Must read the existing values first for some reason)
+    dummyRead = *VIC_IRQ_VEC_RD;
+    dummyRead = *VIC_IRQ_VEC_PEND_RD;
+    *VIC_IRQ_VEC_WR = ~0;
+}
+
+void
+MachineQSD8xxx::shutdownTimers()
+{
+    // Map the timer registers
     uint32 volatile *AGPT_MATCH_VAL = (uint32*)memPhysMap(0xAC100000);
     uint32 volatile *AGPT_ENABLE    = (uint32*)memPhysMap(0xAC100008);
     uint32 volatile *AGPT_CLEAR     = (uint32*)memPhysMap(0xAC10000C);
@@ -174,6 +214,13 @@ MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
     *ADGT_ENABLE = 0;
     *ADGT_CLEAR = 0;
     *ADGT_MATCH_VAL = ~0;
+}
+
+void
+MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
+{
+    shutdownTimers();
+    shutdownInterrupts();
 }
 
 struct QSD8xxxFbDmaData

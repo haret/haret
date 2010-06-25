@@ -16,6 +16,8 @@ public:
 class MachineQSD8xxx : public Machine {
 protected:
     void configureFb(struct fbinfo *);
+    void shutdownInterrupts();
+    void shutdownTimers();
 public:
     MachineQSD8xxx();
     void init();
