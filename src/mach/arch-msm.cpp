@@ -195,6 +195,33 @@ MachineQSD8xxx::shutdownInterrupts()
 }
 
 void
+MachineQSD8xxx::shutdownSirc()
+{
+    // Shut down the second interrupt controller
+    uint32 volatile *SIRC_INT_SELECT        = (uint32*)memPhysMap(0xAC200000+0x00);
+    uint32 volatile *SIRC_INT_ENABLE        = (uint32*)memPhysMap(0xAC200000+0x04);
+    uint32 volatile *SIRC_INT_ENABLE_CLEAR  = (uint32*)memPhysMap(0xAC200000+0x08);
+    uint32 volatile *SIRC_INT_ENABLE_SET    = (uint32*)memPhysMap(0xAC200000+0x0C);
+    uint32 volatile *SIRC_INT_TYPE          = (uint32*)memPhysMap(0xAC200000+0x10);
+    uint32 volatile *SIRC_INT_POLARITY      = (uint32*)memPhysMap(0xAC200000+0x14);
+    uint32 volatile *SIRC_INT_IRQ_STATUS    = (uint32*)memPhysMap(0xAC200000+0x1C);
+    uint32 volatile *SIRC_INT_IRQ1_STATUS   = (uint32*)memPhysMap(0xAC200000+0x20);
+    uint32 volatile *SIRC_INT_RAW_STATUS    = (uint32*)memPhysMap(0xAC200000+0x24);
+    uint32 volatile *SIRC_INT_CLEAR         = (uint32*)memPhysMap(0xAC200000+0x28);
+    
+    *SIRC_INT_ENABLE = 0;
+    *SIRC_INT_ENABLE_CLEAR = 0;
+    *SIRC_INT_ENABLE_SET = 0;
+    *SIRC_INT_TYPE = 0;
+    *SIRC_INT_POLARITY = 0;
+    *SIRC_INT_CLEAR = 0;
+    *SIRC_INT_SELECT = 0;
+    *SIRC_INT_RAW_STATUS = 0;
+    *SIRC_INT_IRQ_STATUS = 0;
+    *SIRC_INT_IRQ1_STATUS = 0;
+}
+
+void
 MachineQSD8xxx::shutdownTimers()
 {
     // Map the timer registers
@@ -221,6 +248,7 @@ MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
 {
     shutdownTimers();
     shutdownInterrupts();
+    shutdownSirc();
 }
 
 struct QSD8xxxFbDmaData

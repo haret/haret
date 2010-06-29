@@ -18,6 +18,7 @@ protected:
     void configureFb(struct fbinfo *);
     void shutdownInterrupts();
     void shutdownTimers();
+    void shutdownSirc();
 public:
     MachineQSD8xxx();
     void init();
