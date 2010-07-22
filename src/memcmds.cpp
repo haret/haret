@@ -172,7 +172,7 @@ static void memFill(uint8 *vaddr, uint32 wcount, uint32 value, int wordsize)
 }
 
 // Fill given number of words in physical memory with given value
-static void memPhysFill(uint32 paddr, uint32 wcount, uint32 value, int wordsize)
+void memPhysFill(uint32 paddr, uint32 wcount, uint32 value, int wordsize)
 {
   while (wcount)
   {

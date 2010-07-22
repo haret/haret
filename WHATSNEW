@@ -20,7 +20,7 @@ next version <kevin@koconnor.net>, Holger Schurig, Vasily Khoruzhick, Martijn St
   * Add support for the HTC Leo, HTC Topaz, HTC Rhodium, HP Jornada 900,
     Medion GoPal E4430, Acer neoTouch S200 F1, HTC Panther (Palm Treo Pro)
 
-  * New commands: SETBIT[P|V], DUMP MSMCLKKHZ (msm/qsd only)
+  * New commands: SETBIT[P|V], DUMP MSMCLKKHZ (msm/qsd only), PATCHFUNC
 
   * Add Samsung S3C64x0 support and gpio function set (tested on Acer M900 device)
 
