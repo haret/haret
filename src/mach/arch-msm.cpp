@@ -208,7 +208,7 @@ MachineQSD8xxx::shutdownSirc()
     uint32 volatile *SIRC_INT_IRQ1_STATUS   = (uint32*)memPhysMap(0xAC200000+0x20);
     uint32 volatile *SIRC_INT_RAW_STATUS    = (uint32*)memPhysMap(0xAC200000+0x24);
     uint32 volatile *SIRC_INT_CLEAR         = (uint32*)memPhysMap(0xAC200000+0x28);
-    
+
     *SIRC_INT_ENABLE = 0;
     *SIRC_INT_ENABLE_CLEAR = 0;
     *SIRC_INT_ENABLE_SET = 0;
@@ -226,20 +226,24 @@ MachineQSD8xxx::shutdownTimers()
 {
     // Map the timer registers
     uint32 volatile *AGPT_MATCH_VAL = (uint32*)memPhysMap(0xAC100000);
+    uint32 volatile *AGPT_COUNT_VAL = (uint32*)memPhysMap(0xAC100004);
     uint32 volatile *AGPT_ENABLE    = (uint32*)memPhysMap(0xAC100008);
     uint32 volatile *AGPT_CLEAR     = (uint32*)memPhysMap(0xAC10000C);
     uint32 volatile *ADGT_MATCH_VAL = (uint32*)memPhysMap(0xAC100010);
+    uint32 volatile *ADGT_COUNT_VAL = (uint32*)memPhysMap(0xAC100014);
     uint32 volatile *ADGT_ENABLE    = (uint32*)memPhysMap(0xAC100018);
     uint32 volatile *ADGT_CLEAR     = (uint32*)memPhysMap(0xAC10001C);
 
     // Disable GP timer
     *AGPT_ENABLE = 0;
-    *AGPT_CLEAR = 0;
+    *AGPT_CLEAR = 1;
+    *AGPT_COUNT_VAL = 0;
     *AGPT_MATCH_VAL = ~0;
 
     // Disable DG timer
     *ADGT_ENABLE = 0;
-    *ADGT_CLEAR = 0;
+    *ADGT_CLEAR = 1;
+    *ADGT_COUNT_VAL = 0;
     *ADGT_MATCH_VAL = ~0;
 }
 
