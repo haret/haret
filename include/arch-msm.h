@@ -19,6 +19,7 @@ protected:
     void shutdownInterrupts();
     void shutdownTimers();
     void shutdownSirc();
+    void shutdownDMA();
 public:
     MachineQSD8xxx();
     void init();

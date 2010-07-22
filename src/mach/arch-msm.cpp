@@ -247,12 +247,31 @@ MachineQSD8xxx::shutdownTimers()
     *ADGT_MATCH_VAL = ~0;
 }
 
+#define MSM_DMOV_CHANNEL_COUNT 16
+#define MSM_DMOV_PHYS 0xA9700000
+#define DMOV_SD0(off, ch) (MSM_DMOV_PHYS + 0x0000 + (off) + ((ch) << 2))
+#define DMOV_SD1(off, ch) (MSM_DMOV_PHYS + 0x0400 + (off) + ((ch) << 2))
+#define DMOV_SD2(off, ch) (MSM_DMOV_PHYS + 0x0800 + (off) + ((ch) << 2))
+#define DMOV_SD3(off, ch) (MSM_DMOV_PHYS + 0x0C00 + (off) + ((ch) << 2))
+#define DMOV_CONFIG(ch)       DMOV_SD3(0x300, ch)
+
+void
+MachineQSD8xxx::shutdownDMA()
+{
+    for (int i=0; i < MSM_DMOV_CHANNEL_COUNT; i++)
+    {
+        uint32 volatile *dmaChannelConfig = (uint32*)memPhysMap(DMOV_CONFIG(i));
+        *dmaChannelConfig = 0;
+    }
+}
+
 void
 MachineQSD8xxx::hardwareShutdown(struct fbinfo *)
 {
     shutdownTimers();
     shutdownInterrupts();
     shutdownSirc();
+    shutdownDMA();
 }
 
 struct QSD8xxxFbDmaData
