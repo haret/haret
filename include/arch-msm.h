@@ -1,6 +1,10 @@
 // Definitions for Texas Instruments OMAP processors.
 #include "machines.h" // Machine
 
+extern "C" {
+    void bootQSD8xxx(char *kernel, uint32 machtype, char *tags);
+}
+
 class MachineMSM7xxxA : public Machine {
 public:
     MachineMSM7xxxA();

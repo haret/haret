@@ -34,7 +34,7 @@ endif
 .PHONY : all FORCE
 
 vpath %.cpp src src/wince src/mach
-vpath %.S src src/wince
+vpath %.S src src/wince src/mach
 vpath %.rc src/wince
 
 ################ cegcc settings
@@ -98,7 +98,7 @@ $(OUT)%.exe: $(OUT)%-debug
 MACHOBJS := machines.o \
   mach-autogen.o \
   arch-pxa27x.o arch-pxa.o arch-sa.o arch-omap.o arch-s3.o arch-msm.o \
-  arch-imx.o arch-centrality.o arch-arm.o
+  arch-imx.o arch-centrality.o arch-arm.o arch-msm-asm.o
 
 $(OUT)mach-autogen.o: src/mach/machlist.txt
 	@echo "  Building machine list"
