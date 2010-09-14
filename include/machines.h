@@ -23,6 +23,9 @@ extern class Machine *Mach;
 // Global detection mechanism
 void setupMachineType();
 
+// Typedefs
+typedef void (__stdcall *startfunc_t)(char *kernel, uint32 mach, char *tags);
+
 // Machine class base definition.
 class Machine {
 public:
@@ -41,6 +44,7 @@ public:
     virtual void hardwareShutdown(struct fbinfo *);
     virtual int detect();
     void (*flushCache)(void);
+    startfunc_t customStartFunc;
 };
 
 // Register a machine class to be scanned during haret start.

@@ -174,6 +174,9 @@ struct preloadData {
     fbinfo fbi;
     uint32 physFB, physFonts;
     unsigned char fonts[FONTDATAMAX];
+    
+    // Extra machine info
+    startfunc_t machStartFunc;
 };
 
 // CRC a block of ram (from linux/lib/crc32.c)
@@ -258,6 +261,8 @@ preloader(struct preloadData *data)
     data->fbi.fb = (uint16 *)data->physFB;
     data->fbi.putcFunc = (fb_putc_t)((char*)data->fbi.putcFunc - data->preloadStart + data->preloadPhys);
     data->fbi.fonts = (unsigned char *)data->physFonts;
+    if (data->machStartFunc)
+        data->machStartFunc = (startfunc_t)((char*)data->machStartFunc - data->preloadStart + data->preloadPhys);
     FB_PRINTF(&data->fbi, "In preloader\\n");
 
     uint32 psr = do_cpuGetPSR();
@@ -322,12 +327,17 @@ preloader(struct preloadData *data)
         }
     }
 
-    FB_PRINTF(&data->fbi, "Jumping to Kernel...\\n");
-
     // Boot
-    typedef void (*lin_t)(uint32 zero, uint32 mach, char *tags);
-    lin_t startfunc = (lin_t)destKernel;
-    startfunc(0, data->machtype, destTags);
+    if (data->machStartFunc) {
+        FB_PRINTF(&data->fbi, "Jumping to Kernel (custom)...\\n");
+        data->machStartFunc(destKernel, data->machtype, destTags);
+    }
+    else {
+        FB_PRINTF(&data->fbi, "Jumping to Kernel...\\n");
+        typedef void (*lin_t)(uint32 zero, uint32 mach, char *tags);
+        lin_t startfunc = (lin_t)destKernel;
+        startfunc(0, data->machtype, destTags);
+    }
 }
 
 
@@ -598,6 +608,9 @@ launchKernel(struct bootmem *bm)
         Output(C_ERROR "Setup for machine shutdown failed");
         return;
     }
+    
+    // Set the custom start func
+    bm->pd->machStartFunc = Mach->customStartFunc;
 
     Screen("Go Go Go...");
 

@@ -21,7 +21,7 @@ extern "C" {
 
 Machine::Machine()
     : name("Default"), archname("generic"), PlatformType(L"PocketPC")
-    , machType(0), arm6mmu(0), flushCache(cpuFlushCache)
+    , machType(0), arm6mmu(0), flushCache(cpuFlushCache), customStartFunc(0)
 {
     memset(OEMInfo, 0, sizeof(OEMInfo));
 }
