@@ -1,2 +1,8 @@
+# Ignore output directory
 out/
 
+# Ignore any local script directories users may have
+scripts*/
+
+# Ignore backup files
+*~
