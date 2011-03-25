@@ -124,8 +124,8 @@ public:
 
 class stringVar : public variableBase {
 public:
-    stringVar(predFunc ta, const char *n, const char *d, char **v)
-        : variableBase("var_string", ta, n, d), data(v), isDynamic(0) { }
+    stringVar(predFunc ta, const char *n, const char *d, const char **v)
+        : variableBase("var_string", ta, n, d), data((char**)v), isDynamic(0) { }
     bool getVar(const char **args, uint32 *v);
     void setVar(const char *args);
     void showVar(const char *args);

@@ -241,11 +241,11 @@ setbitVirt(uint8 *vaddr, uint32 bitnr, uint32 bitval)
     TRY_EXCEPTION_HANDLER {
         if (bitval)
         {
-          *(uint32*)vaddr |= (1 << bitnr - 1);
+          *(uint32*)vaddr |= (1 << (bitnr - 1));
         }
         else
         {
-          *(uint32*)vaddr &= ~(1 << bitnr - 1);
+          *(uint32*)vaddr &= ~(1 << (bitnr - 1));
         }
     } CATCH_EXCEPTION_HANDLER {
         Output(C_ERROR "EXCEPTION while writing bit %d at address %p",

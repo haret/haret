@@ -82,7 +82,7 @@ static void
 Complain(const char *msg, int len, int code)
 {
     unsigned severity = MB_ICONEXCLAMATION;
-    wchar_t *title = L"Warning";
+    const wchar_t *title = L"Warning";
 
     if (code >= 5) {
         severity = MB_ICONASTERISK;

@@ -27,11 +27,11 @@
 #include "resource.h"
 
 // Kernel file name
-static char *bootKernel = "zimage";
+static const char *bootKernel = "zimage";
 // Initrd file name
-static char *bootInitrd = "";
+static const char *bootInitrd = "";
 // Kernel command line
-static char *bootCmdline = "root=/dev/ram0 ro console=tty0";
+static const char *bootCmdline = "root=/dev/ram0 ro console=tty0";
 // ARM machine type (see linux/arch/arm/tools/mach-types)
 static uint32 bootMachineType = 0;
 // Enable framebuffer writes during bootup.

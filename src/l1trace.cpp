@@ -212,12 +212,12 @@ tryEmulate(struct irqData *data, struct irqregs *regs
         if (Bbit(insn)) {
             addrsize = 1;
             asm("swpb %0, %1, [%2]"
-                : "=r" (readval)
+                : "=&r" (readval)
                 : "r" (writeval), "r" (newaddr));
         } else {
             addrsize = 4;
             asm("swp %0, %1, [%2]"
-                : "=r" (readval)
+                : "=&r" (readval)
                 : "r" (writeval), "r" (newaddr));
         }
         setReg(regs, mask_Rd(insn), readval);

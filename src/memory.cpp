@@ -534,7 +534,7 @@ static char *__flags_cb(char *p, uint32 &d)
 }
 
 static char *__flags_cond(char *p, uint32 &d
-                          , uint32 bits, uint32 shift, char *name)
+                          , uint32 bits, uint32 shift, const char *name)
 {
     uint32 mask = ((1<<bits) - 1) << shift;
     if (!(d & mask))

@@ -79,7 +79,7 @@ cmd_dump_eim(const char *cmd, const char *args)
 
 			u         & 0xf); // EDC
 	}
-	char* dsz[8] = {
+	const char* dsz[8] = {
 		"[31:24]", "[23:16]", "[15:8]", "[7:0]", // 8-bit modes
 		"[31:16]", "[15:0]", // 16-bit modes
 		"[31:0]", // 32-bit modes
@@ -164,9 +164,9 @@ REG_DUMP(testIMX, "EIM", cmd_dump_eim,
 static void
 cmd_dump_gpio(const char *cmd, const char *args)
 {
-	char* ocr[4]   = {"A_IN",  "B_IN", "C_IN", "DR" };
-	char* iconf[4] = {"pin",   "ISR",  "zero", "one" };
-	char* icr[4]   = {"rise",  "fall", "high", "low"};
+	const char* ocr[4]   = {"A_IN",  "B_IN", "C_IN", "DR" };
+	const char* iconf[4] = {"pin",   "ISR",  "zero", "one" };
+	const char* icr[4]   = {"rise",  "fall", "high", "low"};
 
 	uint32 store[6][15];
 
