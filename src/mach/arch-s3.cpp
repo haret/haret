@@ -296,7 +296,8 @@ MachineS3c6400::s3c6400ShutdownDMA(struct fbinfo *fbi)
 	uint32 ch_conf, config;
 	int timeout;
 
-	int dma_ctrl, dma_ch, sdma_sel;
+	int dma_ctrl, dma_ch;
+	uint sdma_sel;
 
 	int ctrl_count=4;
 
