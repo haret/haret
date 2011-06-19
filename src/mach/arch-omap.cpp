@@ -188,7 +188,7 @@ MachineOMAP850::init()
 }
 
 int
-MachineOMAP850::preHardwareShutdown()
+MachineOMAP850::preHardwareShutdown(struct fbinfo *fbi)
 {
     /* Map now everything we'll need later */
     base = memPhysMap(OMAP_BASE);
@@ -225,7 +225,7 @@ MachineOMAP15xx::init()
 }
 
 int
-MachineOMAP15xx::preHardwareShutdown()
+MachineOMAP15xx::preHardwareShutdown(struct fbinfo *fbi)
 {
     /* Map now everything we'll need later */
     base = memPhysMap(OMAP_BASE);

@@ -66,9 +66,9 @@ MachinePXA27x::init()
 }
 
 int
-MachinePXA27x::preHardwareShutdown()
+MachinePXA27x::preHardwareShutdown(struct fbinfo *fbi)
 {
-    int ret = MachinePXA::preHardwareShutdown();
+    int ret = MachinePXA::preHardwareShutdown(fbi);
     if (ret)
         return ret;
     cken = (uint32 *)memPhysMap(CKEN);

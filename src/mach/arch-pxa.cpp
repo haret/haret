@@ -59,7 +59,7 @@ MachinePXA::init()
 }
 
 int
-MachinePXA::preHardwareShutdown()
+MachinePXA::preHardwareShutdown(struct fbinfo *fbi)
 {
     /* Map now everything we'll need later */
     dma = (uint32 *)memPhysMap(DMA_BASE_ADDR);

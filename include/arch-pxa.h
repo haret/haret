@@ -6,7 +6,7 @@ public:
     MachinePXA();
     int detect();
     void init();
-    virtual int preHardwareShutdown();
+    virtual int preHardwareShutdown(struct fbinfo *fbi);
     virtual void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 dcsr_count;
@@ -19,7 +19,7 @@ public:
     MachinePXA27x();
     int detect();
     void init();
-    virtual int preHardwareShutdown();
+    virtual int preHardwareShutdown(struct fbinfo *fbi);
     virtual void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 *cken, *uhccoms;

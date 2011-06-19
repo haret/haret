@@ -6,7 +6,7 @@ class MachineS3c2442 : public Machine {
 public:
     MachineS3c2442();
     void init();
-    int preHardwareShutdown();
+    int preHardwareShutdown(struct fbinfo *fbi);
     void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 *channels, *uhcmap;
@@ -29,7 +29,7 @@ protected:
 public:
     MachineS3c6400();
     void init();
-    int preHardwareShutdown();
+    int preHardwareShutdown(struct fbinfo *fbi);
     void hardwareShutdown(struct fbinfo *fbi);
 
     uint32 *usb_otgsfr, *dma_base[4];

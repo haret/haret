@@ -65,7 +65,7 @@ static inline void s3c_writel(volatile uint32 *base, uint32 reg, uint32 val)
 }
 
 int
-MachineS3c2442::preHardwareShutdown()
+MachineS3c2442::preHardwareShutdown(struct fbinfo *fbi)
 {
     channels = (uint32*)memPhysMap(S3C2410_PA_DMA);
     uhcmap = (uint32 *)memPhysMap(S3C2410_PA_USBHOST);
@@ -256,7 +256,7 @@ MachineS3c6400::init()
 }
 
 int
-MachineS3c6400::preHardwareShutdown()
+MachineS3c6400::preHardwareShutdown(struct fbinfo *fbi)
 {
 	dma_base[0] = (uint32*)memPhysMap(S3C6400_PA_DMA0);
 	dma_base[1] = (uint32*)memPhysMap(S3C6400_PA_DMA1);
