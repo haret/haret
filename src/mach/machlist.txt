@@ -54,16 +54,16 @@ Hermes,     S3c2442 ,HERM100;HERM200;HERM300,     HTCHERMES, \
         set resumeaddr 0x30100000
 Trinity,    S3c2442 ,TRIN100,                     HTC_TRINITY
 Athena,     PXA27x  ,ATHE100,                     HTCATHENA, \
-	addlist IRQS p2v(0x08000008) 0xf000 16, \
+	addlist IRQS  p2v(0x08000008) 0xff00 16, \
         addlist GPIOS p2v(0x09000000) 0xf000 16, \
-        addlist GPIOS p2v(0x08000000) 0xf000 16, \
-        addlist GPIOS p2v(0x08000002) 0xf000 16, \
-        addlist GPIOS p2v(0x08000004) 0xf000 16, \
-        addlist GPIOS p2v(0x08000006) 0xf000 16, \
-        addlist GPIOS p2v(0x0800000a) 0xf000 16, \
-        addlist GPIOS p2v(0x0800000c) 0xf000 16, \
-        addlist GPIOS p2v(0x0800000e) 0xf000 16, \
-        addlist GPIOS p2v(0x08000010) 0xf000 16
+        addlist GPIOS p2v(0x08000000) 0xff00 16, \
+        addlist GPIOS p2v(0x08000002) 0xff00 16, \
+        addlist GPIOS p2v(0x08000004) 0xff00 16, \
+        addlist GPIOS p2v(0x08000006) 0xff00 16, \
+        addlist GPIOS p2v(0x0800000a) 0xff00 16, \
+        addlist GPIOS p2v(0x0800000c) 0xff00 16, \
+        addlist GPIOS p2v(0x0800000e) 0xff00 16, \
+        addlist GPIOS p2v(0x08000010) 0xff00 16
 G500,       S3c2440 ,G50V,                        G500,     set ramsize 64*1024*1024
 Artemis,    OMAP850 ,ARTE,                        ARTEMIS, \
         addlist GPIOS p2v(0x04000000) 0xff00 16, \
